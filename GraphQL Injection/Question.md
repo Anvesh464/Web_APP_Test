@@ -1,51 +1,68 @@
-### **1. GraphQL Injection and Security**
-- **What are the key differences between SQL Injection and GraphQL Injection, and how can GraphQL be exploited differently than traditional REST APIs?**
-- **Explain how an attacker might exploit a vulnerable GraphQL schema via introspection. What precautions should developers take to protect against this?**
-- **How would you prevent a GraphQL API from being abused through recursive queries or deep nesting, which could lead to Denial of Service (DoS) attacks?**
-- **In the context of GraphQL, how would you detect and mitigate potential **NoSQL** injections, especially when dealing with MongoDB-like databases?**
-- **How can you exploit GraphQL's flexible query structure to bypass authorization checks and access unauthorized data?**
-- **Can you explain the concept of 'query complexity' in GraphQL and how it can be used to protect APIs from malicious queries?**
+### Advanced Interview Questions on GraphQL Injection
 
-### **2. Advanced Enumeration and Testing Techniques**
-- **Describe the process of identifying and enumerating a GraphQL endpoint in a black-box testing scenario. What techniques or tools would you use to discover hidden or non-documented queries and mutations?**
-- **Explain how the GraphQL Introspection Query works, and how attackers can use it to discover the full schema of a GraphQL server. What mitigations would you suggest?**
-- **How would you go about identifying **hidden** fields or types in a GraphQL schema when introspection is disabled? What tools or techniques would be most effective in this case?**
-- **Describe the methodology to perform **fuzzing** of GraphQL queries. How would you design a fuzzing test to uncover vulnerabilities like improper input validation or unexpected data manipulations?**
+**1. What is GraphQL, and how does it differ from traditional REST APIs?**
+   - GraphQL is a query language for APIs and a runtime for executing those queries with existing data. Unlike REST, where each request is tied to a specific endpoint, GraphQL allows clients to request only the data they need, potentially reducing over-fetching and under-fetching problems. It's more flexible because it lets clients specify the structure of the response.
 
-### **3. Authentication & Authorization in GraphQL**
-- **What are the security concerns around authentication and authorization in GraphQL APIs? How does the "resolver" pattern in GraphQL impact security?**
-- **Explain how you would implement **role-based access control** (RBAC) in a GraphQL service. How would you ensure that authorization logic is securely integrated?**
-- **How would you handle **multi-step authentication workflows** (e.g., 2FA) within a GraphQL API? What challenges might arise in this context?**
-- **GraphQL has a strong focus on the granularity of data access. How can attackers bypass this granularity (e.g., by accessing sensitive data fields that they should not be able to view)?**
+**2. Can you explain what a GraphQL injection attack is and how it works?**
+   - GraphQL injection occurs when an attacker is able to manipulate the structure of a GraphQL query to inject malicious queries or commands into the database. Similar to SQL injections, attackers exploit weaknesses in input validation or lack of authorization checks to perform unauthorized actions or retrieve sensitive data from a GraphQL endpoint.
 
-### **4. GraphQL Mutations and Input Validation**
-- **How would you mitigate the risk of **mutation abuse** in GraphQL, where an attacker may attempt to exploit endpoints to modify data maliciously?**
-- **Describe the potential vulnerabilities in a GraphQL mutation endpoint. How can you ensure that mutations (e.g., creating, updating, deleting) are safe from injection and manipulation attacks?**
-- **In the context of GraphQL, what techniques would you employ to prevent **mass assignment** vulnerabilities, where users can send unauthorized fields during mutation requests?**
+**3. How can you identify an injection point in a GraphQL API?**
+   - An injection point can be identified through introspection queries or error messages that indicate issues with query execution. You can send a query like `?query={__schema{types{name}}}` to retrieve the GraphQL schema. Errors or unexpected results may reveal injection points in the API.
 
-### **5. GraphQL Rate Limiting and DDoS Protection**
-- **What is query batching in GraphQL, and how can it be abused to cause a **Denial of Service** attack? How would you prevent query batching abuse?**
-- **GraphQL queries allow nested queries, which can lead to excessive resource consumption. How would you implement **rate-limiting** or **query depth-limiting** to avoid performance degradation or potential DDoS attacks?**
-- **What is query complexity analysis, and how does it help mitigate abusive GraphQL queries? Explain how to calculate query complexity and set appropriate limits.**
+**4. Explain the concept of schema introspection in GraphQL. How can it be exploited for injection attacks?**
+   - Schema introspection allows clients to query the structure of the GraphQL API, including types, fields, and mutations. Attackers can use introspection to learn about the backend schema and craft malicious queries to exploit vulnerabilities. For example, by injecting queries that target specific fields, attackers could gain access to sensitive data.
 
-### **6. Advanced Security Best Practices**
-- **What are the most effective ways to secure a GraphQL endpoint against data leaks from misconfigurations, such as accidental exposure of sensitive fields or types?**
-- **How would you secure a GraphQL API deployed in a **microservices architecture** where each service may have different security and access controls?**
-- **What steps would you take to prevent Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) attacks in GraphQL APIs?**
-- **Explain the importance of **input validation** and **sanitization** in GraphQL and why it's critical even if GraphQL APIs are type-safe.**
+**5. What are GraphQL mutations, and how can they be exploited in an attack?**
+   - Mutations in GraphQL are used to modify server-side data, similar to HTTP POST or PUT requests in REST. Attackers can exploit mutations to perform unauthorized actions like modifying user data, creating new entries, or deleting records. Proper validation and authentication are necessary to protect mutations from abuse.
 
-### **7. Real-World Exploit Scenarios**
-- **Provide a real-world scenario in which a GraphQL API could be exploited to escalate privileges. How would you detect and prevent such an attack?**
-- **Explain how you would exploit an **insecure GraphQL API** by chaining queries and mutations to escalate access, extract sensitive data, or perform unauthorized actions.**
-- **What are some **best practices** for **securing GraphQL endpoints** when dealing with multiple user roles and ensuring that the server only returns appropriate data based on user privileges?**
+**6. How does GraphQL Batching work, and how can it be used for attacks like password brute-forcing or rate-limit bypass?**
+   - GraphQL batching allows multiple queries to be sent in a single request, which improves performance by reducing the number of HTTP requests. However, this can be exploited for attacks such as brute-forcing passwords or bypassing rate limits by sending several mutation requests with different inputs in one batch, overwhelming the server.
 
-### **8. GraphQL API Design and Vulnerability Mitigation**
-- **In a situation where you need to design a GraphQL API for handling financial transactions, what security considerations would you prioritize to prevent common attack vectors?**
-- **What are the trade-offs between using GraphQL and traditional REST APIs in terms of security, especially in complex or highly sensitive applications?**
-- **How do you handle **pagination** and **filtering** in GraphQL to avoid abuse? Describe potential security concerns and solutions for preventing unwanted data leakage.**
+**7. How would you protect a GraphQL endpoint from injection attacks?**
+   - Protection mechanisms include:
+     - Input validation: Ensure user inputs are properly sanitized to prevent malicious injections.
+     - Authentication and Authorization: Implement strict access control to ensure users can only query or mutate the data they are authorized to access.
+     - Disable introspection in production environments to prevent attackers from learning the schema.
+     - Query complexity analysis to limit excessively large or deeply nested queries.
+     - Using a security library like `graphql-shield` to enforce permissions.
 
-### **Bonus Questions (for Experts):**
-- **How would you design a GraphQL API that requires both complex authorization (role-based and attribute-based access control) and strict data validation across multiple services?**
-- **What is your understanding of **GraphQL federation**, and what are the potential security risks when using federated services in a large-scale GraphQL implementation?**
-- **Discuss the impact of **GraphQL subscriptions** on security and performance. How do you ensure that subscription-based APIs are protected from misuse or DDoS attacks?**
-- **Describe the role of **schema stitching** in GraphQL and the associated risks that come with stitching schemas from different services. How can security be maintained in such scenarios?**
+**8. Can you explain how NoSQL and SQL injections can occur in a GraphQL API?**
+   - **NoSQL Injection:** Attackers can manipulate JSON objects or use operators like `$regex` or `$ne` in search parameters, targeting NoSQL databases like MongoDB through GraphQL queries.
+     - Example: `{ doctors(options: "{\"patients.ssn\" :1}", search: "{ \"patients.ssn\": { \"$regex\": \".*\"}, \"lastName\":\"Admin\" }") { firstName lastName id patients{ssn} } }`
+   
+   - **SQL Injection:** Similar to traditional SQL injections, attackers can inject SQL commands by inserting special characters like single quotes (`'`) into GraphQL queries.
+     - Example: `{ bacon(id: "1'") { id, type, price } }`
+
+**9. What is the role of introspection in GraphQL security testing?**
+   - Introspection allows security professionals to map out a GraphQL API’s structure and identify potential vulnerabilities by discovering the types, fields, and possible queries. Attackers can use this information to craft malicious queries or target sensitive data. Disabling introspection in production environments is a common security best practice.
+
+**10. How can tools like GraphQLMap, InQL, and GQLSpection be used to test the security of a GraphQL API?**
+   - **GraphQLMap:** A scripting engine used for automating the enumeration and exploitation of GraphQL endpoints, assisting in detecting vulnerabilities like injection points.
+   - **InQL:** A Burp Suite extension designed for testing the security of GraphQL APIs, including finding injection points and checking for weaknesses.
+   - **GQLSpection:** A tool that parses GraphQL introspection schemas to generate potential queries, helping security researchers identify attack vectors and sensitive fields.
+
+**11. Describe the process of extracting sensitive data from a GraphQL endpoint using projections and pagination techniques.**
+   - **Projections:** Projections involve crafting GraphQL queries to fetch only specific data fields of interest, often using nested fields to drill down into sensitive information. For example, using `{doctors(options: "{\"patients.ssn\" :1}"){firstName lastName id patients{ssn}}}`.
+   - **Pagination (Edges/Nodes):** GraphQL APIs often use pagination (with fields like `edges`, `nodes`, `pageInfo`) to manage large data sets. Attackers can use these to extract large volumes of data by navigating through paginated results.
+
+**12. Can you explain the importance of GraphQL security audits and how tools like graphql-cop are useful?**
+   - Security audits help identify and mitigate potential risks in GraphQL APIs, such as improper input validation, insecure authentication, or overexposed sensitive data. Tools like `graphql-cop` automate the process of auditing GraphQL endpoints, scanning for misconfigurations, and generating reports on possible security gaps.
+
+**13. How would you approach performing a GraphQL security test on a public API?**
+   - **Step 1:** Identify the GraphQL endpoint (commonly `/graphql` or `/graphiql`).
+   - **Step 2:** Check if introspection is enabled. If introspection is allowed, dump the schema to understand the available types and fields.
+   - **Step 3:** Test for injection points by sending malicious queries (e.g., SQL or NoSQL injection).
+   - **Step 4:** Test for authorization flaws by attempting to access sensitive data without proper credentials or permissions.
+   - **Step 5:** Look for other vulnerabilities like excessive query complexity or rate-limiting issues.
+
+**14. How does the concept of 'suggestions' work in GraphQL security, and how can attackers leverage it for exploitation?**
+   - When a user tries to query a non-existent field in GraphQL, the backend may return a suggestion, like "Did you mean 'node'?" Attackers can exploit these suggestions to brute-force valid field and type names, helping them identify valid attack vectors.
+
+**15. What are the best practices for securing a GraphQL API in production?**
+   - Disable introspection in production.
+   - Implement rate limiting to prevent brute force and denial-of-service attacks.
+   - Secure the GraphQL server with proper authentication (e.g., OAuth, JWT).
+   - Validate and sanitize all user inputs to prevent injections.
+   - Apply authorization controls using GraphQL-specific permission libraries.
+
+These questions test a candidate's knowledge of GraphQL security, injection attacks, best practices, and security testing tools.
