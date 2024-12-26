@@ -1,5 +1,7 @@
 # API Key and Token Leaks | Testing
 
+![image](https://github.com/user-attachments/assets/c78469ba-95c5-468b-82bb-ebcd4295c4f2)
+
 > API keys and tokens are forms of authentication commonly used to manage permissions and access to both public and private services. Leaking these sensitive pieces of data can lead to unauthorized access, compromised security, and potential data breaches.
 
 ## Summary
