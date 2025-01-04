@@ -1,284 +1,127 @@
-1.  **What is an SSL certificate?**
+# SSL Certificate & Web Application Security
 
-SSL standard for Secure Sockets Layer (SSL) is a standard security technology using we can establishes **encrypted** connections between servers and clients, like websites and browsers, to ensure that data is transmitted securely.
+## 1. What is an SSL Certificate?
+SSL (Secure Sockets Layer) is a standard security technology that establishes **encrypted** connections between servers and clients (e.g., websites and browsers), ensuring secure data transmission.
 
-1.  **With SSL**, sensitive information like credit card numbers and login credentials can be securely transmitted, preventing mitm attack.
-    1.  **Without SSL,** data sent between browsers and servers is vulnerable to interception, exposing users to potential identity theft and fraud.
-1.  **Purpose of http-only and Secure Flags?**
+- **With SSL**, sensitive information (credit card numbers, login credentials) can be securely transmitted, preventing MITM (Man-In-The-Middle) attacks.
+- **Without SSL**, data is vulnerable to interception, exposing users to identity theft and fraud.
 
-HTTP Only is a flag added to cookies that tell the browser not to display the cookie information through client-side scripts (document.cookie and others). ... When you set a cookie with the HttpOnly flag, it informs the browser that this special cookie should only be accessed by the serve.
+---
 
-Secure cookies are a type of cookie that are transmitted over encrypted HTTP connections. ... The HttpOnly protects the cookie from being accessed by, for instance, JavaScript, while the SameSite attribute only allows the cookie to be sent to the application if the request originated from the same domain.
+## 2. Purpose of HTTP-Only and Secure Flags
+- **HTTP-Only Flag**: Added to cookies to prevent client-side scripts (e.g., `document.cookie`) from accessing cookie information.
+- **Secure Cookies**: Transmitted only over encrypted HTTP connections, ensuring data security.
 
-1.  **What is HTTP response splitting?**
-1.  **HTTP Response Splitting Vulnerability: CRLF (Carriage Return Line Feed):** CRLF refers to Carriage Return (ASCII 13, %d) Line Feed (ASCII 10, %0a ) characters.
-    1.  These characters insert into the http header filed such as input filed or set-cookie location when untrusted user input is not properly sanitized without proper validated then HTTP responses can be slitted into the two responses. An attacker can exploit this vulnerability to such as Cross-site Scripting (XSS) and web cache poisoning.
+**Flags Summary**:
+- **HTTP-Only**: Prevents access to cookies via client-side scripts.
+- **Secure**: Transmits cookies only over HTTPS (encrypted connection).
 
-![A screenshot of a computer Description automatically generated](media/5005fc2717e2cd80a38491ce28cd78fd.png)
+---
 
-**Impact of Attacks:** Attackers can use HTTP response splitting for various malicious purposes, including:
+## 3. What is HTTP Response Splitting?
+- **CRLF (Carriage Return Line Feed)**: When untrusted user input is not sanitized, CRLF characters can split HTTP responses into two, potentially leading to vulnerabilities like XSS (Cross-Site Scripting) and web cache poisoning.
 
-1.  **XSS (Cross-Site Scripting):** Injecting scripts to steal user data or hijack sessions.
-    1.  **Website Defacement:** Changing the website's content to display the attacker's message.
-    2.  **Phishing:** Redirecting users to fake login pages to steal credentials. (login url)
+### Impact of Attacks:
+1. **XSS (Cross-Site Scripting)**: Injecting malicious scripts to steal data or hijack sessions.
+2. **Website Defacement**: Changing website content to display attacker’s message.
+3. **Phishing**: Redirecting users to fake login pages to steal credentials.
 
-**Prevention**:
+### Prevention:
+1. **Input Validation**: Remove CRLF characters from untrusted data.
+2. **Output Encoding**: Encode user input properly before including in response headers.
+3. **Update Servers/Frameworks**: Regularly update to fix known vulnerabilities.
 
-1.  Strict input validation and sanitization to remove CRLF characters from untrusted data.
-    1.  Proper output encoding before including user input in response headers.
-    2.  Updating web servers and frameworks to address known vulnerabilities.
-1.  **What is header manipulation?**
+---
 
-A header manipulation attack, also known as HTTP header injection attack, it **insert of malicious** data in header filed, **which has not been validated**, then HTTP response header is **redirecting** to attacker website.
+## 4. What is Header Manipulation?
+Header Manipulation (also known as HTTP Header Injection) involves inserting malicious data into HTTP headers, often used for redirecting traffic or injecting malicious content.
 
-For example, we can change **headers** such as abc.com to evil.com if it is reflecting evil.com in web site means it is not prepare validating and vulnerable for host header injection one more example is that **response splitting attack.**
+### Common Types of Header Manipulation:
+1. **Host Header Injection**: Changing the "Host" header to serve content from a different domain.
+2. **Referer Header Injection**: Manipulating the "Referer" header to bypass security measures.
+3. **X-Forwarded-For Injection**: Spoofing the IP address.
+4. **Cookie Manipulation**: Modifying cookies to gain unauthorized access.
 
-**Host Header:** user server web application or several web services are running on same ip it is like **virtual hosting.**
+### Prevention:
+1. Validate and sanitize all HTTP headers to prevent manipulation.
+2. Use proper input/output encoding and security configurations.
 
-Host Header means which web application process the request to get the resources.( 300 or redirection request is better for this attack)
+---
 
-**Common types of header manipulation attacks:** header, reference header, add x-forwarded-host, cookie parameter, password reset parameter. (add permutation and combination)
+## 5. OWASP Top 10 Web Application Vulnerabilities
 
-1.  **Host header injection:** Attackers change the "Host" header to trick the server into serving content from a different domain. This can be used to steal sensitive information or redirect users to malicious websites.
-    1.  **Referrer header injection:** Attackers can manipulate the "Referer" header to potentially bypass certain security measures or spread spam.
-    2.  **X-Forwarded-For (XFF) header injection:** This attack allows attackers to spoof their IP address, making it difficult to track their activity or enforce access controls.
-    3.  **Cookie manipulation:** Attackers can modify existing cookies or inject new ones to gain unauthorized access to user accounts or steal sensitive data.
-    4.  **HTTP response splitting attack.** This type of attack exploits applications that allow a carriage return or line feed as input.
+![OWASP Top 10](media/859f86086425ce54e18126171ccbc775.png)
 
-virtual hosting: tools \| Impact: web caching poisoning, xss
+### 1. Broken Access Control:
+- Unauthorized users can access restricted data or functionality.
+- Exploitation includes URL manipulation, elevating privileges, and Insecure Direct Object References (IDOR).
 
-Header Injection Host Header Hunting : status code of 200 \| 201 \| 202 \| 203 \| 204 i.e. 3xx and 200
+### 2. Cryptographic Failures:
+- Occurs when sensitive data is transmitted insecurely or weak encryption is used.
+- Examples include weak or outdated cryptographic protocols.
 
-status code of 300 \| 301 \| 302 \| 303 \| 304 -- 3xx is the best one for this attack
+### 3. Injection:
+- Untrusted user input is processed as part of commands (e.g., SQL injections) to gain unauthorized access to databases.
 
-1.First method
+### 4. Insecure Design:
+- Weaknesses in the application’s design or architecture.
+- Includes bypassing authentication mechanisms or gaining unauthorized access to sensitive data.
 
-Host bing.com
+### 5. Security Misconfiguration:
+- Default configurations or improperly set permissions can expose systems to vulnerabilities.
 
-2.Second method
+### 6. Vulnerable and Outdated Components:
+- Using outdated third-party libraries or frameworks that have known vulnerabilities.
 
-Host bing.com
+### 7. Identification and Authentication Failures:
+- Weak or ineffective authentication mechanisms like easy-to-guess passwords or lack of multi-factor authentication.
 
-X-Forwarded-Host: realweb.com
+### 8. Software and Data Integrity Failures:
+- Inadequate protection against integrity violations within code and infrastructure.
 
-3.Third Method
+### 9. Security Logging and Monitoring Failures:
+- Inadequate logging and monitoring make it difficult to detect and respond to security incidents.
 
-Host: realweb.com
+### 10. Server-Side Request Forgery (SSRF):
+- Exploiting the server to make unauthorized requests, potentially leading to accessing sensitive internal resources.
 
-X-Forwarded-Host: bing.com
+---
 
-4.Referer:bing.com
+## 6. Insecure Deserialization
+- **Serialization**: Converting an object into a byte format to store or transmit data.
+- **Deserialization**: Reconstructing the object from the byte format.
 
-Try to change host and referrer header because few host is verify for referrer header information.
+Insecure deserialization occurs when untrusted data is deserialized, leading to potential exploits like remote code execution or privilege escalation.
 
-also do the same first three attack to insert the referrer header (Change referrer header)
+### Prevention:
+1. **Input Validation**: Validate and sanitize all data before deserialization.
+2. **Use Secure Libraries**: Employ libraries with built-in deserialization security.
+3. **Update Software Regularly**: Patch vulnerabilities associated with deserialization.
 
-if redirecting right click show response in browser open in Firefox and access or click any parameters
+---
 
-4.head header injection with web Cache Poisoning
+## 7. CWE/SANS Top 25 Dangerous Software Errors
+- The **CWE/SANS Top 25** lists the most dangerous software vulnerabilities, including issues like **hashing without a salt**, **HTTP verb tampering**, and others that can lead to severe security breaches.
 
-follow the 4 methods and access the web application, click anywhere in web application if it is redirecting to the bing means it is host header injection with web cache poising attack.
+### Example of CWE/SANS Top 25: 
+- **Use of a One-Way Hash Without a Salt**: Hash functions like MD5 or SHA can be easily cracked if no salt is added to the password before hashing.
+  
+---
 
-5.Host Header Attack on Password Reset Poisoning.
+## 8. HTTP Verb Tampering
+Bypassing web authentication and authorization by manipulating HTTP methods such as **PUT**, **DELETE**, **TRACE**, and **CONNECT**.
 
-get a email link from password reset page. and try to do the host header injection attack.
+### Risk Methods:
+1. **PUT**: Allows file uploads (e.g., uploading malicious scripts).
+2. **DELETE**: Allows file deletion (e.g., defacing the website).
+3. **CONNECT**: May allow the server to act as a proxy.
+4. **TRACE**: Enables attackers to perform Cross-Site Tracing (XST) attacks.
 
-6.Host Header Attack on XSS Through Host Header
+### Prevention:
+- Disable **PUT**, **DELETE**, **TRACE**, and **CONNECT** methods if they are not needed for normal operations.
 
-first check the host header injection attack after if it is reflecting such as in response "<https://bing.com/?locald>"\>.
+---
 
-Host: bing.com and in response it is "<https://bing.com/?locald>"\>
-
-payload is host: bing.com"\>\<script\>alert(1)\</script\> this is one way method
-
-or send to intruder using simple xxs payload to burst-force attack
-
-7.Host header injection on referrer or add referrer on connection down
-
-connection: close
-
-Referrer: <https://www.bing.com/>
-
-8\. use existing and non-existing sub-domains to do host header injection
-
-9\. Password Reset Poisoning Web-cache poisoning Cross Site Scripting Access to internal hosts-To access internal hosts. host header injection
-
-10.X-Originating-IP: 127.0.0.1 X-Forwarded-For: 127.0.0.1 X-Remote-IP: 127.0.0.1 X-Remote-Addr: 127.0.0.1
-
-1.  **OWASP Top 10 is a list of the ten most critical security risks to web applications. The list is maintained by the Open Web Application Security Project (OWASP), a non-profit organization that focuses on improving software security.**
-
-![Real Life Examples of Web Vulnerabilities (OWASP Top 10)](media/859f86086425ce54e18126171ccbc775.png)
-
-**1. Broken Access Control:** Lets unauthorized users access data or access the application functions they shouldn't have an access. So exploiting weaknesses is how access control mechanisms are implemented, allowing unauthorized users to access data, functionality, or resources which leads to.
-
-1.  URL Manipulation.
-    1.  Exploiting Endpoints.
-    2.  Elevating User Privilege.
-    3.  Insecure Direct Object References (IDOR)
-
-**2. Cryptographic Failures:** This vulnerability occurs when sensitive data is transmitted in insecure manner or improperly configured weak encryption algorithm. An example of this would be a website that stores user passwords in plaintext, allowing an attacker to easily access user credentials.
-
-1.  data is transmitted in clear text format
-    1.  weak or old cryptographic algorithms or protocols used either by default or in older code?
-    2.  Are default crypto keys in use, weak crypto keys generated or re-used, or is proper key management or rotation missing?
-    3.  Is encryption not enforced, e.g., are any HTTP headers (browser) security directives or headers missing?
-    4.  received server certificate and the trust chain properly validated?
-
-**3. Injection:** when an attacker is process the untrusted user input as part of command or queries through the web application. It should be executed by the backend database server. Using this vulnerability an attacker can manipulate SQL queries to gain unauthorized access to a database.
-
-Paste some data.
-
-**4. Insecure Design:** Insecure design means the application itself has inherent functionalities or weaknesses are present in web application actually it is a broad category related to critical design and architectural flaws in web applications that hackers can exploit.
-
-1.  Bypass the authentication mechanisms used by a web application
-    1.  Modify certain URL parameters through unauthorized channels
-    2.  Access the systems to mine them for sensitive information
-    3.  Assume legitimate user accounts and gain unauthorized access to password-protected resources to exploit the system further Obtain access to any environment and further extend the scope of the attack to other environments
-1.  WordPress and the majority of other CMS platforms do not set limits for unsuccessful login attempts on the admin panel, which leaves them exposed to brute force attacks. In all likelihood, a hacker would attempt a large amount of combinations on a target. To mitigate and defend against these attacks, the installation of third-party security extensions would be required.
-
-**5. Security Misconfiguration:** This vulnerability occurs when a web application is configured in a way that allows attackers to exploit known vulnerabilities. An example of this would be a website that has a default password set on a database, allowing attackers to easily gain access to sensitive information.
-
-1.  Missing appropriate security hardening across any part of the application stack or improperly configured permissions on cloud services.
-    1.  Unnecessary features are enabled or installed (e.g., unnecessary ports, services, pages, accounts, or privileges).
-    2.  Default accounts and their passwords are still enabled and unchanged.
-    3.  Error handling reveals stack traces or other overly informative error messages to users.
-
-**6. Vulnerable and Outdated Components:** Unpatched vulnerabilities in third-party. This vulnerability occurs when a web application uses third-party libraries or frameworks expose your application to known security vulnerabilities. An example of this would be a website that uses an outdated version of a popular CMS with known vulnerabilities or third party libraries such as jquery and other framework etc…
-
-**7. Identification and Authentication Failures:** user's identity, authentication, and session management is critical to protect against authentication-related attacks.
-
-1.  Weak authentication mechanisms, like easy-to-guess passwords, default, weak, or well-known passwords, such as "Password1" or "admin/admin" or lack of multi-factor authentication.
-    1.  MITM attack
-    2.  brute force or other automated attacks.
-    3.  Uses weak or ineffective credential recovery and forgot-password processes, such as "knowledge-based answers," which cannot be made safe.
-    4.  Exposes session identifier in the URL.
-    5.  Reuse session identifier after successful login.
-
-**8. Software and Data Integrity Failures:** it is related to software updates, critical data, and CI/CD pipelines without verifying integrity. Unprotected data or applications can be tampered with, leading to manipulation of sensitive data, denial-of-service attacks, data breaches or incorrect functionality.
-
-1.  Software and data integrity failures stem from inadequate protection against integrity violations within code and infrastructure. such as Dependency on plugins, libraries, or modules from untrusted sources, repositories, and CDNs is a common vulnerability.
-    1.  Insecure CI/CD pipelines pose risks of unauthorized access, injection of malicious code, or system compromise.
-    2.  Auto-update functionalities in applications may lack sufficient integrity verification, allowing potential distribution and execution of malicious updates by attackers.
-
-**9. Security Logging and Monitoring Failures:** Without proper logging and monitoring, it's difficult to detect and respond to security incidents.
-
-1.  An example of this would be a website that does not log failed login attempts, making it difficult to identify and block brute force attacks.
-    1.  Logs of applications and APIs are not monitored for suspicious activity.
-    2.  Logs are only stored locally.
-    3.  Penetration testing and scans by dynamic application security testing (DAST) tools (such as OWASP ZAP) do not trigger alerts.
-    4.  The application cannot detect, escalate, or alert for active attacks in real-time or near real-time.
-    5.  Appropriate alerting thresholds and response escalation processes are not in place or effective
-
-**10. Server-Side Request Forgery (SSRF):**
-
-SSRF stands for Server-Side Request Forgery vulnerability, It is a type of web application vulnerability that occurs when a web application allows an attacker to make unauthorized requests from the server to other internal or external resources. In simpler terms, it's like tricking the server into making requests on behalf of the attacker, potentially accessing sensitive data or services that should not be accessible to the attacker.
-
-**Example:** <https://example.com/feed.php?url=externalsite.com/feed/>
-
-When information in a web application has to be retrieved from an external resource, such as an feed from another website, server-side requests are used to fetch the resource and include it in the web application. For example, a developer can use a URL such as.
-
-<https://example.com/feed.php?url=externalsite.com/feed/> to retrieve the remote feed. If the attacker is able to change the url parameter to *localhost*, then he is able to view local resources hosted on the server, making it vulnerable to Server-Side Request Forgery.
-
-If an attacker is able to control the destination of the server-side requests, they can potentially perform the following actions:
-
-**What we can do with the SSRF vulnerability:**
-
-1.  Identify the open Port and IP Scanning: Exploiting SSRF allows scanning of ports and IP addresses.
-    1.  Access to Restricted Resources: Attackers can read inaccessible resources like trace.axd in ASP.NET or metadata APIs in AWS.
-    2.  File Reading: SSRF can enable reading of files from the web server.
-    3.  Retrieval of Sensitive Information: This vulnerability can lead to accessing sensitive information such as the IP address of a web server behind a reverse proxy.
-    4.  Protocol Interaction: SSRF can be used to interact with protocols like Gopher for further discoveries.
-    5.  Server IP Discovery: Attackers can discover the IP addresses of servers behind a reverse proxy.
-    6.  Remote Code Execution: SSRF may lead to remote code execution on the vulnerable server.
-    7.  Trust Relationship Abuse: Abusing the trust relationship between the vulnerable server and others is possible.
-    8.  Bypassing Security Measures: SSRF can bypass IP whitelisting and host-based authentication services.
-
-**Cross-Site Scripting (XSS):** This vulnerability occurs when an attacker can inject malicious code into a web page viewed by other users. An example of this would be a form on a website that allows users to submit comments, which can then be used to inject malicious code into the website.
-
-1.  **what is insecure deserialization?**
-
-To understand what insecure deserialization is, we first must understand what serialization and deserialization are.
-
-Serialization refers to a process of converting data into an object into a byte format which can be persisted to disk (for example saved to a file or a datastore), sent through streams (for example stdout), or sent over a network. The format in which an object is serialized into, can either be binary or **structured** text (for example XML, JSON YAML…). JSON and XML are two of the most commonly used serialization formats within web applications.
-
-Deserialization on the other hand, is the opposite of serialization, that is, transforming serialized data coming from a file, stream or network socket into an **object**.
-
-Web applications make use of serialization and deserialization on a regular basis and most programming languages even provide native features to serialize data (especially into common formats like JSON and XML). It’s important to understand that safe deserialization of objects is normal practice in software development. The trouble however, starts when deserializing untrusted user input.
-
-Most programming languages offer the ability to customize deserialization processes. Unfortunately, it’s frequently possible for an **attacker to abuse these deserialization featur**es when the application is deserializing untrusted data which the attacker controls. Successful insecure deserialization attacks could allow an attacker to **carry out denial-of-service (DoS) attacks, authentication bypasses and remote code execution attacks.**
-
-<https://www.youtube.com/watch?v=nkTBwbnfesQ>
-
-exploitation we have burp suite active plugin is available such as deserialization scanner.
-
-![A blackboard with writing on it Description automatically generated](media/fbd39779e10864e45312c8ae16db75b0.png)
-
-**Potential Impacts:** Remote Code Execution, privilege escalation, Denial of service attack.
-
-1.  Remote Code Execution (RCE): In the worst-case scenario, attackers can inject code that gets executed by the application, giving them complete control over the system.
-    1.  Data Breaches: Attackers can exploit vulnerabilities in deserialization to access sensitive data stored within the application or database.
-    2.  Privilege Escalation: Attackers might gain higher privileges within the application, allowing them to perform unauthorized actions.
-    3.  Denial-of-Service (DoS) Attacks: Malicious objects can consume excessive resources, crashing the application or rendering it unavailable to legitimate users.
-
-**Prevention Tips:**
-
-1.  Validate and Sanitize all Inputs: Before using any data in deserialization, thoroughly validate and sanitize it to remove potentially harmful characters or code.
-    1.  Use Whitelisting: Only deserialize objects from trusted sources and with known structures.
-    2.  Keep Software Updated: Update frameworks, libraries, and web servers regularly to patch known vulnerabilities related to deserialization.
-    3.  Use Secure Deserialization Libraries: Consider using libraries specifically designed for secure deserialization with built-in validation and security features.
-1.  **CWE/SANS TOP 25 Most Dangerous Software Errors**
-
-<https://www.templarbit.com/blog/2018/02/08/owasp-top-10-vs-sans-cwe-25/>
-
-<https://www.ripstech.com/product/compliance/sans-top-25/>
-
-CWE Common Weakness Enumeration
-
-CPE Common platform enumeration
-
-![A screenshot of a computer Description automatically generated](media/a69a00743c72782bc938564f39703a36.png)
-
-1.  **Use of a One-way Hash Without a Salt**
-
-**Hash is the function and which takes the input as a file and process and** returns a fixed-size of string or random number such as hash value or code. Examples are md5. sha512, 256 etc… it mainly used for  **cryptography for tasks like data integrity verification, password hashing, and digital signatures.**
-
-Salt is way of making password more secure by adding some random strings or characters or number to existing password for fix length of the password. so, an attacker very difficult to bypass it. Without a salt, hashes can be reverse engineered more easily using brute force or rainbow tables.
-
-1.  Changes indicates that alteration of file.
-1.  **Http Verb Tempering: Bypassing Web Authentication and Authorization**
-1.  Hypertext transfer protocol (HTTP) gives you list of methods that can be used to perform actions on the web server. Primarily for development and debugging purposes.
-    1.  if the web server is misconfigured can lead to Cross Site Tracing (XST), a form of cross-site scripting, exploit the HTTP TRACE, PUT, DELETE methods.
-    2.  GET and POST are commonly utilized HTTP methods for accessing server information HTTP allows several other method as well, which are less known methods.
-
-Following are some of the methods:
-
-HEAD
-
-GET
-
-POST
-
-PUT
-
-DELETE
-
-TRACE
-
-OPTIONS
-
-CONNECT
-
-**Purpose:** Many of these methods can potentially pose a critical security risk for a web application, as they allow an attacker to modify the files stored on the web server, delete the web page on the server, and upload a web shell to the server which leads to stealing the credentials of legitimate users.
-
-Moreover, when rooting the server, the **methods that must be disabled** are the following:
-
-**PUT:** This method allows a client to upload new files on the web server. An attacker can exploit it by uploading malicious files (e.g. an ASP or PHP file that executes commands by invoking cmd.exe), or by simply using the victim’s server as a file repository.
-
-**DELETE:** This method allows a client to delete a file on the web server. An attacker can exploit it as a very simple and direct way to deface a web site or to mount a Denial of Service (DOS) attack.
-
-**CONNECT:** This method could allow a client to use the web server as a proxy
-
-**TRACE:** This method simply echoes back to the client whatever string has been sent to the server, and is used mainly for debugging purposes of developers. This method, originally assumed harmless, can be used to mount an attack known as Cross Site Tracing, which has been discovered by Jeremiah Grossman.
 
 1.  **How many ways to exploit put method?**
 1.  Introduction to HTTP PUT Method
