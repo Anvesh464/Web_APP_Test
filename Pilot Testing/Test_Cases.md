@@ -1386,7 +1386,6 @@ search=Har') and starts-with(../password,'c
 3. **XSS with HTTP Response Splitting**
 4. **JSON Attack - How to Find and Exploit JSON Vulnerabilities**
 
-```markdown
 # XML External Entity (XXE) Attack
 
 An **XML External Entity (XXE) attack** is a type of attack against an application that parses XML input and allows XML entities. XML entities can be used to tell the XML parser to fetch specific content on the server.
