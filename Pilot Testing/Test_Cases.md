@@ -1442,4 +1442,10 @@ XXE vulnerabilities often exist in **XML-RPC implementations** and other XML-bas
 ```
 
 ```xml
+<!--?xml version="1.0" ?-->
+<!DOCTYPE replace [<!ENTITY example "Doe"> ]>
+ <userInfo>
+  <firstName>John</firstName>
+  <lastName>&example;</lastName>
+ </userInfo>
 ```
