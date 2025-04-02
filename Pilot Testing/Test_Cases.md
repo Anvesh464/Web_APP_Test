@@ -1428,3 +1428,12 @@ Another example:
 ]>
 <data>&file;</data>
 ```
+## Vulnerabilities
+
+XXE vulnerabilities often exist in **XML-RPC implementations** and other XML-based data processing systems.
+
+```xml
+```
+
+```xml
+```
