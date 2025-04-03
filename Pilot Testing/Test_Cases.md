@@ -40,9 +40,7 @@ Search in [exploit-db](https://www.exploit-db.com/)
 - XML Injection
 
 ## cURL to Burp Request Command
-```bash
 curl -x 127.0.0.1:8080
-```
 
 ## XSS Payload Example
 ```html
