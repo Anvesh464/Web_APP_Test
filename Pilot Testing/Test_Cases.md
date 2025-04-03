@@ -1,12 +1,6 @@
 <img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="600">
 
-# XSS and Web Security Notes
-
-## Enta pirikodivi evannni niku eandhuku ra
-
 Make life easier, not harder.
-You have to take the first step; then people follow.
-
 [PayloadsAllTheThings - GitHub](https://github.com/swisskyrepo/PayloadsAllTheThings)
 
 ### Application version-related exploits
