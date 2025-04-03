@@ -444,6 +444,7 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 
 **More payloads and techniques:** [PayloadsAllTheThings - Open Redirect](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Open%20Redirect)
 
+https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/README.md 
 ---
 
 # 5. Parameter Tampering (All Parameters Change)
