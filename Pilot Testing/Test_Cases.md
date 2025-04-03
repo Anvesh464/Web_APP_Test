@@ -449,11 +449,18 @@ https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/RE
 
 # 5. Parameter Tampering (All Parameters Change)
 
-**Description:** The Web Parameter Tampering attack manipulates parameters exchanged between client and server to modify application data such as user credentials, permissions, prices, and product quantities.
+**Description:** The Web Parameter Tampering attack is based on the manipulation of parameters exchanged between client and server in order to modify application data, such as user credentials and permissions, price and quantity of products, etc. Usually, this information is stored in cookies, hidden form fields, or URL Query Strings, and is used to increase application functionality and control. 
+
+The parameter modification of form fields can be considered a typical example of Web Parameter Tampering attack. 
+For example, consider a user who can select 
+Form field values (combo box, check box, etc.) on an application page. When these values are submitted by the user, they could be acquired and arbitrarily manipulated by an attacker. 
 
 **Targeted Parameters:**
 ```
-price, amount, cost, discount, quantity, transaction, user IDs, number, strings, delivery charges, etc.
+mainly : price,amount,cost,discount,quantity, transaction  any user id's(priviledge escalation),number,strings,quality,delivery charges discounts etc... to change the parameters and forwards request to payment gateway.
+using money we can search in burp if it is matches change the amount or above parameters then and intercept off.
+
+Priviledge escalation attack senario login into account one for admin and another normal user in different browsers. access few admin resource similar to normal user function and paste that url in normal user browser if the normal user able to access admin functionalities there is a vulnerability.
 ```
 
 ### Attack Scenarios:
@@ -463,23 +470,24 @@ Qty=500&price=100  →  Qty=5&price=100
 ```
 #### Example 2:
 ```
-Cashback=0&amt=100&qty=1 → Cashback=100000&amt=100&qty=1
+Cashback=0&amt=100 & qty=1
+Cashback=100000&amt=100 & qty=1 there is parameter tempering on cashback
 ```
 #### Example 3:
 Modify the request in Burp Suite before the payment gateway.
+do the nessasary steps and before an application is going to payment gateway do it there like send the request to repeater then change the amount. have to drop a  packet.
+we can use the -amount also  such as 100  --99
 
 ### Bypass Methods:
-1. Encode and decode the URL to change the amount.
-2. Modify cookies in the browser storage.
-3. Upload a malicious profile picture with a link.
-
+1. sometimes amount should be encoding so copy the url and decode to change amount after that encode the payload
+2. while leads to priviledge escalation for example normal user login into an application goto values like amount or profile information update if the cookie is weak configured goto inspect element-->storage-->change values like false-->true or change amount....
+3. porfile pic upload with malicious link and geo-location
 ---
-
 # 6. HTML Injection
 
 **Description:** HTML injection occurs when an attacker can inject arbitrary HTML code into a vulnerable web page.
 
-### Payloads:
+### Payloads: 1. Hyderlink click 2. html payload
 ```html
 <h1>Vulnerable for HTML Injection</h1>
 <A HREF="http://bing.com/">OffensiveHunter</A>
