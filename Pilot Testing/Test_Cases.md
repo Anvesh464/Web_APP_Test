@@ -78,7 +78,7 @@ curl -x 127.0.0.1:8080
 - [Altdns](https://github.com/infosec-au/altdns)
 - [Netcraft](https://searchdns.netcraft.com/)
 - [HTTP Status Checker](https://httpstatus.io/)
-- https://github.com/projectdiscovery/subfinder
+- [SubFinder](https://github.com/projectdiscovery/subfinder)
 
 sort out subdomain unpapularity (Less travel route)
 
