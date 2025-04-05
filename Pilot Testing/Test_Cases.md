@@ -147,7 +147,8 @@ docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest docker --im
     * [Account Takeover via Cross Site Scripting](#account-takeover-via-cross-site-scripting)
     * [Account Takeover via HTTP Request Smuggling](#account-takeover-via-http-request-smuggling)
     * [Account Takeover via CSRF](#account-takeover-via-csrf)
-* [References](#references)
+    * Account Takeover via JWT
+    * JSON Web Token might be used to authenticate an user. Edit the JWT with another User ID / Email - Check for weak JWT signature
 
 # 3. Cross-Site Scripting (XSS)
 
