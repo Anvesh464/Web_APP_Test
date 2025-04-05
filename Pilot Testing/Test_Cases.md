@@ -98,6 +98,42 @@ telnet
 waplayzer
 ```
 ---
+## API Key and Token Leaks
+
+```markdown
+# API Key and Token Leaks
+
+## Common Causes of Leaks
+
+- **Hardcoding in Source Code**: Developers may unintentionally leave API keys or tokens directly in the source code.
+- **Public Repositories**: Accidentally committing sensitive keys and tokens to publicly accessible version control systems like GitHub.
+- **Hardcoding in Docker Images**: API keys and credentials might be hardcoded in Docker images hosted on DockerHub or private registries.
+- **Logs and Debug Information**: Keys and tokens might be inadvertently logged or printed during debugging processes.
+- **Configuration Files**: Including keys and tokens in publicly accessible configuration files (e.g., `.env` files, `config.json`, `settings.py`, or `.aws/credentials`).
+
+## Scan a GitHub Organization
+
+To scan an entire GitHub organization for leaks, run the following command:
+
+```bash
+docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --org=trufflesecurity
+```
+
+## Scan a GitHub Repository, its Issues, and Pull Requests
+
+To scan a GitHub repository including its issues and pull requests, run:
+
+```bash
+docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys --issue-comments --pr-comments
+```
+
+## Scan a Docker Image for Verified Secrets
+
+To scan a Docker image for secrets, use the following command:
+
+```bash
+docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest docker --image trufflesecurity/secrets
+```
 # 3. Cross-Site Scripting (XSS)
 
 ## XSS Background
