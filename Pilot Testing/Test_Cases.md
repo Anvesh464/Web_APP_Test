@@ -134,6 +134,21 @@ To scan a Docker image for secrets, use the following command:
 ```bash
 docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest docker --image trufflesecurity/secrets
 ```
+* [Password Reset Feature](#password-reset-feature)
+    * [Password Reset Token Leak via Referrer](#password-reset-token-leak-via-referrer)
+    * [Account Takeover Through Password Reset Poisoning](#account-takeover-through-password-reset-poisoning)
+    * [Password Reset via Email Parameter](#password-reset-via-email-parameter)
+    * [IDOR on API Parameters](#idor-on-api-parameters)
+    * [Weak Password Reset Token](#weak-password-reset-token)
+    * [Leaking Password Reset Token](#leaking-password-reset-token)
+    * [Password Reset via Username Collision](#password-reset-via-username-collision)
+    * [Account Takeover Due To Unicode Normalization Issue](#account-takeover-due-to-unicode-normalization-issue)
+* [Account Takeover via Web Vulneralities](#account-takeover-via-web-vulneralities)
+    * [Account Takeover via Cross Site Scripting](#account-takeover-via-cross-site-scripting)
+    * [Account Takeover via HTTP Request Smuggling](#account-takeover-via-http-request-smuggling)
+    * [Account Takeover via CSRF](#account-takeover-via-csrf)
+* [References](#references)
+
 # 3. Cross-Site Scripting (XSS)
 
 ## XSS Background
