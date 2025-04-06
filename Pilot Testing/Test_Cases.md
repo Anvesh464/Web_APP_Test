@@ -940,6 +940,13 @@ Access-Control-Allow-Credentials: true
 ```bash
 curl http://any.com -H "Origin: http://www.bing.com" -I
 ```
+## Tools
+
+* [s0md3v/Corsy](https://github.com/s0md3v/Corsy/) - CORS Misconfiguration Scanner
+* [chenjj/CORScanner](https://github.com/chenjj/CORScanner) - Fast CORS misconfiguration vulnerabilities scanner
+* [@honoki/PostMessage](https://tools.honoki.net/postmessage.html) - POC Builder
+* [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
+* [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
 ----- 
 
 ## 2. CRLF Injection
