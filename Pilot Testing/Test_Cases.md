@@ -6,7 +6,7 @@ Make life easier, not harder.
 ### Application version-related exploits
 Search in [exploit-db](https://www.exploit-db.com/)
 
-## Addons
+## Addons 
 
 - Hackbar
 - FoxyProxy Standard
