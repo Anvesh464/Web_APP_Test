@@ -1262,7 +1262,16 @@ echo $0   # Identifying shell
 ```
 
 ---
+Click-Jacking
 
+```
+<iframe src="http://target site" security="restricted"></iframe>
+```
+```
+<div style="opacity: 0; position: absolute; top: 0; left: 0; height: 100%; width: 100%;">
+  <a href="malicious-link">Click me</a>
+</div>
+```
 ## 14. File Uploading
 
 ### Tools:
