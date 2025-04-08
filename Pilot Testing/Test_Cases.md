@@ -780,6 +780,7 @@ c:/unattended.xml
 c:/windows/repair/sam
 c:/windows/repair/system
 ```
+
 # 5. Parameter Tampering (All Parameters Change)
 
 **Description:** The Web Parameter Tampering attack is based on the manipulation of parameters exchanged between client and server in order to modify application data, such as user credentials and permissions, price and quantity of products, etc. Usually, this information is stored in cookies, hidden form fields, or URL Query Strings, and is used to increase application functionality and control. 
