@@ -798,6 +798,132 @@ HPP can target two levels:
 /transfer?amount=1&amount=5000
 ```
 
+# Headless Browser
+
+> A headless browser is a web browser without a graphical user interface. It works just like a regular browser, such as Chrome or Firefox, by interpreting HTML, CSS, and JavaScript, but it does so in the background, without displaying any visuals.
+> Headless browsers are primarily used for automated tasks, such as web scraping, testing, and running scripts. They are particularly useful in situations where a full-fledged browser is not needed, or where resources (like memory or CPU) are limited.
+
+## Summary
+
+* [Headless Commands](#headless-commands)
+* [Local File Read](#local-file-read)
+* [Debugging Port](#debugging-port)
+* [Network](#network)
+    * [Port Scanning](#port-scanning)
+    * [DNS Rebinding](#dns-rebinding)
+* [References](#references)
+
+## Headless Commands
+
+Example of headless browsers commands:
+
+* Google Chrome
+
+    ```ps1
+    google-chrome --headless[=(new|old)] --print-to-pdf https://www.google.com
+    ```
+
+* Mozilla Firefox
+
+    ```ps1
+    firefox --screenshot https://www.google.com
+    ```
+
+* Microsoft Edge
+
+    ```ps1
+    "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless --disable-gpu --window-size=1280,720 --screenshot="C:\tmp\screen.png" "https://google.com"
+    ```
+---
+# HTTP Hidden Parameters
+
+> Web applications often have hidden or undocumented parameters that are not exposed in the user interface. Fuzzing can help discover these parameters, which might be vulnerable to various attacks.
+
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+    * [Bruteforce Parameters](#bruteforce-parameters)
+    * [Old Parameters](#old-parameters)
+* [References](#references)
+
+## Tools
+
+* [PortSwigger/param-miner](https://github.com/PortSwigger/param-miner) - Burp extension to identify hidden, unlinked parameters.
+* [s0md3v/Arjun](https://github.com/s0md3v/Arjun) - HTTP parameter discovery suite
+* [Sh1Yo/x8](https://github.com/Sh1Yo/x8) - Hidden parameters discovery suite
+* [tomnomnom/waybackurls](https://github.com/tomnomnom/waybackurls) - Fetch all the URLs that the Wayback Machine knows about for a domain
+* [devanshbatham/ParamSpider](https://github.com/devanshbatham/ParamSpider) - Mining URLs from dark corners of Web Archives for bug hunting/fuzzing/further probing
+
+## Methodology
+
+### Bruteforce Parameters
+
+* Use wordlists of common parameters and send them, look for unexpected behavior from the backend.
+
+    ```ps1
+    x8 -u "https://example.com/" -w <wordlist>
+    x8 -u "https://example.com/" -X POST -w <wordlist>
+    ```
+
+Wordlist examples:
+
+* [Arjun/large.txt](https://github.com/s0md3v/Arjun/blob/master/arjun/db/large.txt)
+* [Arjun/medium.txt](https://github.com/s0md3v/Arjun/blob/master/arjun/db/medium.txt)
+* [Arjun/small.txt](https://github.com/s0md3v/Arjun/blob/master/arjun/db/small.txt)
+* [samlists/sam-cc-parameters-lowercase-all.txt](https://github.com/the-xentropy/samlists/blob/main/sam-cc-parameters-lowercase-all.txt)
+* [samlists/sam-cc-parameters-mixedcase-all.txt](https://github.com/the-xentropy/samlists/blob/main/sam-cc-parameters-mixedcase-all.txt)
+----
+# Insecure Deserialization
+
+* [Deserialization Identifier](#deserialization-identifier)
+* [POP Gadgets](#pop-gadgets)
+* [Labs](#labs)
+* [References](#references)
+
+## Deserialization Identifier
+
+Check the following sub-sections, located in other chapters :
+
+* [Java deserialization : ysoserial, ...](Java.md)
+* [PHP (Object injection) : phpggc, ...](PHP.md)
+* [Ruby : universal rce gadget, ...](Ruby.md)
+* [Python : pickle, PyYAML, ...](Python.md)
+* [.NET : ysoserial.net, ...](DotNET.md)
+
+| Object Type     | Header (Hex) | Header (Base64) |
+|-----------------|--------------|-----------------|
+| Java Serialized | AC ED        | rO              |
+| .NET ViewState  | FF 01        | /w              |
+| Python Pickle   | 80 04 95     | gASV            |
+| PHP Serialized  | 4F 3A        | Tz              |
+
+## POP Gadgets
+
+> A POP (Property Oriented Programming) gadget is a piece of code implemented by an application's class, that can be called during the deserialization process.
+
+POP gadgets characteristics:
+
+* Can be serialized
+* Has public/accessible properties
+* Implements specific vulnerable methods
+* Has access to other "callable" classes
+
+## Labs
+
+* [PortSwigger - Modifying serialized objects](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-objects)
+* [PortSwigger - Modifying serialized data types](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-data-types)
+* [PortSwigger - Using application functionality to exploit insecure deserialization](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-using-application-functionality-to-exploit-insecure-deserialization)
+* [PortSwigger - Arbitrary object injection in PHP](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-arbitrary-object-injection-in-php)
+* [PortSwigger - Exploiting Java deserialization with Apache Commons](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-java-deserialization-with-apache-commons)
+* [PortSwigger - Exploiting PHP deserialization with a pre-built gadget chain](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-php-deserialization-with-a-pre-built-gadget-chain)
+* [PortSwigger - Exploiting Ruby deserialization using a documented gadget chain](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-ruby-deserialization-using-a-documented-gadget-chain)
+* [PortSwigger - Developing a custom gadget chain for Java deserialization](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-developing-a-custom-gadget-chain-for-java-deserialization)
+* [PortSwigger - Developing a custom gadget chain for PHP deserialization](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-developing-a-custom-gadget-chain-for-php-deserialization)
+* [PortSwigger - Using PHAR deserialization to deploy a custom gadget chain](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-using-phar-deserialization-to-deploy-a-custom-gadget-chain)
+* [NickstaDB - DeserLab](https://github.com/NickstaDB/DeserLab)
+
+----
 ### Parameter Pollution Table
 
 When ?par1=a&par1=b
