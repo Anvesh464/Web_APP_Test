@@ -2246,19 +2246,21 @@ GET /test?buster=123 HTTP/1.1
 Host: target.com
 X-Forwarded-Host: test"><script>alert(1)</script>
 ```
-
 ---
 
 ## Insecure Direct Object References (IDOR)
+Insecure Direct Object References (IDOR) is a security vulnerability that occurs when an application allows users to directly access or modify objects (such as files, database records, or URLs) based on user-supplied input, without sufficient access controls. This means that if a user changes a parameter value (like an ID) in a URL or API request, they might be able to access or manipulate data that they aren’t authorized to see or modify.
 
 ### Tools:
-- Burp Suite Plugins: `Authz`, `AuthMatrix`, `Authorize`
+•	PortSwigger/BApp Store > Authz
+•	PortSwigger/BApp Store > AuthMatrix
+•	PortSwigger/BApp Store > Autorize
 
 ### Example Parameters:
 - `http://foo.bar/somepage?invoice=12345`
 - `http://foo.bar/changepassword?user=someuser`
 - `http://foo.bar/showImage?img=img00011`
-
+- `https://example.com/profile?user_id=123:`c
 ---
 
 ## XPATH Injection
