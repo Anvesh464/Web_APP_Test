@@ -1,5 +1,15 @@
 <img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="600">
 
+* [SQL Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/SQL%20Injection/)
+* [Server Side Request Forgery](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Request%20Forgery/)
+* [Server Side Template Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Template%20Injection/)
+* [Upload Insecure Files](https://github.com/Anvesh464/Web_APP_Test/tree/main/Upload%20Insecure%20Files/)
+* [Web Cache Deception](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Cache%20Deception/)
+* [Web Sockets](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Sockets/)
+* [XSLT Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSLT%20Injection/)
+* [XXE Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XXE%20Injection/)
+* [XSS Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSS%20Injection/)
+  
 Make life easier, not harder.
 [PayloadsAllTheThings - GitHub](https://github.com/swisskyrepo/PayloadsAllTheThings)
 
