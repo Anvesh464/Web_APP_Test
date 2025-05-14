@@ -335,8 +335,7 @@ http://leettime.net/xsslab1/
 
 - [Prompt.ml](https://prompt.ml/0)
 - [XSS Lab](http://leettime.net/xsslab1/)
----
-
+```
 # 4. Manual XSS Vector Building
 
 ## Steps to Find & Exploit XSS
@@ -346,24 +345,15 @@ http://leettime.net/xsslab1/
 3. Close any open tags.
 4. Use event handlers like `onmouseover` for bypassing sanitization.
 
-Example:
-```html
-<input type="text" name="name" value='hello'>
+Example: <input type="text" name="name" value='hello'>
 <input type="submit" name="submit" value="search">
-```
-Payload:
-```html
-'onmouseover='alert(1);
-```
-
----
-
+Payload: 'onmouseover='alert(1);
 # References
 
 - [PayloadsAllTheThings - XSS Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection)
 - [LeetTime XSS Labs](http://leettime.net/xsslab1/)
 - [Prompt.ml](https://prompt.ml/)
-
+```
 ---
 # XSS & Host Header Injection Testing Guide
 
