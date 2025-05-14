@@ -18,7 +18,7 @@ Search in [exploit-db](https://www.exploit-db.com/)
 
 ## Addons 
 
-- Hackbar
+- Hackbar, CounterXSS, FindSomething, XSS辅助工具, XSS, Hack-Tools, WhatCMS, 
 - FoxyProxy Standard
 - Wappalyzer
 - Cookies Manager+
