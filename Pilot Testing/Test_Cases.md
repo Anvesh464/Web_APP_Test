@@ -335,8 +335,8 @@ http://leettime.net/xsslab1/
 
 - [Prompt.ml](https://prompt.ml/0)
 - [XSS Lab](http://leettime.net/xsslab1/)
-
 ---
+
 # 4. Manual XSS Vector Building
 
 ## Steps to Find & Exploit XSS
@@ -452,9 +452,9 @@ Payload:
 
 ## 10. Blind XSS Vulnerability
 - Use **Hunter** for detection.
-
+```
+```
 ---
-
 # Host Header Injection
 ## 1. Overview
 - Exploiting host header injection in **virtual hosting environments**.
