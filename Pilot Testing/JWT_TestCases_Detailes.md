@@ -1,5 +1,4 @@
-1. **WT authentication bypass via unverified signature**
-=====================================================
+## 1. **WT authentication bypass via unverified signature**
 
 This lab uses a JWT-based mechanism for handling sessions. Due to implementation
 flaws, the server doesn't verify the signature of any JWTs that it receives.
@@ -31,8 +30,7 @@ Getting access to the admin panel:
 
 ![img](media/245ff9102112c2c322639e32efd9f4b1.png)
 
-2. **WT authentication bypass via flawed signature verification**
-==============================================================
+## 2. **WT authentication bypass via flawed signature verification**
 
 This lab uses a JWT-based mechanism for handling sessions. The server is
 insecurely configured to accept unsigned JWTs.
@@ -67,8 +65,7 @@ Access the admin panel and delete the user:
 
 ![img](media/aa1416cc3205f46e18c9686248b67aac.png)
 
-3. **JWT authentication bypass via weak signing key**
-==================================================
+## 3. **JWT authentication bypass via weak signing key**
 
 This lab uses a JWT-based mechanism for handling sessions. It uses an extremely
 weak secret key to both sign and verify tokens. This can be easily brute-forced
