@@ -5,6 +5,13 @@ This lab uses a JWT-based mechanism for handling sessions. Due to implementation
 
 ![img](media/9d5b3d84d5ee6ae0401972897fe16897.png)
 
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and observe the JWT in the session cookie.
+3. Modify the `sub` claim in the payload to `administrator`.
+4. Send the modified token to access the admin panel at `/admin`.
+5. Delete the user `carlos` to complete the lab.
 After logging in we are assigned a JWT:
 
 ![img](media/0a63fd3607a46527843d33cc1e7fa25c.png)
@@ -29,20 +36,22 @@ Getting access to the admin panel:
 
 ## 2. **WT authentication bypass via flawed signature verification**
 
-This lab uses a JWT-based mechanism for handling sessions. The server is
-insecurely configured to accept unsigned JWTs.
-
-To solve the lab, modify your session token to gain access to the admin panel at
+This lab uses a JWT-based mechanism for handling sessions. The server is insecurely configured to accept unsigned JWTs. To solve the lab, modify your session token to gain access to the admin panel at
 /admin, then delete the user carlos.
-
-You can log in to your own account using the following credentials: wiener:peter
-
-Tip: We recommend familiarizing yourself with how to work with JWTs in Burp
-Suite before attempting this lab.
 
 References:
 
 -   https://portswigger.net/web-security/jwt
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and decode the JWT.
+3. Change the `alg` value in the header to `none`.
+4. Modify the `sub` claim in the payload to `administrator`.
+5. Remove the signature part of the token, leaving the trailing dot.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.
 
 ![img](media/efa213f9e5df48435401fb8af16b4e80.png)
 
