@@ -1,4 +1,4 @@
-**WT authentication bypass via unverified signature**
+1. **WT authentication bypass via unverified signature**
 =====================================================
 
 This lab uses a JWT-based mechanism for handling sessions. Due to implementation
@@ -6,15 +6,6 @@ flaws, the server doesn't verify the signature of any JWTs that it receives.
 
 To solve the lab, modify your session token to gain access to the admin panel at
 /admin, then delete the user carlos.
-
-You can log in to your own account using the following credentials: wiener:peter
-
-Tip: We recommend familiarizing yourself with how to work with JWTs in Burp
-Suite before attempting this lab.
-
-References:
-
--   https://portswigger.net/web-security/jwt
 
 ![img](media/9d5b3d84d5ee6ae0401972897fe16897.png)
 
@@ -40,7 +31,7 @@ Getting access to the admin panel:
 
 ![img](media/245ff9102112c2c322639e32efd9f4b1.png)
 
-**WT authentication bypass via flawed signature verification**
+2. **WT authentication bypass via flawed signature verification**
 ==============================================================
 
 This lab uses a JWT-based mechanism for handling sessions. The server is
@@ -76,7 +67,7 @@ Access the admin panel and delete the user:
 
 ![img](media/aa1416cc3205f46e18c9686248b67aac.png)
 
-**JWT authentication bypass via weak signing key**
+3. **JWT authentication bypass via weak signing key**
 ==================================================
 
 This lab uses a JWT-based mechanism for handling sessions. It uses an extremely
@@ -145,7 +136,7 @@ Cookie: session=eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJh
 
 ![img](media/e55aa099d9f1cc38c419bf850998a325.png)
 
-**JWT authentication bypass via jwk header injection**
+4. **JWT authentication bypass via jwk header injection**
 ======================================================
 
 This lab uses a JWT-based mechanism for handling sessions. The server supports
@@ -188,7 +179,7 @@ Cookie: session=eyJraWQiOiIzNmRiZGEzNi01NTJjLTQzOGItYWM0Yy05ZTM2NWZiNzhlYzUiLCJ0
 ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**JWT authentication bypass via jku header injection**
+5. **JWT authentication bypass via jku header injection**
 ======================================================
 
 This lab uses a JWT-based mechanism for handling sessions. The server supports
