@@ -1,9 +1,6 @@
 ## 1. **WT authentication bypass via unverified signature**
 
-This lab uses a JWT-based mechanism for handling sessions. Due to implementation
-flaws, the server doesn't verify the signature of any JWTs that it receives.
-
-To solve the lab, modify your session token to gain access to the admin panel at
+This lab uses a JWT-based mechanism for handling sessions. Due to implementation flaws, the server doesn't verify the signature of any JWTs that it receives. To solve the lab, modify your session token to gain access to the admin panel at
 /admin, then delete the user carlos.
 
 ![img](media/9d5b3d84d5ee6ae0401972897fe16897.png)
