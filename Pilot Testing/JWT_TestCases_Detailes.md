@@ -133,8 +133,7 @@ Cookie: session=eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJh
 
 ![img](media/e55aa099d9f1cc38c419bf850998a325.png)
 
-4. **JWT authentication bypass via jwk header injection**
-======================================================
+## 4. **JWT authentication bypass via jwk header injection**
 
 This lab uses a JWT-based mechanism for handling sessions. The server supports
 the jwk parameter in the JWT header. This is sometimes used to embed the correct
@@ -176,8 +175,7 @@ Cookie: session=eyJraWQiOiIzNmRiZGEzNi01NTJjLTQzOGItYWM0Yy05ZTM2NWZiNzhlYzUiLCJ0
 ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-5. **JWT authentication bypass via jku header injection**
-======================================================
+## 5. **JWT authentication bypass via jku header injection**
 
 This lab uses a JWT-based mechanism for handling sessions. The server supports
 the jku parameter in the JWT header. However, it fails to check whether the
@@ -268,7 +266,7 @@ If done with Burp:
 
 ![img](media/548e2f8776cf967171cd30d0d900715b.png)
 
-JWT authentication bypass via kid header path traversal
+##6. **JWT authentication bypass via kid header path traversal**
 =======================================================
 
 This lab uses a JWT-based mechanism for handling sessions. In order to verify
