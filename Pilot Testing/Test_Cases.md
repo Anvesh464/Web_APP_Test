@@ -510,6 +510,128 @@ X-Forwarded-For: 127.0.0.1
 X-Remote-IP: 127.0.0.1
 X-Remote-Addr: 127.0.0.1
 ```
+Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
+
+---
+
+## 💥 1. **Web Cache Poisoning via Host Header**
+
+1. **Send a normal GET request and observe the Host: header** 
+   ```http
+   GET / HTTP/1.1  
+   Host: vulnerable-website.com
+   ```
+2. **Check if caching is enabled**  Look for headers like:
+   ```
+   X-Cache: HIT or MISS  
+   Cache-Control: public  
+   ```
+3. **Inject a fake Host and observe response**
+   ```http
+   GET / HTTP/1.1  
+   Host: attacker.com
+   ```
+4. **Send multiple requests to check if content is cached**
+   Send the same request and see if the response (with attacker.com) persists.
+5. **If vulnerable, host malicious content on attacker.com**
+   Others accessing the same page may receive poisoned content.
+---
+## 🔐 2. **Password Reset Poisoning via Host Header**
+
+Receive the password reset link of a victim on a malicious domain.
+
+### ✅ Steps:
+
+1. **Start the "Forgot Password" flow**
+   Enter victim's email (or your own test account).
+
+2. **Intercept the request in Burp Suite**
+   Locate the `Host:` header:
+
+   ```
+   Host: vulnerable-website.com
+   ```
+
+3. **Modify it to your malicious domain**
+
+   ```
+   Host: attacker.com
+   ```
+
+4. **Forward the request**
+   If the app uses `Host:` to build the reset URL, the email will contain a link to `attacker.com/...`
+
+5. **Capture the request on attacker.com**
+   Host a simple server (e.g., `python3 -m http.server`) and log incoming URLs.
+
+---
+
+## 🌐 3. **SSRF via Host Header**
+
+### 🎯 Objective:
+
+Use Host header to trick the server into making internal HTTP requests (SSRF).
+
+### ✅ Steps:
+
+1. **Find a feature that fetches data from a URL or reflects Host**
+   e.g., redirects, URL previews, tracking pixels.
+
+2. **Send a crafted Host header pointing to an internal resource**
+
+   ```http
+   GET / HTTP/1.1  
+   Host: 127.0.0.1
+   ```
+
+3. **Observe response for internal content**
+   You might see server error, timeout, or internal app data in the response.
+
+4. **Try internal services like:**
+
+   * `localhost`
+   * `169.254.169.254` (AWS metadata)
+   * `internal-api.local`
+
+5. **Log sensitive data**
+   If SSRF is successful, log internal endpoints/data accessed via your Host payload.
+
+---
+
+## 🔓 4. **Bypassing Access Controls via Host Header**
+
+### 🎯 Objective:
+
+Bypass authentication or domain-based restrictions by modifying the Host.
+
+### ✅ Steps:
+
+1. **Try to access a restricted resource**
+   Normally responds with 401 or redirect.
+
+2. **Modify Host to a whitelisted one**
+   Try values like:
+
+   ```
+   Host: internal-service
+   Host: localhost
+   ```
+
+3. **Observe the result**
+   If the app wrongly trusts this Host, you may gain access.
+
+4. **Combine with X-Forwarded-Host or X-Original-URL headers**
+
+   ```
+   Host: attacker.com  
+   X-Forwarded-Host: internal
+   ```
+
+5. **Check behavior**
+   Did it skip authentication? Did it trust internal access?
+
+---
+
 ---
 # 4. URL Redirection (Used as a Phishing Attack) or Open Redirection
 
