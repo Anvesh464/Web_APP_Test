@@ -423,7 +423,7 @@ We will update the PoC from the previous lab:
 </html>
 ```
 
-# 06 SameSite Lax bypass via method override
+# 07 SameSite Lax bypass via method override
 
 This lab's change email function is vulnerable to CSRF. To solve the lab, perform a CSRF attack that changes the victim's email address. You should use the provided exploit server to host your attack.
 
