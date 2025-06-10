@@ -26,7 +26,7 @@ It is a POST request. Clicking "Engagement tools" > "Generate CSRF PoC", it gene
 
 
 
-![img](image/2.png)
+![img](media/2.png)
 
 
 ```
