@@ -20,7 +20,7 @@ There is a function to update the user's email:
 
 
 
-![img](image/1.png)
+![img](Pilot Testing/images/1.png)
 
 It is a POST request. Clicking "Engagement tools" > "Generate CSRF PoC", it generates an HTML PoC.
 
