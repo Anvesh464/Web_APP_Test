@@ -712,3 +712,176 @@ We can change the username and send it to Intruder to test all the passwords:
 From this we get that the password is “12345”:
 
 ![img](media/7636f4959a8b23f42a40fd97717a6cf4.png)
+
+# 16 - Broken brute-force protection, IP block
+
+This lab is vulnerable due to a logic flaw in its password brute-force protection. To solve the lab, brute-force the victim's password, then log in and access their account page.
+
+Your credentials: wiener:peter
+Victim's username: carlos
+
+Hint: Advanced users may want to solve this lab by using a macro or the Turbo Intruder extension. However, it is possible to solve the lab without using these advanced features.
+
+---------------------------------------------
+
+References:
+
+- https://portswigger.net/web-security/authentication/password-based
+
+- https://portswigger.net/web-security/authentication/auth-lab-passwords
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/1.png)
+
+---------------------------------------------
+
+Generated link: https://0a9f008704cb076382ef4c7e0060006d.web-security-academy.net/
+
+
+Trying a bruteforce you get a message the IP is blocked:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/2.png)
+
+Attempt 8 returns incorrect password:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/3.png)
+
+To send the correct credentials wiener:peter after every login attempt I created a list with the password after every of the 100 passwords to test:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/4.png)
+
+And a list with both usernames:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/5.png)
+
+I wil use the Pitchfork attack type, described here, which will take the values of each list one by one:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/6.png)
+
+Send the payload:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/7.png)
+
+Now the attack is executed, but not successfully:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/8.png)
+
+It ends up blocked after 15 passwords, so I will add the correct login after more passwords than just one. 
+
+I created a short Python script to generate the user list:
+
+```
+all_passw = open("100pass.txt").read().splitlines()
+
+counter = 0
+num = 5
+
+print("wiener")
+#print("peter")
+for i in all_passw:
+        counter += 1
+        print("carlos")
+        #print(i)
+        if counter % num == 0:
+                print("wiener")
+                #print("peter")
+```                
+                
+And the password list:
+
+```
+all_passw = open("100pass.txt").read().splitlines()
+
+counter = 0
+num = 5
+
+#print("wiener")
+print("peter")
+for i in all_passw:
+        counter += 1
+        #print("carlos")
+        print(i)
+        if counter % num == 0:
+                #print("wiener")
+                print("peter")
+```
+
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/9.png)
+
+But this did not work either.
+
+Finally I added 1000 milliseconds between request in Resource Pool:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/10.png)
+
+And now it works. We find the password for carlos is “moon”:
+
+
+
+![img](images/16%20-%20Broken%20brute-force%20protection,%20IP%20block/11.png)
+
+
+# 17 - Insufficient workflow validation
+
+This lab makes flawed assumptions about the sequence of events in the purchasing workflow. To solve the lab, exploit this flaw to buy a "Lightweight l33t leather jacket".
+
+You can log in to your own account using the following credentials: wiener:peter
+
+---------------------------------------------
+
+Generated link: https://0a44005d0489eb06819b441c00f2003f.web-security-academy.net/
+
+
+First I will try to buy some eggs:
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/1.png)
+
+Clicking "Place order" generates a POST request:
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/2.png)
+
+And a GET request to "/cart/order-confirmation?order-confirmed=true":
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/3.png)
+
+After adding the leather jacket and clicking "Place order" you get a POST request and a GET request but to "/cart?err=INSUFFICIENT_FUNDS":
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/4.png)
+
+If you substitute that with "/cart/order-confirmation?order-confirmed=true" the order is created:
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/5.png)
+
+
+
+![img](images/17%20-%20Insufficient%20workflow%20validation/6.png)
