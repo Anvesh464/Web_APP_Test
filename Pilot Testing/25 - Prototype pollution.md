@@ -1,3 +1,101 @@
+
+01 DOM XSS via client-side prototype pollution
+===============================================
+This lab is vulnerable to DOM XSS via client-side prototype pollution. To solve the lab:
+
+Find a source that you can use to add arbitrary properties to the global Object.prototype.
+
+Identify a gadget property that allows you to execute arbitrary JavaScript.
+
+Combine these to call alert().
+
+You can solve this lab manually in your browser, or use DOM Invader to help you.
+
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/prototype-pollution/client-side
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/1.png)
+
+---------------------------------------------
+
+There are 2 scripts imported in the home page:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/2.png)
+
+
+File /resources/js/deparam.js:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/3.png)
+
+
+File /resources/js/searchLogger.js. This one is interesting for the “transport_url” value:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/4.png)
+
+
+We can search “/?\_\_proto\_\_[foo]=bar” and find there is a pollution:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/5.png)
+
+
+If we add the “transport_url” element from logger.js in a request to “/?\_\_proto\_\_[transport_url]=bar”, there is a request to “/bar”:
+
+
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/6.png)
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/7.png)
+
+A payload like “/?\_\_proto\_\_[transport_url]="><script>alert(1)</script><x a="” does not work:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/8.png)
+
+
+If we search “/?\_\_proto\_\_[transport_url]=data:,alert(1);”:
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/9.png)
+
+------------------------------
+
+DOM Invader is an extension in Burp's browser:
+
+
+
+
+
+
+
+
+
+
+
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/10.png)
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/11.png)
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/12.png)
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/13.png)
+![img](images/DOM%20XSS%20via%20client-side%20prototype%20pollution/14.png)
+
+
+
 02 DOM XSS via an alternative prototype pollution vector
 ========================================================
 
@@ -106,6 +204,64 @@ Finally:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![img](media/ca8bf3d56d761d7500c5425cd9bb2bc4.png)
+
+04 Client-side prototype pollution in third-party libraries
+=============================================================
+
+This lab is vulnerable to DOM XSS via client-side prototype pollution. This is due to a gadget in a third-party library, which is easy to miss due to the minified source code. Although it's technically possible to solve this lab manually, we recommend using DOM Invader as this will save you a considerable amount of time and effort.
+
+To solve the lab:
+
+Use DOM Invader to identify a prototype pollution and a gadget for DOM XSS.
+
+Use the provided exploit server to deliver a payload to the victim that calls alert(document.cookie) in their browser.
+
+This lab is based on real-world vulnerabilities discovered by PortSwigger Research. For more details, check out Widespread prototype pollution gadgets by Gareth Heyes.
+
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/prototype-pollution/client-side
+
+
+
+![img](images/Client-side%20prototype%20pollution%20in%20third-party%20libraries/1.png)
+
+---------------------------------------------
+
+DOM Invader detects two sources:
+ 
+
+
+![img](images/Client-side%20prototype%20pollution%20in%20third-party%20libraries/2.png)
+
+
+In my case these two sources seem impossible to exploit.
+
+There is a live chat where we can inject a payload in the form:
+
+
+
+![img](images/Client-side%20prototype%20pollution%20in%20third-party%20libraries/3.png)
+
+
+And DOM Invader detects a sink:
+
+
+
+![img](images/Client-side%20prototype%20pollution%20in%20third-party%20libraries/4.png)
+
+
+Finally it seems there is a gadget but my lab is not working right. The solution from Portswigger:
+
+
+```
+<script>
+    location="https://0a65003104a4a2b382ec47a700530010.web-security-academy.net/#__proto__[hitCallback]=alert%28document.cookie%29"
+</script>
+```
 
 05 Client-side prototype pollution via browser APIs
 ===================================================
