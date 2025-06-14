@@ -799,7 +799,7 @@ Continue character by character nutil getting the password
 
 ![img](media/378f1bb2e4f34cdf80870460e8786e20.png)
 
-#15 Blind SQL injection with out-of-band interaction
+15 Blind SQL injection with out-of-band interaction
 
 This lab contains a blind SQL injection vulnerability. The application uses a tracking cookie for analytics, and performs a SQL query containing the value of the submitted cookie.
 
@@ -883,7 +883,7 @@ Cookie: TrackingId=FFyToxqSs49lpxuC'+union+select+EXTRACTVALUE(xmltype('<%3fxml+
 
 ![img](images/Blind%20SQL%20injection%20with%20out-of-band%20interaction/2.png)
 
-#16 Blind SQL injection with out-of-band data exfiltration
+16 Blind SQL injection with out-of-band data exfiltration
 
 This lab contains a blind SQL injection vulnerability. The application uses a tracking cookie for analytics, and performs a SQL query containing the value of the submitted cookie.
 
@@ -964,7 +964,7 @@ mnsyvP6Ci68a0edP'+union+select+EXTRACTVALUE(xmltype('<%3fxml+version="1.0"+encod
 
 ![img](images/Blind%20SQL%20injection%20with%20out-of-band%20data%20exfiltration/5.png)
 
-#17 SQL injection with filter bypass via XML encoding
+17 SQL injection with filter bypass via XML encoding
 
 This lab contains a SQL injection vulnerability in its stock check feature. The results from the query are returned in the application's response, so you can use a UNION attack to retrieve data from other tables.
 
