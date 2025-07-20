@@ -4762,3 +4762,43 @@ For a list of affected libraries and projects, visit [snyk/zip-slip-vulnerabilit
 
 * [Zip Slip - Snyk - June 5, 2018](https://github.com/snyk/zip-slip-vulnerability)
 * [Zip Slip Vulnerability - Snyk - April 15, 2018](https://snyk.io/research/zip-slip-vulnerability)
+
+## Directory traversal
+
+Best Selection open the image tab and observe the path 
+common parameters to check | any place where file paths are input, such as URL parameters, form fields, or upload endpoints.
+
+## 🔍 Common Keywords for Directory Traversal Testing
+
+- `file`
+- `filename`
+- `filepath`
+- `path`
+- `download`
+- `include`
+- `doc`
+- `page`
+- `template`
+- `view`
+- `folder`
+---
+## 📎 Typical Parameters in URLs or Forms
+
+These keywords often appear in requests like:
+
+- `?file=report.pdf`
+- `?path=/documents/user1/`
+- `?doc=manual.txt`
+- `?download=/resources/book.pdf`
+- `?page=home.html`
+- `?template=invoice.html`
+
+🧪 **Test Tip:** Try injecting traversal payloads such as:
+- `../../../etc/passwd`
+- `%2e%2e/%2e%2e/etc/passwd`
+
+Observe server responses for unexpected file access or errors.
+
+```
+GET /image?filename=../../../etc/passwd 
+```
