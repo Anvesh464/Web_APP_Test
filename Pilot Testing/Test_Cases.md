@@ -4775,8 +4775,7 @@ Best Selection open the image tab and observe the path | common parameters to ch
 
 - `?file=report.pdf`  - `?path=/documents/user1/`  - `?doc=manual.txt`  - `?download=/resources/book.pdf` - `?page=home.html`  - `?template=invoice.html`
 
-🧪 **Test Tip:** Try injecting traversal payloads such as:
-- `../../../etc/passwd`   - `%2e%2e/%2e%2e/etc/passwd`
+🧪 **Test Tip:** Try injecting traversal payloads such as: - `../../../etc/passwd`   - `%2e%2e/%2e%2e/etc/passwd`
 
 Observe server responses for unexpected file access or errors.
 
