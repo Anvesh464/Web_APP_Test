@@ -4765,7 +4765,7 @@ For a list of affected libraries and projects, visit [snyk/zip-slip-vulnerabilit
 
 ## Directory traversal
 
-Best Selection open the image tab and observe the path | common parameters to check | any place where file paths are input, such as URL parameters, form fields, or upload endpoints.
+Best Selection open the image tab and observe the path | common parameters to check | any place where file paths are input, such as URL parameters, form fields, or upload endpoints. https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/Brute-Force/Traversal_LFI.txt
 
 ## 🔍 Common Keywords for Directory Traversal Testing
 
