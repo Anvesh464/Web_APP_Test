@@ -712,6 +712,28 @@ Use Host header to trick the server into making internal HTTP requests (SSRF).
 
 ---
 
+### 🛠️ **Proxy-Aware Tools for Testing**
+
+To simulate or bypass corporate proxies, use these tools:
+
+| Tool | Description |
+|------|-------------|
+| [Burp Suite](https://portswigger.net/burp) | Use Repeater and Intruder to test header combinations. |
+| [Headi](https://www.blackhatethicalhacking.com/tools/headi/) | Automates header injection with proxy-aware payloads. |
+| [HostHeaderScanner](https://github.com/inpentest/HostHeaderScanner) | Detects Host Header Injection and SSRF via proxy headers. |
+| [Param Miner (Burp Extension)](https://portswigger.net/bappstore/9f3c3b7b9e4f4e3e9c3d3e3b9f3c3b7b) | Finds hidden headers and ambiguous parsing behavior. |
+
+---
+
+### 🧪 **Advanced Proxy Bypass Tricks**
+
+- **Use internal IPs**: `Host: 127.0.0.1` or `Host: 192.168.0.1`
+- **Subdomain spoofing**: `Host: attacker.vulnerable.com`
+- **Header fuzzing**: Try variations like `X-Forwarded-For`, `X-Real-IP`, `X-Originating-IP`
+- **Cache poisoning**: Inject headers that affect CDN behavior (e.g., `Vary`, `X-Forwarded-Proto`)
+
+---
+
 ## 🔓 4. **Bypassing Access Controls via Host Header**
 
 ### 🎯 Objective:
