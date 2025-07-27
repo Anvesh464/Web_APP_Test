@@ -1842,6 +1842,43 @@ curl http://any.com -H "Origin: http://www.bing.com" -I
 * [@honoki/PostMessage](https://tools.honoki.net/postmessage.html) - POC Builder
 * [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
 * [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
+
+**Common vulnerable parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `Origin` | Header used to validate request source |
+| `Access-Control-Allow-Origin` | Response header that defines allowed origins |
+| `Access-Control-Allow-Credentials` | Enables cookies/auth headers in cross-origin requests |
+| `Access-Control-Allow-Methods` | Allowed HTTP methods (GET, POST, etc.) |
+| `Access-Control-Allow-Headers` | Allowed custom headers |
+| `Access-Control-Max-Age` | Caching duration for preflight responses |
+
+---
+
+### 🔥 Bypass Techniques (Adapted from your GitHub repos)
+
+| Technique | Description | Example |
+|----------|-------------|---------|
+| **Reflected Origin** | Server echoes attacker’s `Origin` | `Origin: https://evil.com` |
+| **Regex Bypass** | Exploit loose regex like `.*trusted.com` | `Origin: https://trusted.com.evil.com` |
+| **Null Origin** | Use sandboxed iframe or data URI | `Origin: null` |
+| **Subdomain Takeover** | Host payload on trusted subdomain | `Origin: https://sub.trusted.com` |
+| **Credentialed Requests** | Exploit `Access-Control-Allow-Credentials: true` | Combine with reflected origin |
+| **Special Characters** | Use `%`, `@`, `` ` `` to bypass regex | `Origin: https://trusted.com%.evil.com` |
+
+---
+
+## 🧠 Bypass Logic Summary
+
+### 🔗 From [PortSwigger CORS Lab](https://github.com/Anvesh464/Portswigger-Labs/tree/main/06%20-%20Cross-origin%20resource%20sharing%20(CORS)) and [PayloadsAllTheThings](https://github.com/Anvesh464/PayloadsAllTheThings/tree/master/CORS%20Misconfiguration)
+
+- **Regex flaws**: `.*trusted.com` matches `eviltrusted.com`
+- **Null origin**: Triggered via sandboxed iframe or `data:` URI
+- **Subdomain trust**: Exploitable if attacker controls `*.trusted.com`
+- **Credential leaks**: Only exploitable if `Access-Control-Allow-Credentials: true` is set
+
+---
 ----- 
 
 # CRLF Injection
