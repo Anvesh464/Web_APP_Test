@@ -481,6 +481,9 @@ Payload: 'onmouseover='alert(1);
 - Exploiting host header injection in **virtual hosting environments**.
 - Can lead to **web cache poisoning, XSS, password reset poisoning, and internal host access**.
 - i.e 3xx and 200 status code of 300 | 301 | 302 | 303 | 304 -- 3xx is the best one for this attack for an example login page has multiple redirection request, modify any one of them
+- Tools: https://github.com/inpentest/HostHeaderScanner - python host_header_scanner.py http://target.com --threads 10 --verbose 2 --oob oob.example.com
+- [https://portswigger.net/bappstore/3908768b9ae945d8adf583052ad2e3b3 headi -url http://target.com](https://www.blackhatethicalhacking.com/tools/headi/) headi -url http://target.com
+- https://github.com/inpentest/HostHeaderScanner bash script.sh -l urls.txt
 
 ## 2. Attack Methods
 ### Method 1:
