@@ -2956,10 +2956,50 @@ Processing an unvalidated XSL stylesheet can allow an attacker to change XML str
 
 ### Tools:
 - [PayloadsAllTheThings - XSLT Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSLT%20Injection#tools)
-
+---
+## Template Injection (SSTI)
+> Absolutely, here's the **section-wise SSTI fuzzing parameter list** formatted for automation use — modular, categorized, and ready for integration:
+---
+### 🔍 **Generic Parameters**
+```text
+name, username, user, message, comment, bio, description, title, subject, content, search, query, input, data, value, text, email, phone, address, location, city, country, lang, template, theme, style, color
+```
+---
+### 📨 **Form & Submission Parameters**
+```text
+feedback, review, note, reply, post, submit, form, entry, details, remarks
+```
+---
+### 🧠 **Logic & Control Parameters**
+```text
+greeting, welcome, status, role, type, mode, level, priority, flag, state, action, option, choice
+```
+---
+### 🧱 **Template-Specific Parameters**
+```text
+tpl, tmpl, template_id, template_name, template_type, engine, render, view, layout, partial, fragment
+```
+---
+### 🍪 **Cookie Parameters**
+```text
+session, token, auth, user_id, theme, lang
+```
+---
+### 🧾 **Header Parameters**
+```text
+User-Agent, Referer, X-Forwarded-For, X-Client-Data, X-Requested-With, X-Template-Engine
+```
+---
+### 🧭 **URL/Path Parameters**
+```text
+page, view, id, slug, route, path, endpoint, file, doc, article
+```
 ---
 
-## Template Injection (SSTI)
+### 📦 **JSON Keys (for API fuzzing)**
+```json
+"name", "message", "template", "data"
+```
 
 ### Tools:
 - [Tplmap](https://github.com/epinna/tplmap)
