@@ -1921,6 +1921,8 @@ Of course, Anvesh. Here’s a **structured agenda-wise SSRF test case list** tha
 
 ## 🧪 SSRF Pilot Testing Agenda
 
+Common parameters to checks: url, uri, dest, destination, redirect, redir, next, data, callback, return, site, domain, feed, host, hostname, port, path, reference, page, continue, window, out, view, show, navigation, to, target, rurl, rlink, link, img_url, file, source, img_src, download_url, proxy, load_url, open, forward, post_url, request_url
+
 ### 🧭 1. Initial Recon & Target Parameter Discovery
 - Identify all user-controlled URL parameters in GET/POST requests
 - Map potential SSRF sinks:
