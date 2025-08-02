@@ -2403,6 +2403,8 @@ Absolutely, Anvesh! Here's a **complete OS Command Injection test case list with
 
 ## 🧨 OS Command Injection — Test Cases with Payloads
 
+> cmd, command, execute, exec, run, shell, process, task, action, operation, script, script_path, script_name, filename, filepath, file, path, dir, directory, target, ip, host, hostname, ping, traceroute, nslookup, dns, lookup, port, interface, netstat, subnet, mask, gateway, route, user, username, account, name, key, token, id, uid, gid, group, env, env_var, variable, config, config_path, config_file, backup, restore, upload, download, log, log_path, log_file, debug, trace, monitor, scan, scanner, tool, utility
+
 ---
 
 ### **1. Basic Command Injection via GET Parameter**
