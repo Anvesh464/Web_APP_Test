@@ -7467,3 +7467,198 @@ new_password=123456
 ❌ Vulnerable: Password changed without auth
 
 ---
+Absolutely, Anvesh — here’s a **comprehensive, automation-ready test suite** for **JSON Injection**, including cases that can lead to **XSS vulnerabilities** when improperly parsed or rendered. Each case is modular, reproducible, and formatted for Burp/ZAP, GitHub, or scripting workflows.
+
+---
+
+### 🧪 **1. Basic JSON Injection (Server-Side)**  
+Injecting unsanitized values into backend JSON streams.
+
+```json
+{ "username": "\"admin\"" }
+```
+
+✅ Expected: Escaped and validated  
+❌ Vulnerable: Breaks JSON structure, alters logic
+
+---
+
+### 🧬 **2. JSON Structure Manipulation**  
+Injecting nested or malformed structures.
+
+```json
+{ "user": { "role": "admin" } }  
+{ "user": ["admin", "user"] }
+```
+
+✅ Expected: Strict schema enforcement  
+❌ Vulnerable: Role escalation or logic confusion
+
+---
+
+### 🧩 **3. Key Injection / Overwrite**  
+Injecting duplicate or unexpected keys.
+
+```json
+{ "user": "guest", "user": "admin" }
+```
+
+✅ Expected: Key deduplication or rejection  
+❌ Vulnerable: Overwrites original value
+
+---
+
+### 🧨 **4. JSON Injection Leading to XSS (Client-Side)**  
+Injecting script into JSON that gets rendered in DOM.
+
+```json
+{ "comment": "<img src=x onerror=alert(1)>" }
+```
+
+✅ Expected: Escaped before rendering  
+❌ Vulnerable: DOM-based XSS triggered
+
+---
+
+### 🔥 **5. JSON Eval Abuse (JS Context)**  
+Breaking out of JS string and injecting script.
+
+```json
+{ "name": "\"; alert(1)//" }
+```
+
+✅ Expected: Parsed safely  
+❌ Vulnerable: XSS via `eval()` or `new Function()`
+
+---
+
+### 🧠 **6. JSONP Callback Injection**  
+Injecting into callback parameter of JSONP endpoint.
+
+```http
+GET /data?callback=alert(1)
+```
+
+✅ Expected: Callback name validated  
+❌ Vulnerable: Reflected XSS via JSONP
+
+---
+
+### 🧼 **7. Content-Type Mismatch Exploitation**  
+Server returns JSON with `text/html` or `text/plain`.
+
+```http
+Content-Type: text/html  
+Response: { "msg": "<script>alert(1)</script>" }
+```
+
+✅ Expected: `application/json` + `X-Content-Type-Options: nosniff`  
+❌ Vulnerable: Browser executes script
+
+---
+
+### 🧬 **8. JSON Injection via Arrays / Type Confusion**
+
+```json
+{ "user": ["<script>alert(1)</script>"] }  
+{ "user": { "$ne": "" } }
+```
+
+✅ Expected: Type validation  
+❌ Vulnerable: Logic bypass or XSS via rendering
+
+---
+
+### 🧪 **9. JSON Injection via API Parameters**
+
+```http
+POST /api/update  
+Content-Type: application/json  
+{ "username": "<svg onload=alert(1)>" }
+```
+
+✅ Expected: Sanitized before DOM insertion  
+❌ Vulnerable: Reflected/stored XSS
+
+---
+
+### 🧩 **10. JSON Injection via Nested Object Reflection**
+
+```json
+{ "profile": { "bio": "<script>alert('XSS')</script>" } }
+```
+
+✅ Expected: Escaped before rendering  
+❌ Vulnerable: Stored XSS in profile page
+
+---
+
+### 🧪 **Fuzzable Parameters for JSON Injection**
+
+```text
+username, comment, bio, message, data, payload, input, value, query, search, callback, name, title, description, content, user, role, id, token
+```
+
+---
+Great point, Anvesh — when the response `Content-Type` is `application/json`, browsers generally treat it as raw data and won’t automatically execute embedded HTML/JS like they would in `text/html`. However, **XSS is still possible in specific contexts**, especially when:
+
+---
+
+### 🚨 JSON XSS Execution Scenarios
+
+**1. JSON Parsed + Injected into DOM (Client-Side Sink)**  
+If the response is read via JavaScript and inserted unsafely using sinks like `innerHTML`, `document.write()`, or jQuery `.html()`:
+
+```js
+fetch('/api/user')
+  .then(res => res.json())
+  .then(data => {
+    document.body.innerHTML = data.username; // BAD
+  });
+```
+
+- **Payload:** `{"username":"<img src=x onerror=alert(1)>"}`
+- ✅ Expected: Escape before rendering  
+- ❌ Vulnerable: Payload executes as HTML
+
+---
+
+**2. Eval/Function-Based Parsing**  
+If the JSON is parsed and executed via `eval()` or `new Function()`, even though it's JSON:
+
+```js
+eval(res.body);  // Dangerous
+new Function(`return ${res.body}`)(); // Also dangerous
+```
+
+- **Payload:** `{"name":"\"};alert(1)//"}`
+- ✅ Expected: Safe parsing with `JSON.parse()`  
+- ❌ Vulnerable: XSS triggered via JS interpreter
+
+---
+
+**3. JSONP Misuse or Open Callback Reflection**  
+If endpoint like `/data?callback=` reflects untrusted callback input:
+
+```http
+GET /data?callback=alert  
+→ Response: `alert({"user":"xss"})`
+```
+
+- ✅ Expected: Callback name validated  
+- ❌ Vulnerable: Executable XSS payload
+
+---
+
+**4. JSON Served with Unsafe Headers**  
+If JSON is served with incorrect or missing headers:
+
+```http
+Content-Type: text/html
+X-Content-Type-Options: missing
+```
+
+- ✅ Expected: `application/json` with `nosniff`  
+- ❌ Vulnerable: Browser may render as HTML
+
+---
