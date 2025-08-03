@@ -4503,6 +4503,71 @@ Content-Type: application/json
 ✅ Expected: Parser rejects mismatched content  
 ❌ Vulnerable: XML parsed despite header
 
+To systematically identify and fuzz **XXE injection points**, it's crucial to understand both **where** and **how** XML content is handled across the application. Here's a structured breakdown of **common parameters** and **fuzzing criteria** tailored for XXE hunting:
+
+---
+
+## 🧩 Common Parameters to Fuzz (One-Liner Format)
+
+> xml, request, data, body, content, payload, input, message, soap, envelope, file, filepath, filename, doc, document, resource, template, config, metadata, settings, schema, definition, DTD, markup, parser, render, type, feed, submission, upload, import, include, attachment
+
+## 🧪 Fuzzing Criteria for XXE Vulnerability
+
+Each parameter should be tested under one or more of the following conditions:
+
+### 📦 **1. Payload Accepted in XML Format**
+- Does the parameter support or accept XML-formatted input?
+- Try submitting:
+  ```xml
+  <root>&test;</root>
+  ```
+  and observe parsing behavior.
+
+---
+
+### 📥 **2. External Entities Are Parsed**
+- Inject `<!DOCTYPE>` declaration with `SYSTEM`, `PUBLIC`, or `ENTITY` tags.
+- Validate via file read (`file:///etc/passwd`) or SSRF (`http://domain/xxe`).
+
+---
+
+### 🌐 **3. Out-of-Band (Blind XXE) Behavior**
+- Monitor for DNS/HTTP callbacks triggered by payload like:
+  ```xml
+  <!ENTITY xxe SYSTEM "http://collaborator.net/ping">
+  ```
+
+---
+
+### 🧾 **4. Content-Type Enforcement**
+- Send XML payload with various content types:
+  - `application/xml`
+  - `text/xml`
+  - `application/json` (to test mismatch parsing)
+
+---
+
+### 📎 **5. Embedded File References**
+- Check if parameters accept paths or file references.
+  - Example: `file`, `template`, `doc`, `import`
+- Try entities like:
+  ```xml
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+  ```
+
+---
+
+### 🔗 **6. Header-Based Reflection**
+- Inspect headers:
+  - `SOAPAction`, `X-XML-Content`, `Content-Disposition`
+- Inject malformed XML via POST body or headers.
+
+---
+
+### 🎯 **7. Format-Specific XML Parsing**
+- Submit XML inside structured formats like DOCX, SVG, or XSL.
+- Upload files with embedded XXE payloads.
+
 ---
 
 # CSV Injection (Formula Injection)
