@@ -6251,3 +6251,120 @@ password=admin
 
 ✅ Expected: All required fields enforced  
 ❌ Vulnerable: Partial login accepted
+
+Here you go, Anvesh — a **comprehensive authentication test case suite**, formatted for automation or integration into your GitHub project. I've expanded your initial entries to cover deeper logic, misconfigurations, and edge cases across typical auth mechanisms.
+
+---
+
+## 🔐 Complete Authentication Test Suite
+
+Each section includes: payloads, expected behavior, and signs of vulnerability.
+
+### 11. Password Field Type Check  
+Ensure the password field isn’t rendered as plain text.
+
+```html
+<input type="text" name="password">
+```
+
+✅ Expected: `type="password"`  
+❌ Vulnerable: Reveals password as typed
+
+---
+
+### 12. Session Token Mismanagement  
+Test for token reuse and predictability.
+
+```text
+Session: JSESSIONID=1234, 1235, etc.
+```
+
+✅ Expected: Randomized, single-use tokens  
+❌ Vulnerable: Predictable or reusable tokens
+
+---
+
+### 13. Authentication Token in URL  
+Check if sensitive auth tokens appear in the URL.
+
+```http
+GET /dashboard?auth_token=abc123
+```
+
+✅ Expected: Tokens in headers or cookies  
+❌ Vulnerable: Leaked via referrer or log
+
+---
+
+### 14. Improper Rate Limiting  
+Test brute-force resistance with automation.
+
+```bash
+hydra -l admin -P passwords.txt https://target/login
+```
+
+✅ Expected: Lockout or CAPTCHA  
+❌ Vulnerable: No throttle or detection
+
+---
+
+### 15. Login via GET Method  
+Check if credentials are accepted via GET.
+
+```http
+GET /login?username=admin&password=admin
+```
+
+✅ Expected: POST required  
+❌ Vulnerable: Logs may expose credentials
+
+---
+
+### 16. Cookie Replay Attack  
+Reuse intercepted auth cookies.
+
+```http
+Cookie: sessionid=abc123
+```
+
+✅ Expected: Expiry or invalidation  
+❌ Vulnerable: Replay grants access
+
+---
+
+### 17. Multi-Factor Authentication Bypass  
+Test for MFA enforcement and logic flaws.
+
+✅ Expected: MFA always triggered  
+❌ Vulnerable: MFA skipped with direct link or certain flow
+
+---
+
+### 18. Password Reset Abuse  
+Tamper with reset flows or enumerate emails.
+
+```http
+email=test@example.com  
+email=admin@example.com
+```
+
+✅ Expected: Generic messages, rate limiting  
+❌ Vulnerable: Enumeration or logic bypass
+
+---
+
+### 19. OAuth/OpenID Logic Abuse  
+Test third-party login integrations.
+
+✅ Expected: Token validation enforced  
+❌ Vulnerable: Accepts expired/forged tokens
+
+---
+
+### 20. Social Engineering Vector  
+Check for password hints or email contents that leak info.
+
+✅ Expected: No sensitive hints or links  
+❌ Vulnerable: Verbose error or info disclosures
+
+---
