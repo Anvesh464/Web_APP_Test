@@ -7137,3 +7137,70 @@ GET /ADMIN/config
 ❌ Vulnerable: Admin page accessible by case
 
 ---
+Certainly, Anvesh — here’s a curated set of **common access control-related parameters** for fuzzing, bypass detection, and privilege manipulation. They’re grouped by attack vector for direct use in Burp/ZAP payload sets, repeater automation, or active scan extensions.
+
+---
+
+### 🧪 **Role Elevation & Identity Switching**
+
+```text
+role, user_role, access_level, user_type, isAdmin, accountType, privilege, admin, is_superuser, group, permission, auth_level, clearance
+```
+
+---
+
+### 🔍 **User Identification / IDOR Testing**
+
+```text
+id, user_id, account_id, uid, profile, target, member_id, token_id, record_id, ref, reference_id, object_id
+```
+
+---
+
+### ⚙️ **Client-Controlled Access Logic (Cookies / Query / POST)**
+
+```text
+auth, logged_in, authenticated, session, sessionid, logged_user, active_user, context, login, cookie, state, role_token
+```
+
+---
+
+### 🧩 **Backend Flags / Boolean Toggles**
+
+```text
+is_admin, admin_access, elevated, access_granted, validate_admin, user=guest&admin=true, verified=true, bypassACL=true
+```
+
+---
+
+### 💡 **File/Path-Based Access Flags**
+
+```text
+path, filepath, file, include, resource, load, page, template, route, url, next, redirect, view, forward
+```
+
+---
+
+### 🚪 **Header-Based Role Inference & Routing Manipulation**
+
+```text
+X-Original-URL, X-Rewrite-URL, X-Forwarded-For, X-Host, X-User, Forwarded, Referer, Origin, X-Remote-User
+```
+
+---
+
+### 🧬 **Token & Scope Manipulation**
+
+```text
+token, auth_token, access_token, bearer, jwt, ticket, scope, scopes, grant_type, credentials
+```
+
+---
+
+### 🔓 **Misc Privilege Bypass Vectors**
+
+```text
+debug, internal, mode, env, sandbox, impersonate, sudo, emulate, execute_as, run_as, proxy_user
+```
+
+---
