@@ -3794,7 +3794,158 @@ jwt_session
 
 Reference: [PayloadsAllTheThings - OAuth](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/OAuth)
 
+```text
+redirect_uri, state, response_type, client_id, client_secret, scope, code, access_token, refresh_token, token_type, expires_in, aud, iss, nonce, grant_type, prompt, login_hint, id_token_hint, assertion, error, error_description, error_uri, approval_prompt, max_age, acr_values, claims, request, request_uri, code_challenge, code_challenge_method, code_verifier, post_logout_redirect_uri, resource
+```
+
+**1. Authorization Code Interception**  
+Intercept `code` parameter during redirect flow.
+
+`http`  
+Request:  
+```http
+GET /callback?code=stolenCode&state=xyz
+```
+
+✅ Expected: Code bound to session or PKCE  
+❌ Vulnerable: Code reused by attacker
+
 ---
+
+**2. Open Redirect via redirect_uri**  
+Use attacker-controlled redirect URI.
+
+`http`  
+Request:  
+```http
+GET /auth?redirect_uri=https://evil.com
+```
+
+✅ Expected: Whitelisted redirect_uri enforced  
+❌ Vulnerable: Redirects to attacker domain
+
+---
+
+**3. Missing State Parameter (CSRF)**  
+Omit `state` during authorization request.
+
+`http`  
+Request:  
+```http
+GET /auth?client_id=xyz&response_type=code
+```
+
+✅ Expected: Request rejected  
+❌ Vulnerable: CSRF protection bypassed
+
+---
+
+**4. Reused Authorization Code**  
+Replay previously used `code`.
+
+`http`  
+Request:  
+```http
+POST /token
+{
+  "code": "oldCode",
+  "client_id": "xyz",
+  "client_secret": "abc"
+}
+```
+
+✅ Expected: Code invalidated after use  
+❌ Vulnerable: Code reused for token issuance
+
+---
+
+**5. Scope Manipulation**  
+Request elevated scopes without user awareness.
+
+`http`  
+Request:  
+```http
+GET /auth?scope=admin+delete+write
+```
+
+✅ Expected: Scope shown in consent screen  
+❌ Vulnerable: Scope granted silently
+
+---
+
+**6. Token Leakage via Referrer**  
+Access token exposed in URL and referrer headers.
+
+`http`  
+Request:  
+```http
+GET /profile?access_token=xyz
+```
+
+✅ Expected: Token passed via Authorization header  
+❌ Vulnerable: Token leaked in logs or referrer
+
+---
+
+**7. Insecure Token Storage**  
+Access token stored in localStorage.
+
+`js`  
+Code:  
+```js
+localStorage.setItem("access_token", token);
+```
+
+✅ Expected: Token stored in memory or secure cookie  
+❌ Vulnerable: Token accessible via XSS
+
+---
+
+**8. Missing Token Expiry**  
+Access token issued without expiration.
+
+`json`  
+Response:  
+```json
+{
+  "access_token": "xyz",
+  "expires_in": null
+}
+```
+
+✅ Expected: Token has TTL  
+❌ Vulnerable: Token valid indefinitely
+
+---
+
+**9. Weak Client Secret**  
+Use predictable or short client_secret.
+
+`json`  
+Credentials:  
+```json
+{
+  "client_id": "xyz",
+  "client_secret": "123456"
+}
+```
+
+✅ Expected: Strong, random secret  
+❌ Vulnerable: Easily brute-forced
+
+---
+
+**10. Authorization Code in URL Fragment**  
+Expose code in fragment instead of query param.
+
+`http`  
+URL:  
+```http
+https://example.com/callback#code=xyz
+```
+
+✅ Expected: Code passed via query param  
+❌ Vulnerable: Code inaccessible to server, exposed to JS
 
 ## SQL Injection (SQLi)
 SQL Injection can be:
