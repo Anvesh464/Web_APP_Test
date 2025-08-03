@@ -6876,3 +6876,264 @@ Check for password hints or email contents that leak info.
 ❌ Vulnerable: Verbose error or info disclosures
 
 ---
+
+## Access control vulnerabilities.
+
+---
+
+### **1. Vertical Privilege Escalation**
+Accessing admin-only endpoints as a low-privilege user.
+
+```http
+GET /admin/deleteUser?id=123
+```
+
+✅ Expected: Access denied or redirected  
+❌ Vulnerable: Non-admin can trigger admin action
+
+---
+
+### **2. Horizontal Privilege Escalation (IDOR)**
+Manipulating IDs to access peer-level data.
+
+```http
+GET /user/profile?id=456
+```
+
+✅ Expected: Only own data is accessible  
+❌ Vulnerable: Other user's info exposed
+
+---
+
+### **3. Unauthenticated Access to Protected Resources**
+Reaching sensitive endpoints without logging in.
+
+```http
+GET /admin/config
+```
+
+✅ Expected: Redirect to login or 403  
+❌ Vulnerable: Endpoint available pre-auth
+
+---
+
+### **4. Role Tampering via Client-Controlled Input**
+Altering cookies or hidden fields to elevate access.
+
+```http
+Cookie: role=admin
+```
+
+✅ Expected: Server enforces actual role  
+❌ Vulnerable: Role accepted from client input
+
+---
+
+### **5. HTTP Method Override**
+Using unexpected methods to perform restricted actions.
+
+```http
+PUT /user/123/delete
+```
+
+✅ Expected: Unsupported method returns 405  
+❌ Vulnerable: Method triggers privileged action
+
+---
+
+### **6. Referer-Based Authorization**
+Attempting access based on spoofed `Referer` header.
+
+```http
+Referer: https://trusted.com/dashboard
+```
+
+✅ Expected: Server verifies session/auth  
+❌ Vulnerable: Access granted purely via header
+
+---
+
+### **7. Routing Header Injection**
+Using override headers to reach protected routes.
+
+```http
+X-Original-URL: /admin  
+X-Rewrite-URL: /admin
+```
+
+✅ Expected: Header discarded or validated  
+❌ Vulnerable: Header triggers protected route logic
+
+---
+
+### **8. Forced Browsing**
+Enumerating undocumented paths without authorization.
+
+```http
+GET /admin/panel  
+GET /config/debug
+```
+
+✅ Expected: 403 or 302 redirect  
+❌ Vulnerable: Sensitive functions exposed
+
+---
+
+### **9. JWT/Signed Token Role Manipulation**
+Modifying encoded tokens for elevated privileges.
+
+```json
+{
+  "user": "guest",
+  "role": "admin"
+}
+```
+
+✅ Expected: Signature checked and rejected  
+❌ Vulnerable: Role accepted without signature validation
+
+---
+
+### **10. CSRF on Privileged Action**
+Exploiting lack of anti-CSRF on sensitive operations.
+
+```html
+<form action="https://target.com/deleteUser?id=123" method="POST">
+  <input type="submit">
+</form>
+```
+
+✅ Expected: CSRF token validation  
+❌ Vulnerable: Action triggered with forged request
+
+---
+Absolutely, Anvesh — here’s an extended suite with additional **Access Control Bypass Techniques**, structured just like your original format for easy markdown integration and scanner automation.
+
+---
+
+### **11. Parameter Pollution for Bypass**
+Injecting duplicate parameters to confuse backend logic.
+
+```http
+GET /admin?role=user&role=admin
+```
+
+✅ Expected: Strict role validation  
+❌ Vulnerable: Privilege escalated via duplicate parameter
+
+---
+
+### **12. Query String Override in POST**
+Injecting query parameters in POST requests that override body logic.
+
+```http
+POST /update  
+Content-Length: …  
+{ "role": "user" }  
+GET /update?role=admin
+```
+
+✅ Expected: Body parameters preferred  
+❌ Vulnerable: Query overrides server validation
+
+---
+
+### **13. JSON Structure Manipulation**
+Tampering nested fields or using alternate key casing.
+
+```json
+{ "Role": "admin" }  
+{ "role": ["user", "admin"] }
+```
+
+✅ Expected: Strong parsing and validation  
+❌ Vulnerable: Elevation via malformed JSON
+
+---
+
+### **14. Path Traversal on Role Files**
+Attempt to access privilege assignment files.
+
+```http
+GET /roles/../../admin/assignments.json
+```
+
+✅ Expected: Path blocked  
+❌ Vulnerable: Privileged role file exposed
+
+---
+
+### **15. HTTP Parameter Pollution in Cookies**
+Combining cookie and URL parameters for role escalation.
+
+```http
+GET /dashboard?user=guest  
+Cookie: user=admin
+```
+
+✅ Expected: Cookie validated alone  
+❌ Vulnerable: Mixed param leads to bypass
+
+---
+
+### **16. File Upload Role Assignment**
+Upload XML/JSON config to manipulate roles.
+
+```xml
+<config><role>admin</role></config>
+```
+
+✅ Expected: Content structure validated  
+❌ Vulnerable: Roles set via upload
+
+---
+
+### **17. Host Header Abuse for Role Assignment**
+Manipulate host header to trick internal logic.
+
+```http
+Host: admin.internal  
+GET /dashboard
+```
+
+✅ Expected: Host verified or ignored  
+❌ Vulnerable: Admin context triggered
+
+---
+
+### **18. URL Encoded Role Injection**
+Use encoding to bypass filters.
+
+```http
+GET /profile?role=%61%64%6D%69%6E
+```
+
+✅ Expected: Proper decoding and role enforcement  
+❌ Vulnerable: Decoded role grants elevation
+
+---
+
+### **19. Cache Poisoning-Based Role Reuse**
+Trigger cached admin responses with poisoned headers.
+
+```http
+X-Forwarded-Host: admin.site.com
+```
+
+✅ Expected: Cache segregated by auth  
+❌ Vulnerable: Privileged content served
+
+---
+
+### **20. Case Sensitivity Bypass**
+Access control checks fail due to inconsistent casing.
+
+```http
+GET /Admin/Config  
+GET /ADMIN/config
+```
+
+✅ Expected: Case-insensitive access validation  
+❌ Vulnerable: Admin page accessible by case
+
+---
