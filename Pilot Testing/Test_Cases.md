@@ -7204,3 +7204,266 @@ debug, internal, mode, env, sandbox, impersonate, sudo, emulate, execute_as, run
 ```
 
 ---
+## automation-ready test suite for **Authentication Vulnerabilities**, formatted to match your previous access control layout. Each case includes a reproducible payload and expected behavior for Burp/ZAP integration or GitHub documentation.
+---
+
+### **1. Weak Password Policy**
+Test for lack of complexity enforcement.
+
+```text
+Password: 123456
+```
+
+✅ Expected: Rejected due to weak policy  
+❌ Vulnerable: Accepted without validation
+
+---
+
+### **2. Credential Stuffing / No Rate Limiting**
+Automated login attempts with known credentials.
+
+```http
+POST /login  
+username=admin&password=admin123
+```
+
+✅ Expected: Rate limiting or CAPTCHA  
+❌ Vulnerable: Unlimited login attempts allowed
+
+---
+
+### **3. Default Credentials**
+Login using vendor defaults.
+
+```http
+admin:admin  
+root:toor
+```
+
+✅ Expected: Disabled or changed  
+❌ Vulnerable: Default creds accepted
+
+---
+
+### **4. Missing Multi-Factor Authentication**
+Login with only username/password.
+
+```http
+POST /login  
+username=admin&password=admin123
+```
+
+✅ Expected: MFA prompt  
+❌ Vulnerable: Full access without second factor
+
+---
+
+### **5. Insecure Password Reset**
+Reset without verifying identity.
+
+```http
+POST /reset  
+email=admin@example.com
+```
+
+✅ Expected: Token or challenge required  
+❌ Vulnerable: Password reset without verification
+
+---
+
+### **6. Username Enumeration**
+Different responses for valid vs invalid usernames.
+
+```http
+POST /login  
+username=admin&password=wrongpass
+```
+
+✅ Expected: Generic error message  
+❌ Vulnerable: Reveals valid usernames
+
+---
+
+### **7. Session Fixation**
+Reuse session ID across login.
+
+```http
+GET /login  
+Set-Cookie: sessionid=abc123
+```
+
+✅ Expected: New session issued post-login  
+❌ Vulnerable: Session remains unchanged
+
+---
+
+### **8. Insecure Token Storage**
+Tokens stored in localStorage or exposed in JS.
+
+```js
+localStorage.setItem("token", "JWT...")
+```
+
+✅ Expected: HttpOnly cookie or secure storage  
+❌ Vulnerable: Token accessible via JS
+
+---
+
+### **9. Brute Force via GraphQL/REST**
+Automated login via API endpoints.
+
+```graphql
+mutation { login(username:"admin", password:"123456") }
+```
+
+✅ Expected: Rate limiting or lockout  
+❌ Vulnerable: No protection on API login
+
+---
+
+### **10. Password in URL / Logs**
+Sensitive credentials passed via GET.
+
+```http
+GET /login?username=admin&password=123456
+```
+
+✅ Expected: POST method only  
+❌ Vulnerable: Password exposed in logs
+
+---
+
+Let me know if you want:
+- 🔁 Fuzzable parameter list for auth vectors
+- 🧪 Burp/ZAP config blocks for brute force, token leakage, and MFA bypass
+- 📜 Markdown checklist with anchors for GitHub repo integration
+
+Absolutely, Anvesh — here’s the **extended authentication test suite**, continuing in your preferred modular format. These cases cover advanced bypasses, token abuse, and protocol misconfigurations for Burp/ZAP automation or GitHub integration.
+
+---
+
+### **11. OAuth Token Misuse**
+Using access tokens across unrelated services.
+
+```http
+Authorization: Bearer <token_from_other_app>
+```
+
+✅ Expected: Token scoped and validated  
+❌ Vulnerable: Token accepted across domains
+
+---
+
+### **12. JWT Signature Bypass**
+Tampering with JWT algorithm or signature.
+
+```json
+{
+  "alg": "none",
+  "payload": { "role": "admin" }
+}
+```
+
+✅ Expected: Signature verified  
+❌ Vulnerable: Token accepted without validation
+
+---
+
+### **13. SSO Trust Abuse**
+Login via untrusted identity provider.
+
+```http
+SSO login via attacker-controlled IdP
+```
+
+✅ Expected: IdP whitelisted  
+❌ Vulnerable: Any IdP accepted
+
+---
+
+### **14. Token Replay**
+Reuse of expired or intercepted tokens.
+
+```http
+Authorization: Bearer <old_token>
+```
+
+✅ Expected: Token expiration enforced  
+❌ Vulnerable: Token reused successfully
+
+---
+
+### **15. Password Reset Token Leakage**
+Token exposed in logs or referrer headers.
+
+```http
+GET /reset?token=abc123
+```
+
+✅ Expected: Token short-lived and scoped  
+❌ Vulnerable: Token leaked or reused
+
+---
+
+### **16. Insecure Redirect After Login**
+Redirect to attacker-controlled domain.
+
+```http
+GET /login?redirect=https://evil.com
+```
+
+✅ Expected: Redirect validated  
+❌ Vulnerable: Open redirect allowed
+
+---
+
+### **17. Missing Logout Invalidation**
+Session remains active after logout.
+
+```http
+GET /logout  
+→ Session cookie still valid
+```
+
+✅ Expected: Session destroyed  
+❌ Vulnerable: Reuse of old session
+
+---
+
+### **18. Session Timeout Misconfiguration**
+Session persists beyond expected duration.
+
+```http
+Idle for 30+ mins → Still logged in
+```
+
+✅ Expected: Session expired  
+❌ Vulnerable: Session remains active
+
+---
+
+### **19. MFA Bypass via API**
+Login via API skips MFA enforcement.
+
+```http
+POST /api/login  
+→ No MFA challenge
+```
+
+✅ Expected: MFA enforced across channels  
+❌ Vulnerable: API login skips MFA
+
+---
+
+### **20. Password Change Without Old Password**
+Change password without verifying current one.
+
+```http
+POST /change-password  
+new_password=123456
+```
+
+✅ Expected: Old password required  
+❌ Vulnerable: Password changed without auth
+
+---
