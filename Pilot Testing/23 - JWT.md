@@ -1,6 +1,13 @@
 Certainly! Based on the information available from PortSwigger's Web Security Academy, here's a consolidated Markdown file that combines key JWT attack techniques and corresponding labs. This serves as a comprehensive guide to understanding and exploiting various JWT vulnerabilities.
 
----
+## JWT Authentication Bypass Techniques
+
+### 1. JWT Authentication Bypass via Unverified Signature
+### 2. JWT Authentication Bypass via "None" Algorithm
+### 3. JWT Authentication Bypass via Algorithm Confusion
+### 4. JWT Authentication Bypass via Weak Signing Key
+### 5. JWT Authentication Bypass via `kid` Header Path Traversal
+### 6. JWT Authentication Bypass via `jku` Header Injection
 
 # JWT Labs – PortSwigger
 
@@ -460,3 +467,4 @@ Cookie: session=eyJraWQiOiIuLi8uLi8uLi9kZXYvbnVsbCIsImFsZyI6IkhTMjU2In0.eyJpc3Mi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![img](media/05f2b05ba72f1ab44b00ad13dd110577.png)
+
