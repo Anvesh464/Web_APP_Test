@@ -29,6 +29,7 @@
 14 WebSocket Message Flood / DoS
 
 15 WebSocket Misconfiguration → RCE (Node.js)
+
 ---
 
 # **2. Sample Payloads (Core Attack Payloads)**
