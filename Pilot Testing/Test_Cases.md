@@ -6107,6 +6107,345 @@ jwt_session
 {"kid":"../../../../etc/passwd"}
 ```
 ## OAuth Exploitation
+
+# ✅ **OAuth Mandatory Vulnerability Names**
+
+* **Misconfigured Redirect URI**
+* **Missing PKCE (Proof Key for Code Exchange)**
+* **Weak or Missing State Parameter**
+* **Lack of HTTPS Enforcement**
+* **Invalid Token Claim Validation**
+* **Implicit Flow Enabled (response_type=token)**
+* **Insecure Token Storage (Client-Side)**
+* **Authorization Code Reuse**
+* **Missing Client Authentication (Confidential Clients)**
+* **Missing Nonce Validation (OIDC)**
+* **JWKS Key Rotation Failure**
+* **ROPC (Resource Owner Password Credentials) Enabled**
+
+---
+# **1. Misconfigured Redirect URI**
+
+## ✔ Test Case Expectation
+
+Server must reject any redirect URI that is **not exactly registered**.
+
+### 📌 Test Case Payload (INVALID ON PURPOSE)
+
+```http
+GET /authorize?
+  client_id=testapp&
+  response_type=code&
+  redirect_uri=https://example.com/callback-test&
+  scope=openid&
+  state=test_state_001
+```
+
+### **Expected Result:**
+
+❌ Rejected because `callback-test` is not an exact-match.
+
+---
+
+# **2. Missing PKCE (Public Clients)**
+
+## ✔ Test Case Expectation
+
+If PKCE is missing → reject.
+
+### 📌 Payload (Missing PKCE)
+
+```http
+GET /authorize?
+  response_type=code&
+  client_id=public-app-01&
+  redirect_uri=com.app://cb&
+  scope=openid profile
+```
+
+### **Expected Result:**
+
+❌ Reject with “missing code_challenge”.
+
+---
+
+### 📌 Payload (With PKCE)
+
+```http
+GET /authorize?
+  response_type=code&
+  client_id=public-app-01&
+  redirect_uri=com.app://cb&
+  scope=openid profile&
+  state=pkce_tc_01&
+  code_challenge=TESTCHALLENGE123456&
+  code_challenge_method=S256
+```
+
+### **Expected Result:**
+
+✔ Accepted.
+
+---
+
+# **3. Weak or Missing State Parameter**
+
+## ✔ Test Case Expectation
+
+`state` must be validated to prevent CSRF.
+
+### 📌 Payload (Missing State)
+
+```http
+GET /authorize?
+  client_id=testapp&
+  response_type=code&
+  redirect_uri=https://example.com/callback&
+  scope=openid
+```
+
+### **Expected Result:**
+
+❌ Reject because `state` is missing.
+
+---
+
+# **4. Lack of HTTPS Enforcement**
+
+## ✔ Test Case Expectation
+
+OAuth endpoints must use HTTPS.
+
+### 📌 Payload (HTTP instead of HTTPS)
+
+```http
+GET http://auth.example.com/authorize?client_id=testapp
+```
+
+### **Expected Result:**
+
+❌ Reject or redirect to HTTPS.
+
+---
+
+# **5. Invalid Token Claim Validation**
+
+## ✔ Test Case Expectation
+
+Tokens must be rejected if `iss`, `aud`, `exp`, or signature is invalid.
+
+### 📌 Test Case Payload (Expired Token Example)
+
+```json
+{
+  "iss": "https://auth.example.com/",
+  "aud": "https://api.example.com/",
+  "sub": "user001",
+  "exp": 1000000000
+}
+```
+
+### **Expected Result:**
+
+❌ Reject due to expired token.
+
+---
+
+# **6. Implicit Flow Enabled (response_type=token)**
+
+## ✔ Test Case Expectation
+
+Implicit flow must be disabled.
+
+### 📌 Payload (Implicit Flow)
+
+```http
+GET /authorize?
+  response_type=token&
+  client_id=testclient&
+  redirect_uri=https://example.com/callback&
+  scope=openid
+```
+
+### **Expected Result:**
+
+❌ Reject because implicit flow is disabled.
+
+---
+
+# **7. Insecure Token Storage (Client-Side)**
+
+## ✔ Test Case Expectation
+
+Tokens must be stored in secure cookies or secure mobile storage.
+
+### 📌 Payload (Correct Secure Cookie)
+
+```http
+Set-Cookie: access_token=TEST123;
+  HttpOnly;
+  Secure;
+  SameSite=Lax;
+```
+
+### **Expected Result:**
+
+✔ Accepted — secure cookie attributes present.
+
+---
+
+# **8. Authorization Code Reuse**
+
+## ✔ Test Case Expectation
+
+Authorization codes must be single-use only.
+
+### 📌 First Use (Valid)
+
+```http
+POST /token
+grant_type=authorization_code&
+code=TEST_CODE_01&
+redirect_uri=https://example.com/callback&
+client_id=testapp
+```
+
+### **Expected Result:**
+
+✔ Accepted.
+
+---
+
+### 📌 Second Use (Reuse Attempt)
+
+```http
+POST /token
+code=TEST_CODE_01
+```
+
+### **Expected Result:**
+
+❌ Reject — authorization code already used.
+
+---
+
+# **9. Missing Client Authentication (Confidential Clients)**
+
+## ✔ Test Case Expectation
+
+Confidential clients must authenticate at the token endpoint.
+
+### 📌 Invalid Secret
+
+```http
+POST /token
+client_id=server-client-01&
+client_secret=WRONG_SECRET
+```
+
+### **Expected Result:**
+
+❌ Reject — invalid client authentication.
+
+---
+
+### 📌 Valid Secret
+
+```http
+POST /token
+client_id=server-client-01&
+client_secret=VALID_SECRET_001
+```
+
+### **Expected Result:**
+
+✔ Accepted.
+
+---
+
+# **10. Missing Nonce Validation (OIDC)**
+
+## ✔ Test Case Expectation
+
+OIDC authorization must include and validate a `nonce`.
+
+### 📌 Missing Nonce
+
+```http
+GET /authorize?
+  client_id=oidc-client&
+  response_type=code&
+  redirect_uri=https://example.com/callback&
+  scope=openid profile
+```
+
+### **Expected Result:**
+
+❌ Reject — missing required nonce.
+
+---
+
+### 📌 Valid Nonce
+
+```http
+nonce=OIDC_NONCE_TEST_01
+```
+
+### **Expected Result:**
+
+✔ Nonce accepted.
+
+---
+
+# **11. JWKS Key Rotation Failure**
+
+## ✔ Test Case Expectation
+
+Tokens must be rejected when signed with unknown or outdated keys.
+
+### 📌 JWKS (Dummy Example)
+
+```json
+{
+  "keys": [
+    {
+      "kid": "testkey001",
+      "kty": "RSA",
+      "alg": "RS256",
+      "n": "00TESTMODULUS",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+### **Expected Result:**
+
+❌ Reject if the token references a key ID not found in JWKS.
+
+---
+
+# **12. ROPC (Resource Owner Password Credentials) Enabled**
+
+## ✔ Test Case Expectation
+
+ROPC must be disabled.
+
+### 📌 Payload (ROPC Flow)
+
+```http
+POST /token
+grant_type=password&
+username=testuser&
+password=password123
+```
+
+### **Expected Result:**
+
+❌ Reject — ROPC flow is forbidden.
+
+---
+
 - Stealing OAuth Token via Referer
 - Grabbing OAuth Token via `redirect_uri`
 - Executing XSS via `redirect_uri`
