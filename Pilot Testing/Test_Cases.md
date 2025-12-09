@@ -5622,6 +5622,442 @@ Default algorithm: **HS256** (HMAC SHA256 symmetric encryption). For asymmetric 
 ```
 ### Exploiting JWT Vulnerabilities
 #### Modify JWT Signature to None Algorithm
+
+# 🔐 **JWT Vulnerability Names**
+
+### **1. JWT Signature Validation Bypass**
+### **2. JWT “none” Algorithm Acceptance**
+### **3. JWT Algorithm Confusion (HS256 ↔ RS256)**
+### **4. JWT Weak Signing Key Vulnerability**
+### **5. JWT `kid` Header Manipulation**
+### **6. JWT Path Traversal via `kid` Header**
+### **7. JWT External JWK Injection (`jku`)**
+### **8. JWT External Certificate Injection (`x5u`)**
+### **9. JWT Header Parameter Injection**
+### **10. JWT Claim Tampering**
+### **11. JWT Expiration Bypass (`exp`)**
+### **12. JWT Issued-In-Future (`iat`) Abuse**
+### **13. JWT Not-Before (`nbf`) Misuse**
+### **14. JWT Invalid Audience (`aud`) Acceptance**
+### **15. JWT Invalid Issuer (`iss`) Acceptance**
+### **16. JWT Missing Required Claims**
+### **17. JWT Replay Attack (No Revocation / Rotation)**
+### **18. JWT Overly Long Token (Token Size DoS)**
+### **19. JWT Sensitive Data Exposure in Payload**
+### **20. JWT Storage Misconfiguration (localStorage, XSS)**
+### **21. JWT Transport Misconfiguration (No HTTPS)**
+### **22. JWT Refresh Token Rotation Failure**
+### **23. JWT Key Exposure in Logs / Error Messages**
+### **24. JWT Weak Randomness in `jti` or IDs**
+### **25. JWT Invalid Token Parsing/Deserialization Issues**
+
+---
+
+# 🛡️ **JWT Security Test Cases (Safe Examples Only)**
+
+Each test case includes:
+
+* **Purpose**
+* **What to verify**
+* **Sample header + payload** (harmless, unsigned, non-exploitable)
+
+---
+
+# ## ✅ **1. Missing Signature / Unverified Signature**
+
+### **Purpose:** Ensure the server rejects unsigned tokens.
+
+### **Expected:** 401 Unauthorized
+
+**Example unsigned JWT:**
+
+```text
+eyJhbGciOiJub25lIn0.eyJ1c2VyIjoiYWRtaW4ifQ.
+```
+
+**Decoded:**
+
+```json
+Header:  { "alg": "none" }
+Payload: { "user": "admin" }
+Signature: (empty)
+```
+
+---
+
+# ## ✅ **2. “none” Algorithm Test**
+
+### **Purpose:** Ensure `alg: none` is disabled.
+
+### **Expected:** Reject token.
+
+**Example:**
+
+```json
+Header:
+{ "alg": "none", "typ": "JWT" }
+
+Payload:
+{ "user": "test_user", "role": "admin" }
+```
+
+---
+
+# ## ✅ **3. Algorithm Mismatch / Confusion Test (HS256 vs RS256)**
+
+### **Purpose:** Verify server does not auto-switch algorithms.
+
+### **Expected:** Reject mismatched algorithm tokens.
+
+**Example header:**
+
+```json
+{ "alg": "HS256", "typ": "JWT" }
+```
+
+**Example payload:**
+
+```json
+{ "user": "alice", "role": "admin" }
+```
+
+*(Signature omitted to ensure safety.)*
+
+---
+
+# ## ✅ **4. Weak Signing Key Test**
+
+### **Purpose:** Ensure server rejects tokens signed with weak HMAC keys.
+
+### **Expected:** Reject or warn.
+
+**Example weak scenario:**
+
+```text
+Secret key = "12345"
+```
+
+**Test payload:**
+
+```json
+{ "user": "test", "exp": 9999999999 }
+```
+
+---
+
+# ## ✅ **5. Expired Token**
+
+### **Purpose:** Ensure expiration is enforced.
+
+### **Expected:** Reject token.
+
+**Payload example (expired):**
+
+```json
+{
+  "user": "bob",
+  "exp": 1000000000
+}
+```
+
+---
+
+# ## ✅ **6. Token Issued in the Future**
+
+### **Purpose:** Ensure `iat` in the future is rejected.
+
+### **Expected:** Reject token.
+
+**Example payload:**
+
+```json
+{
+  "user": "charlie",
+  "iat": 9999999999
+}
+```
+
+---
+
+# ## ✅ **7. Invalid Audience (`aud`)**
+
+### **Purpose:** Ensure the server validates audience.
+
+### **Expected:** Reject token.
+
+```json
+{
+  "user": "eve",
+  "aud": "unknown-service"
+}
+```
+
+---
+
+# ## ✅ **8. Invalid Issuer (`iss`)**
+
+### **Purpose:** Verify server enforces strict issuer matching.
+
+### **Expected:** Reject token.
+
+```json
+{
+  "user": "dave",
+  "iss": "fake-issuer"
+}
+```
+
+---
+
+# ## ✅ **9. Tampered Payload**
+
+### **Purpose:** Server must detect tampering after signature is removed/altered.
+
+### **Expected:** Reject token.
+
+**Original payload:**
+
+```json
+{ "user": "frank", "role": "user" }
+```
+
+**Tampered payload:**
+
+```json
+{ "user": "frank", "role": "admin" }
+```
+
+---
+
+# ## ✅ **10. Oversized Token**
+
+### **Purpose:** Identify DoS risk via extremely large payloads.
+
+### **Expected:** Reject or limit token size.
+
+**Example oversized claim block (truncated):**
+
+```json
+{
+  "user": "test",
+  "data": "AAAA....(thousands of characters)....AAAA"
+}
+```
+
+---
+
+# ## ✅ **11. `kid` Header Manipulation (Safe Example)**
+
+### **Purpose:** Ensure `kid` is sanitized and validated.
+
+### **Expected:** Reject token.
+
+**Header:**
+
+```json
+{
+  "alg": "HS256",
+  "kid": "../../etc/passwd"
+}
+```
+
+**Payload:**
+
+```json
+{ "user": "tester" }
+```
+
+*(No signature included.)*
+
+---
+
+# ## ✅ **12. `jku` Header Injection (Safe Example)**
+
+### **Purpose:** Server should block untrusted JWK URLs.
+
+### **Expected:** Reject unless allowlisted.
+
+**Header:**
+
+```json
+{
+  "alg": "RS256",
+  "jku": "http://untrusted.example.com/jwks.json"
+}
+```
+
+**Payload:**
+
+```json
+{ "user": "token_user" }
+```
+
+---
+
+# ## ✅ **13. `x5u` External Certificate Fetch (Safe Example)**
+
+### **Purpose:** Ensure strict certificate pinning or URL blocking.
+
+### **Expected:** Reject token.
+
+**Example header:**
+
+```json
+{
+  "alg": "RS256",
+  "x5u": "http://untrusted.example.com/cert.pem"
+}
+```
+
+**Payload:**
+
+```json
+{ "user": "api_user" }
+```
+
+---
+
+# ## ✅ **14. Missing Required Claims**
+
+### **Purpose:** Validate presence of all mandatory claims.
+
+### **Expected:** Reject.
+
+**Example payload missing `sub`, `iss`, `aud`:**
+
+```json
+{ "user": "test_user" }
+```
+
+---
+
+# ## ✅ **15. Replay of Previously Valid Token**
+
+### **Purpose:** Check revocation & refresh token rotation.
+
+### **Expected:** Reject reused/rotated tokens.
+
+**Example payload (conceptual):**
+
+```json
+{
+  "sub": "12345",
+  "jti": "old-revoked-id"
+}
+```
+
+---
+
+# JWT Labs – PortSwigger
+
+This document consolidates key JWT attack techniques and corresponding labs from PortSwigger's Web Security Academy.([portswigger.net][1])
+
+---
+
+## 1. JWT Authentication Bypass via Unverified Signature
+
+This lab demonstrates a scenario where the server fails to verify the signature of JWTs, allowing attackers to modify token payloads without detection.([portswigger.net][2])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and observe the JWT in the session cookie.
+3. Modify the `sub` claim in the payload to `administrator`.
+4. Send the modified token to access the admin panel at `/admin`.
+5. Delete the user `carlos` to complete the lab.([portswigger.net][3], [portswigger.net][4], [portswigger.net][5], [portswigger.net][2])
+
+**Reference:** [Lab: JWT authentication bypass via unverified signature](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-unverified-signature)
+
+---
+
+## 2. JWT Authentication Bypass via "None" Algorithm
+
+In this lab, the server accepts JWTs with the `alg` header parameter set to `none`, effectively disabling signature verification.([portswigger.net][4])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and decode the JWT.
+3. Change the `alg` value in the header to `none`.
+4. Modify the `sub` claim in the payload to `administrator`.
+5. Remove the signature part of the token, leaving the trailing dot.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.([portswigger.net][6], [portswigger.net][5], [portswigger.net][4], [portswigger.net][3])
+
+**Reference:** [Lab: JWT authentication bypass via flawed signature verification](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-flawed-signature-verification)
+
+---
+
+## 3. JWT Authentication Bypass via Algorithm Confusion
+
+This lab illustrates an algorithm confusion vulnerability where the server uses an RSA key pair but accepts tokens signed with a symmetric algorithm like `HS256`.([portswigger.net][3])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Access the server's public key from the `/jwks.json` endpoint.
+3. Convert the public key to a suitable format for signing.
+4. Modify the JWT header to use `HS256` and the payload's `sub` claim to `administrator`.
+5. Sign the token using the public key as the HMAC secret.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.([portswigger.net][7], [portswigger.net][3], [portswigger.net][6], [portswigger.net][8], [portswigger.net][2])
+
+**Reference:** [Lab: JWT authentication bypass via algorithm confusion](https://portswigger.net/web-security/jwt/algorithm-confusion/lab-jwt-authentication-bypass-via-algorithm-confusion)
+
+---
+
+## 4. JWT Authentication Bypass via Weak Signing Key
+
+This lab focuses on exploiting weak secret keys used for signing JWTs, which can be brute-forced using tools like hashcat.([portswigger.net][5])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and extract the JWT.
+3. Use hashcat with a wordlist to brute-force the secret key.
+4. Modify the JWT payload's `sub` claim to `administrator`.
+5. Sign the token using the discovered secret key.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.([portswigger.net][7], [portswigger.net][5])
+
+**Reference:** [Lab: JWT authentication bypass via weak signing key](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-weak-signing-key)
+
+---
+
+## 5. JWT Authentication Bypass via `kid` Header Path Traversal
+
+This lab demonstrates how the `kid` header parameter can be exploited using path traversal to manipulate the key file used for signature verification.([portswigger.net][6])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Intercept the `GET /my-account` request and decode the JWT.
+3. Modify the `kid` value in the header to a path traversal string pointing to `/dev/null`.
+4. Change the payload's `sub` claim to `administrator`.
+5. Sign the token using a null byte as the secret.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.([portswigger.net][6])
+
+**Reference:** [Lab: JWT authentication bypass via kid header path traversal](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-kid-header-path-traversal)
+
+---
+
+## 6. JWT Authentication Bypass via `jku` Header Injection
+
+In this lab, the server accepts a `jku` header parameter pointing to a JSON Web Key Set (JWKS) URL without proper validation, allowing attackers to supply their own keys.([portswigger.net][8])
+
+**Steps:**
+
+1. Log in with the provided credentials: `wiener:peter`.
+2. Generate a new RSA key pair and host the public key in a JWKS format on an external server.
+3. Modify the JWT header to include the `jku` parameter pointing to your JWKS URL and set the `kid` to match your key.
+4. Change the payload's `sub` claim to `administrator`.
+5. Sign the token using your private key.
+6. Send the modified token to access the admin panel at `/admin`.
+7. Delete the user `carlos` to complete the lab.([portswigger.net][7], [portswigger.net][3], [portswigger.net][1], [portswigger.net][8])
+
+**Reference:** [Lab: JWT authentication bypass via jku header injection](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-jku-header-injection)
+
 ```python
 import jwt
 
