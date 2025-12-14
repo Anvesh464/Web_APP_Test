@@ -826,34 +826,12 @@ Host: evil.com\r\nX-Test: 123
 
 ```
 Host: xn--evil-9sa.com
-```
-
-### Using IP-long form:
-
-```
-Host: 2130706433     # 127.0.0.1 in decimal
-```
-
-### Hex:
-
-```
-Host: 0x7f000001
-```
-
-### Octal:
-
-```
-Host: 0177.0000.0001
-```
-
-### Mixed Encoding:
-
-```
-Host: evil.com%2Etarget.com
-```
-
+### Using IP-long form:  Host: 2130706433     # 127.0.0.1 in decimal
+### Hex: Host: 0x7f000001
+### Octal: Host: 0177.0000.0001
+### Mixed Encoding: Host: evil.com%2Etarget.com
 ---
-
+```
 # 🔥 **3.6 Prefix / Suffix Injection Bypass**
 
 ### Fake trusted-host prefix:
