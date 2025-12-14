@@ -860,24 +860,13 @@ Host: evil.com%2Etarget.com
 
 ```
 Host: trusted.com.evil.com
-```
-
 ### Using @ to confuse parsers:
-
-```
 Host: trusted.com@evil.com
-```
-
 ### Using double host headers:
-
-```
 Host: evil.com
 Host: target.com
-```
-
 Some servers will parse the last one; some the first.
-
----
+```
 
 # 🔥 **3.7 Null Byte / Special Character Bypass**
 
