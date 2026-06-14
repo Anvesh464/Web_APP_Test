@@ -469,24 +469,12 @@ Hello" onkeypress="prompt(1)
 - [https://portswigger.net/bappstore/3908768b9ae945d8adf583052ad2e3b3 headi -url http://target.com](https://www.blackhatethicalhacking.com/tools/headi/) headi -url http://target.com
 - https://github.com/inpentest/HostHeaderScanner bash script.sh -l urls.txt
 
-- **Host**: The primary header to test. Try injecting arbitrary domains.
-- **X-Forwarded-Host**: Often used by proxies; can override the Host header.
-- **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
-- **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
-- **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
-- **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
-
-## 2. Password Reset Poisoning
-- Obtain a **password reset link**.
-- Modify the `Host` header.
-
-## 3. Host Header Injection on Referer Header
-  ```http
-  Connection: close
-  Referer: https://www.bing.com/
-  ```
-## 7. Subdomain-Based Host Header Injection
-- Use existing and non-existing subdomains to inject headers.
+    - **Host**: The primary header to test. Try injecting arbitrary domains.
+    - **X-Forwarded-Host**: Often used by proxies; can override the Host header.
+    - **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
+    - **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
+    - **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
+    - **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
 
 ```http
 Host: bing.com
@@ -515,6 +503,10 @@ X-Forwarded-Host: attacker.com
 
 GET https://vulnerable.com/ HTTP/1.1
 Host: attacker.com
+
+Host Header Injection on Referer Header
+Connection: close
+Referer: https://www.bing.com/
 
 GET / HTTP/1.1
 Host: vulnerable.com
