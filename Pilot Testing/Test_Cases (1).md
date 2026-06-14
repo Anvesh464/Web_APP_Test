@@ -603,10 +603,6 @@ Host: evil.com\t
 
 ```
 Host: evil.com\r\nX-Test: 123
-```
-
----
-
 punycode  Host: xn--evil-9sa.com
 Using IP-long form  Host: 2130706433     # 127.0.0.1 in decimal
 Hex:   Host: 0x7f000001
@@ -614,16 +610,12 @@ Octal:   Host: 0177.0000.0001
 Mixed Encoding" Host: evil.com%2Etarget.com
 Fake trusted-host prefix
 Host: trusted.com.evil.com
-
-3.7 Null Byte / Special Character Bypass
-Host: evil.com%00target.com
+Null Byte / Special Character Bypass Host: evil.com%00target.com
 Host: target.com%00.evil.com
 Host: target.com\evil.com
-
 3.8 CORS Bypass Using Host Reflection**
 Host: evil.com
 Origin: http://evil.com
-```
 *3.9 CDN / Proxy Bypass (Akamai, Cloudflare, Nginx)**
 Forwarded: host=evil.com
 X-Forwarded-Host: internal-admin
