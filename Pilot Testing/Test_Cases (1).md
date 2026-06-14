@@ -511,6 +511,19 @@ X-Forwarded-Server: attacker.com
 X-HTTP-Host-Override: attacker.com
 Forwarded: host=attacker.com
 
+Host: evil.com:8080
+Host: legit.com.evil.com
+
+Host: target.com.evil.io
+Host: target.com.attacker.net
+Host: evil.com?target.com
+Host: target.com#evil.com
+
+X-Forwarded-Host: evil.com
+X-Host: attacker.com
+X-Forwarded-Server: evil.com
+X-HTTP-Host-Override: evil.com
+
 - Use **non-standard ports**: `Host: evil.com:badport`
 - Try **subdomain tricks**: `Host: attacker.vulnerable.com`
 - Use **encoded characters**: `%0d%0aHost: evil.com`
@@ -528,16 +541,6 @@ Content-Type: application/json
 
 {"email":"victim@example.com"}
 ```
-# 📌 **2.3 Open Redirect / URL Confusion**
-
-```
-Host: evil.com:8080
-```
-
-```
-Host: legit.com.evil.com
-```
----
 # 📌 **2.4 SSRF Using Host Header**
 
 ```
@@ -560,57 +563,6 @@ Host: internal.target.local
 ```
 Host: staging.target.com
 ```
----
-
-# 🔥 **3.1 Domain Validation Bypass Payloads**
-
-### Case: Application checks `endswith("target.com")` incorrectly
-
-```
-Host: target.com.evil.io
-```
-
-```
-Host: target.com.attacker.net
-```
-
-```
-Host: evil.com?target.com
-```
-
-```
-Host: target.com#evil.com
-```
-
----
-
-# 🔥 **3.2 Header Override Bypass**
-
-Some applications prioritize these headers over `Host:`:
-
-```
-X-Forwarded-Host: evil.com
-```
-
-```
-X-Host: attacker.com
-```
-
-```
-X-Forwarded-Server: evil.com
-```
-
-```
-X-HTTP-Host-Override: evil.com
-```
-
-Combine:
-
-```
-Host: trusted.com
-X-Forwarded-Host: evil.com
-```
-
 ---
 
 # 🔥 **3.3 Port-Based Bypass**
@@ -655,117 +607,30 @@ Host: evil.com\r\nX-Test: 123
 
 ---
 
-# 🔥 **3.5 Unicode / Encoding Bypass Cases**
-
-### Using punycode:
-
-```
-Host: xn--evil-9sa.com
-```
-
-### Using IP-long form:
-
-```
-Host: 2130706433     # 127.0.0.1 in decimal
-```
-
-### Hex:
-
-```
-Host: 0x7f000001
-```
-
-### Octal:
-
-```
-Host: 0177.0000.0001
-```
-
-### Mixed Encoding:
-
-```
-Host: evil.com%2Etarget.com
-```
-
----
-
-# 🔥 **3.6 Prefix / Suffix Injection Bypass**
-
-### Fake trusted-host prefix:
-
-```
+punycode  Host: xn--evil-9sa.com
+Using IP-long form  Host: 2130706433     # 127.0.0.1 in decimal
+Hex:   Host: 0x7f000001
+Octal:   Host: 0177.0000.0001
+Mixed Encoding" Host: evil.com%2Etarget.com
+Fake trusted-host prefix
 Host: trusted.com.evil.com
-```
 
-### Using @ to confuse parsers:
-
-```
-Host: trusted.com@evil.com
-```
-
-### Using double host headers:
-
-```
-Host: evil.com
-Host: target.com
-```
-
-Some servers will parse the last one; some the first.
-
----
-
-# 🔥 **3.7 Null Byte / Special Character Bypass**
-
-```
+3.7 Null Byte / Special Character Bypass
 Host: evil.com%00target.com
-```
-
-```
 Host: target.com%00.evil.com
-```
-
-```
 Host: target.com\evil.com
-```
 
----
-
-# 🔥 **3.8 CORS Bypass Using Host Reflection**
-
-Check if server reflects Host header into CORS:
-
-```
+3.8 CORS Bypass Using Host Reflection**
 Host: evil.com
 Origin: http://evil.com
 ```
-
----
-
-# 🔥 **3.9 CDN / Proxy Bypass (Akamai, Cloudflare, Nginx)**
-
-```
+*3.9 CDN / Proxy Bypass (Akamai, Cloudflare, Nginx)**
 Forwarded: host=evil.com
-```
-
-```
 X-Forwarded-Host: internal-admin
 ```
 
 ---
 
-# ✔ **4. Combined Master Payload (All-in-One Fuzzer)**
-
-This helps catch most host header issues in one go:
-
-```
-GET / HTTP/1.1
-Host: evil.com
-X-Forwarded-Host: evil.com
-X-Host: attacker.com
-X-Forwarded-Server: admin.local
-Origin: http://evil.com
-Forwarded: host=internal.target
-```
 | Tool | Description |
 |------|-------------|
 | [Burp Suite](https://portswigger.net/burp) | Use Repeater and Intruder to test header combinations. |
@@ -773,25 +638,12 @@ Forwarded: host=internal.target
 | [HostHeaderScanner](https://github.com/inpentest/HostHeaderScanner) | Detects Host Header Injection and SSRF via proxy headers. |
 | [Param Miner (Burp Extension)](https://portswigger.net/bappstore/9f3c3b7b9e4f4e3e9c3d3e3b9f3c3b7b) | Finds hidden headers and ambiguous parsing behavior. |
 
----
 ### 🧪 **Advanced Proxy Bypass Tricks**
 
 - **Use internal IPs**: `Host: 127.0.0.1` or `Host: 192.168.0.1`
 - **Subdomain spoofing**: `Host: attacker.vulnerable.com`
 - **Header fuzzing**: Try variations like `X-Forwarded-For`, `X-Real-IP`, `X-Originating-IP`
 - **Cache poisoning**: Inject headers that affect CDN behavior (e.g., `Vary`, `X-Forwarded-Proto`)
-
----
-
-1. **Try to access a restricted resource**
-   Normally responds with 401 or redirect.
-
-2. **Modify Host to a whitelisted one**
-   Try values like:
-   ```
-   Host: internal-service
-   Host: localhost
-   ```
 
 ---
 # 4. URL Redirection (Used as a Phishing Attack) or Open Redirection
