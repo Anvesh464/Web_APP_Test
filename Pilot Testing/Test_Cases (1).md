@@ -860,56 +860,46 @@ file, filename, path, filepath, page, doc, download, include, template, view, ur
 ## Methodology
 
 HTTP Parameter Pollution (HPP) is a web security vulnerability where an attacker injects multiple instances of the same HTTP parameter into a request. The server's behavior when processing duplicate parameters can vary, potentially leading to unexpected or exploitable behavior.
-
+```ps1
+/app?debug=false&debug=true
+/transfer?amount=1&amount=5000
+```
 HPP can target two levels:
 
 * Client-Side HPP: Exploits JavaScript code running on the client (browser).
 * Server-Side HPP: Exploits how the server processes multiple parameters with the same name.
 
-**Examples**:
+## 🔗 Basic HPP Payloads
+- **Duplicate parameter**:  `?id=123&id=456` → Backend may process the second value (`456`) or concatenate both.  
+- **Overriding parameter**:  `?redirect=whitelisted.com&redirect=evil.com` → Second parameter overrides the first.  
+- **Multiple next parameters**:    `?next=https://safe.com&next=https://evil.com` → Some frameworks pick the last occurrence.
 
-```ps1
-/app?debug=false&debug=true
-/transfer?amount=1&amount=5000
-```
+## 🧩 Encoding Tricks
+- **Encoded ampersand**:  `?id=123%26id=456` → `%26` decoded as `&`, injecting a second parameter.  
+- **Double encoding**:    `?id=123%2526id=456` → Double-decoded into two parameters.  
+- **Null byte injection**:    `?file=report%00&type=pdf` → Null byte may truncate and allow pollution.  
+- **Mixed encoding**:    `?next=https://safe.com%26next=https://evil.com` → Encoded injection bypasses filters.
 
-# Headless Browser
+## ⚙️ Path & Query Manipulation
+- **Nested query**:  `?next=?redirect=https://evil.com` → Injects a new query inside a parameter.  
+- **Chained parameters**:  `?url=https://safe.com?redirect=https://evil.com` → Pollution inside query string.  
+- **Fragment injection**:  `?redirect=https://evil.com#next=https://safe.com` → Fragment may be ignored by server but parsed by client.  
+- **Path confusion**:    `?path=/folder&path=/evil` → Multiple path parameters injected.
 
-> A headless browser is a web browser without a graphical user interface. It works just like a regular browser, such as Chrome or Firefox, by interpreting HTML, CSS, and JavaScript, but it does so in the background, without displaying any visuals.
-> Headless browsers are primarily used for automated tasks, such as web scraping, testing, and running scripts. They are particularly useful in situations where a full-fledged browser is not needed, or where resources (like memory or CPU) are limited.
+## 🗂️ Advanced HPP Payloads
+- **JSON body pollution**:    `{"redirect":"https://safe.com","redirect":"https://evil.com"}` → Duplicate keys in JSON.  
+- **Array injection**:  `?id[]=123&id[]=456` → Arrays may be parsed differently across frameworks.  
+- **Header pollution**:  `?X-Forwarded-For=127.0.0.1&X-Forwarded-For=evil.com` → Multiple headers injected.  
+- **Cookie pollution**:  `?cookie=sessionid=abc&cookie=sessionid=xyz` → Multiple cookies may override.  
+- **Form pollution**:    `username=admin&username=evil` → Duplicate form fields submitted.
 
-## Summary
-
-* [Headless Commands](#headless-commands)
-* [Local File Read](#local-file-read)
-* [Debugging Port](#debugging-port)
-* [Network](#network)
-    * [Port Scanning](#port-scanning)
-    * [DNS Rebinding](#dns-rebinding)
-* [References](#references)
-
-## Headless Commands
-
-Example of headless browsers commands:
-
-* Google Chrome
-
-    ```ps1
-    google-chrome --headless[=(new|old)] --print-to-pdf https://www.google.com
-    ```
-
-* Mozilla Firefox
-
-    ```ps1
-    firefox --screenshot https://www.google.com
-    ```
-
-* Microsoft Edge
-
-    ```ps1
-    "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless --disable-gpu --window-size=1280,720 --screenshot="C:\tmp\screen.png" "https://google.com"
-    ```
----
+## 📦 Realistic Examples
+- **Login bypass**:  `?user=admin&user=guest` → Some apps may authenticate as `guest`.  
+- **Payment manipulation**:   `?amount=100&amount=1` → Polluted parameter may reduce payment amount.  
+- **Redirect bypass**:  `?next=https://safe.com&next=https://evil.com` → Final redirect goes to attacker site.  
+- **Search pollution**:  `?q=apple&q=banana` → Search results may be manipulated.  
+- **Download pollution**:    `?file=report.pdf&file=evil.exe` → Backend may serve malicious file.
+  
 # HTTP Hidden Parameters
 
 > Web applications often have hidden or undocumented parameters that are not exposed in the user interface. Fuzzing can help discover these parameters, which might be vulnerable to various attacks.
@@ -921,25 +911,6 @@ Example of headless browsers commands:
     * [Bruteforce Parameters](#bruteforce-parameters)
     * [Old Parameters](#old-parameters)
 * [References](#references)
-
-## Tools
-
-* [PortSwigger/param-miner](https://github.com/PortSwigger/param-miner) - Burp extension to identify hidden, unlinked parameters.
-* [s0md3v/Arjun](https://github.com/s0md3v/Arjun) - HTTP parameter discovery suite
-* [Sh1Yo/x8](https://github.com/Sh1Yo/x8) - Hidden parameters discovery suite
-* [tomnomnom/waybackurls](https://github.com/tomnomnom/waybackurls) - Fetch all the URLs that the Wayback Machine knows about for a domain
-* [devanshbatham/ParamSpider](https://github.com/devanshbatham/ParamSpider) - Mining URLs from dark corners of Web Archives for bug hunting/fuzzing/further probing
-
-## Methodology
-
-### Bruteforce Parameters
-
-* Use wordlists of common parameters and send them, look for unexpected behavior from the backend.
-
-    ```ps1
-    x8 -u "https://example.com/" -w <wordlist>
-    x8 -u "https://example.com/" -X POST -w <wordlist>
-    ```
 
 Wordlist examples:
 
