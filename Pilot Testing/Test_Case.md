@@ -2007,6 +2007,59 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 ruby sub_brust.rb --fast nokia.com
 ```
 
+# 🔹 Basic Subdomain Takeover Checks
+
+* Unclaimed service (CNAME): `sub.target.com → cname → unclaimed.service.com` → Service not configured → takeover possible.
+* NXDOMAIN reference: `sub.target.com → cname → non-existing.domain` → Register domain → hijack.
+* Dangling DNS entry:  Subdomain points to deleted cloud resource → attacker reclaims it.
+* Expired domain: CNAME → expired domain → attacker buys domain → gains control.
+
+# 🔹 Common Vulnerable Services
+
+* AWS S3 bucket:\  `sub.target.com → bucket.s3.amazonaws.com`\  → Bucket doesn’t exist → create same bucket name.
+* Azure / Blob storage:  `sub.target.com → storage.azure.com`
+
+# 🔹 DNS & Domain Manipulation
+
+* Register expired domain:  Domain used in CNAME expires → attacker buys.
+* Wildcard DNS abuse: `*.target.com → attacker-controlled service`
+* Chained subdomain:  `sub.target.com → sub.sub.target.com`
+* Dangling NS records:  Subdomain points to deleted nameserver.
+
+## 🧩 AWS S3
+
+* Bucket creation:\
+  Create bucket with same name\
+  → Host malicious content.
+
+* Endpoint test:\
+  `http://bucket.s3.amazonaws.com`
+## 🔹 Proof of Concept (PoC)
+
+### Step 1: Identify dangling DNS
+```
+dig subdomain.example.com
+```
+### Step 2: Observe response* Points to unused external provider
+### Step 3: Claim resource  Register bucket/app/service with same name as DNS target
+### Step 4: Validate takeover
+
+* Upload test content
+* Access via:
+```
+http://subdomain.example.com
+```
+### Example:
+
+```
+PoC message: "Subdomain takeover by <your-name>"
+```
+## 🧩 DNS Tricks
+
+* Trailing dot:\`sub.target.com.`
+* Alternate resolution:`sub.target.com.evil.com`
+* DNS rebinding:  Switch IP after validation.
+
 ## References:
 - [PayloadsAllTheThings - CORS Misconfiguration](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/CORS%20Misconfiguration)
 - [CRLF Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/CRLF%20Injection)
