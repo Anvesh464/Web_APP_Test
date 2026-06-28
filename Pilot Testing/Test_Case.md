@@ -1995,12 +1995,6 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * Account deletion:  /delete-account
 * Admin action abuse:  Silent admin operation using victim session.
 
-## 6. Two-Factor Authentication (2FA) Bypass
-
-### Exploitation:
-- Login to an account where 2FA is implemented.
-- Try directly accessing resources after authentication without entering OTP.
-
 ## 7. Hostile Subdomain Takeover
 
 ### Attack Scenario:
