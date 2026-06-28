@@ -5020,29 +5020,6 @@ Inject malicious JavaScript into cacheable responses.
 
 # ✅ **HTTP Verb Testcase Names (Names Only)**
 
-1. GET Method Access Control Test
-2. POST Method Access Control Test
-3. PUT Method Access Control Test
-4. DELETE Method Access Control Test
-5. PATCH Method Access Control Test
-6. HEAD Method Access Control Test
-7. OPTIONS Method Exposure Test
-8. TRACE Method Enabled Test
-9. TRACK Method Enabled Test
-10. CONNECT Method Enabled Test
-11. X-HTTP-Method Override Test
-12. X-HTTP-Method-Override Header Test
-13. Method Spoofing via Query Parameter
-14. Method Spoofing via Hidden Form Field
-15. HTTP Verb Fuzzing (Custom Methods)
-16. Privilege Escalation via Unsupported Methods
-17. CORS Preflight Method Validation
-18. Rate Limiting Test Per HTTP Verb
-19. CSRF Validation per HTTP Verb
-20. API Endpoint Method Fuzzing
-
----
-
 ### **1. GET Method Access Control Test**
 
 **Real Payload:**
