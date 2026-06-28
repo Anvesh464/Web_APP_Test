@@ -2788,6 +2788,8 @@ X-Forwarded-Host: test"><script>alert(1)</script>
 ## Insecure Direct Object References (IDOR)
 Insecure Direct Object References (IDOR) is a security vulnerability that occurs when an application allows users to directly access or modify objects (such as files, database records, or URLs) based on user-supplied input, without sufficient access controls. This means that if a user changes a parameter value (like an ID) in a URL or API request, they might be able to access or manipulate data that they aren’t authorized to see or modify.
 
+any parametes parsent do the modification as well hiden parameters.
+
 ### Tools:
 •	PortSwigger/BApp Store > Authz
 •	PortSwigger/BApp Store > AuthMatrix
@@ -2798,6 +2800,24 @@ Insecure Direct Object References (IDOR) is a security vulnerability that occurs
 - `http://foo.bar/changepassword?user=someuser`
 - `http://foo.bar/showImage?img=img00011`
 - `https://example.com/profile?user_id=123:`c
+
+### Examples:
+1. **Forgot Password Flow:**
+   - Intercept request containing `email` and `user_id`.
+   - Modify parameters and check for unauthorized access.
+
+2. **Facebook Page Deletion Attack:**
+   - If a page delete request contains `page_id`, replace it with another user's ID to delete their page.
+
+3. **Comment Modification:**
+   - Modify `uid` in request to change another user's comment.
+
+4. **Account Takeover:**
+   - Modify `profile_id` in a profile update request to edit another user's account.
+
+**References:**
+- [HackerOne Report 227522](https://hackerone.com/reports/227522)
+- [HackerOne Report 322661](https://hackerone.com/reports/322661)
 ---
 
 ## XPATH Injection
@@ -3432,28 +3452,6 @@ Check if the system allows excessively long passwords (>500 characters).
 
 Test with:
 - [Password DoS](https://password-dos.herokuapp.com/)
-
----
-
-## IDOR (Insecure Direct Object Reference)
-
-### Examples:
-1. **Forgot Password Flow:**
-   - Intercept request containing `email` and `user_id`.
-   - Modify parameters and check for unauthorized access.
-
-2. **Facebook Page Deletion Attack:**
-   - If a page delete request contains `page_id`, replace it with another user's ID to delete their page.
-
-3. **Comment Modification:**
-   - Modify `uid` in request to change another user's comment.
-
-4. **Account Takeover:**
-   - Modify `profile_id` in a profile update request to edit another user's account.
-
-**References:**
-- [HackerOne Report 227522](https://hackerone.com/reports/227522)
-- [HackerOne Report 322661](https://hackerone.com/reports/322661)
 
 ---
 
